@@ -542,7 +542,8 @@ export default function ClientsPage() {
     console.log('🔍 FILTRE RESERVATIONS - START', { 
       totalReservations: reservations.length, 
       searchTerm,
-      clientSearchDate
+      clientSearchDate,
+      selectedAgencyId
     });
     
     let currentReservations = reservations;
@@ -617,6 +618,15 @@ export default function ClientsPage() {
       console.log('After search filter:', filteredEnrichedReservations.length);
     }
 
+    // Apply agency filter AFTER search filter (so search works across all agencies)
+    if (selectedAgencyId !== 'all') {
+      filteredEnrichedReservations = filteredEnrichedReservations.filter((res) => {
+        const client = clients.find(c => c.id === res.client_id);
+        return client?.agency_id === selectedAgencyId;
+      });
+      console.log('After selectedAgency filter:', filteredEnrichedReservations.length);
+    }
+
     // Apply date search filter
     if (clientSearchDate) {
       filteredEnrichedReservations = filteredEnrichedReservations.filter((res) => {
@@ -634,7 +644,7 @@ export default function ClientsPage() {
 
     console.log('🔍 FILTRE RESERVATIONS - FINAL RESULT:', filteredEnrichedReservations.length);
     return filteredEnrichedReservations;
-  }, [reservations, clients, rooms, sites, agencies, currentUser, searchTerm, clientSearchDate]);
+  }, [reservations, clients, rooms, sites, agencies, currentUser, searchTerm, clientSearchDate, selectedAgencyId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 px-6 py-6">
