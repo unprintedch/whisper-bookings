@@ -465,14 +465,9 @@ export default function ClientsPage() {
 
     // 3. Search filter (by text)
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      
       currentFilteredClients = currentFilteredClients.filter((client) => {
-        const searchLower = searchTerm.toLowerCase();
-        
-        // Debug log to see actual client_number
-        if (searchLower === '42') {
-          console.log('Searching for 42, client:', client.name, 'client_number:', client.client_number, 'type:', typeof client.client_number);
-        }
-        
         // Search in client fields
         if (client.name?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_name?.toLowerCase().includes(searchLower)) return true;
