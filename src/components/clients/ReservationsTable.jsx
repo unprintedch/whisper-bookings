@@ -30,6 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ListFilter, ChevronUp, ChevronDown, Edit, Calendar as CalendarIcon, Download, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { Input } from "@/components/ui/input";
 
 const columnsConfig = [
 { id: 'clientName', label: 'Client', defaultVisible: true, sortable: true },
@@ -81,6 +82,7 @@ export default function ReservationsTable({
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDateStart, setFilterDateStart] = useState(null);
   const [filterDateEnd, setFilterDateEnd] = useState(null);
+  const [searchText, setSearchText] = useState('');
 
   // Load external column visibility when it becomes available
   useEffect(() => {
@@ -112,6 +114,24 @@ export default function ReservationsTable({
 
   const sortedReservations = useMemo(() => {
     let filtered = [...reservations];
+    
+    // Apply text search
+    if (searchText && searchText.trim()) {
+      const searchLower = searchText.toLowerCase().trim();
+      filtered = filtered.filter(r => 
+        (r.clientName && r.clientName.toLowerCase().includes(searchLower)) ||
+        (r.clientNumber && String(r.clientNumber).toLowerCase().includes(searchLower)) ||
+        (r.contactName && r.contactName.toLowerCase().includes(searchLower)) ||
+        (r.contactEmail && r.contactEmail.toLowerCase().includes(searchLower)) ||
+        (r.contactPhone && r.contactPhone.toLowerCase().includes(searchLower)) ||
+        (r.roomName && r.roomName.toLowerCase().includes(searchLower)) ||
+        (r.siteName && r.siteName.toLowerCase().includes(searchLower)) ||
+        (r.agencyName && r.agencyName.toLowerCase().includes(searchLower)) ||
+        (r.comment && r.comment.toLowerCase().includes(searchLower)) ||
+        (r.status && r.status.toLowerCase().includes(searchLower)) ||
+        (r.bed_configuration && r.bed_configuration.toLowerCase().includes(searchLower))
+      );
+    }
     
     // Apply agency filter
     if (filterAgency !== 'all') {
@@ -180,7 +200,7 @@ export default function ReservationsTable({
     }
 
     return sorted;
-  }, [reservations, sortConfig, filterAgency, filterStatus, filterDateStart, filterDateEnd]);
+  }, [reservations, sortConfig, filterAgency, filterStatus, filterDateStart, filterDateEnd, searchText]);
 
   const visibleColumns = columnsConfig.filter((c) => columnVisibility[c.id]);
   
@@ -300,6 +320,13 @@ export default function ReservationsTable({
           
           {/* Filters Row */}
           <div className="flex flex-wrap items-center gap-3">
+            <Input
+              placeholder="Search reservations, clients, rooms..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full max-w-md h-9"
+            />
+            
             <Select value={filterAgency} onValueChange={setFilterAgency}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="All Agencies" />
@@ -374,11 +401,12 @@ export default function ReservationsTable({
               </PopoverContent>
             </Popover>
             
-            {(filterAgency !== 'all' || filterStatus !== 'all' || filterDateStart || filterDateEnd) && (
+            {(searchText || filterAgency !== 'all' || filterStatus !== 'all' || filterDateStart || filterDateEnd) && (
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => {
+                  setSearchText('');
                   setFilterAgency('all');
                   setFilterStatus('all');
                   setFilterDateStart(null);

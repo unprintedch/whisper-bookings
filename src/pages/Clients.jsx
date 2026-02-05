@@ -55,7 +55,7 @@ export default function ClientsPage() {
   // State for controls (previously in Layout.js)
   const [searchTerm, setSearchTerm] = useState(''); // Renamed from clientSearchText
   const [clientSearchDate, setClientSearchDate] = useState(null);
-  const [clientViewMode, setClientViewMode] = useState('clients'); // 'clients' or 'reservations'
+  const [clientViewMode, setClientViewMode] = useState('reservations'); // 'clients' or 'reservations'
   const [columnVisibility, setColumnVisibility] = useState(null); // Will be loaded from user preferences
   const [selectedAgencyId, setSelectedAgencyId] = useState('all'); // Added
 
@@ -618,76 +618,31 @@ export default function ClientsPage() {
           <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
             <CardHeader className="border-b border-slate-100 p-4">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                {/* Search and Filters */}
-                <div className="flex flex-1 items-center gap-3 min-w-[300px]">
-                  <Input
-                    placeholder="Search clients, contacts, phone, notes, client#..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-9" />
-
-                  {currentUser?.custom_role !== 'agency' && // Conditional rendering for agency filter
-                    <Select value={selectedAgencyId} onValueChange={setSelectedAgencyId}>
-                      <SelectTrigger className="w-[180px] h-9">
-                        <SelectValue placeholder="Filter by Agency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Agencies</SelectItem>
-                        {agencies.map((agency) =>
-                          <SelectItem key={agency.id} value={agency.id}>{agency.name}</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  }
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-48 justify-start text-left font-normal h-9">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {clientSearchDate ? format(clientSearchDate, 'dd/MM/yyyy') : 'Filter by date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={clientSearchDate}
-                        onSelect={setClientSearchDate}
-                        initialFocus />
-
-                      {clientSearchDate &&
-                        <div className="p-2 border-t">
-                          <Button variant="ghost" size="sm" onClick={() => setClientSearchDate(null)} className="w-full">
-                            Clear filter
-                          </Button>
-                        </div>
-                      }
-                    </PopoverContent>
-                  </Popover>
-                </div>
                 {/* View Toggles and Actions */}
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-lg">
                     <Button
                       size="sm"
-                      variant={clientViewMode === 'clients' ? 'default' : 'ghost'}
-                      onClick={() => setClientViewMode('clients')}
-                      className="transition-all h-8 bg-white text-slate-800">
-
-                      By Client
-                    </Button>
-                    <Button
-                      size="sm"
                       variant={clientViewMode === 'reservations' ? 'default' : 'ghost'}
                       onClick={() => setClientViewMode('reservations')}
-                      className="transition-all h-8 text-slate-600">
+                      className="transition-all h-8 bg-white text-slate-800">
 
                       All Reservations
                     </Button>
+                    <Button
+                      size="sm"
+                      variant={clientViewMode === 'clients' ? 'default' : 'ghost'}
+                      onClick={() => setClientViewMode('clients')}
+                      className="transition-all h-8 text-slate-600">
+
+                      By Client
+                    </Button>
                   </div>
-                  <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Client
-                  </Button>
                 </div>
+                <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Client
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -896,62 +851,9 @@ export default function ClientsPage() {
           <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
             <CardHeader className="border-b border-slate-100 p-4">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                {/* Search and Filters */}
-                <div className="flex flex-1 items-center gap-3 min-w-[300px]">
-                  <Input
-                    placeholder="Search reservations, clients, rooms, status, client#..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-9" />
-
-                  {currentUser?.custom_role !== 'agency' && // Conditional rendering for agency filter
-                    <Select value={selectedAgencyId} onValueChange={setSelectedAgencyId}>
-                      <SelectTrigger className="w-[180px] h-9">
-                        <SelectValue placeholder="Filter by Agency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Agencies</SelectItem>
-                        {agencies.map((agency) =>
-                          <SelectItem key={agency.id} value={agency.id}>{agency.name}</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  }
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-48 justify-start text-left font-normal h-9">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {clientSearchDate ? format(clientSearchDate, 'dd/MM/yyyy') : 'Filter by date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={clientSearchDate}
-                        onSelect={setClientSearchDate}
-                        initialFocus />
-
-                      {clientSearchDate &&
-                        <div className="p-2 border-t">
-                          <Button variant="ghost" size="sm" onClick={() => setClientSearchDate(null)} className="w-full">
-                            Clear filter
-                          </Button>
-                        </div>
-                      }
-                    </PopoverContent>
-                  </Popover>
-                </div>
                 {/* View Toggles and Actions */}
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-lg">
-                    <Button
-                      size="sm"
-                      variant={clientViewMode === 'clients' ? 'default' : 'ghost'}
-                      onClick={() => setClientViewMode('clients')}
-                      className="transition-all h-8 text-slate-600">
-
-                      By Client
-                    </Button>
                     <Button
                       size="sm"
                       variant={clientViewMode === 'reservations' ? 'default' : 'ghost'}
@@ -960,12 +862,20 @@ export default function ClientsPage() {
 
                       All Reservations
                     </Button>
+                    <Button
+                      size="sm"
+                      variant={clientViewMode === 'clients' ? 'default' : 'ghost'}
+                      onClick={() => setClientViewMode('clients')}
+                      className="transition-all h-8 text-slate-600">
+
+                      By Client
+                    </Button>
                   </div>
-                  <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Client
-                  </Button>
                 </div>
+                <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Client
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
