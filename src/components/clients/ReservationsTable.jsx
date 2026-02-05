@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,10 +98,14 @@ export default function ReservationsTable({
       // Apply global search from parent component
       const matchesGlobalSearch = !searchText ||
       reservation.clientName.toLowerCase().includes(searchText.toLowerCase()) ||
+      (reservation.clientNumber && String(reservation.clientNumber).toLowerCase().includes(searchText.toLowerCase())) ||
       reservation.contactName && reservation.contactName.toLowerCase().includes(searchText.toLowerCase()) ||
       reservation.contactEmail && reservation.contactEmail.toLowerCase().includes(searchText.toLowerCase()) ||
       reservation.roomName && reservation.roomName.toLowerCase().includes(searchText.toLowerCase()) ||
-      reservation.siteName && reservation.siteName.toLowerCase().includes(searchText.toLowerCase());
+      reservation.siteName && reservation.siteName.toLowerCase().includes(searchText.toLowerCase()) ||
+      reservation.agencyName && reservation.agencyName.toLowerCase().includes(searchText.toLowerCase()) ||
+      reservation.comment && reservation.comment.toLowerCase().includes(searchText.toLowerCase()) ||
+      reservation.status && reservation.status.toLowerCase().includes(searchText.toLowerCase());
 
       if (!matchesGlobalSearch) return false;
 
