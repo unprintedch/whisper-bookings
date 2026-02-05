@@ -68,6 +68,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
                 src={room.photo_url}
                 alt={room.name}
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
             </div>
           ) : (
