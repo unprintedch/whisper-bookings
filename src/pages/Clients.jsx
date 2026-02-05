@@ -974,7 +974,8 @@ export default function ClientsPage() {
                 isLoading={isLoading}
                 onEditReservation={handleEditReservation}
                 columnVisibility={columnVisibility}
-                onColumnVisibilityChange={handleColumnVisibilityChange} />
+                onColumnVisibilityChange={handleColumnVisibilityChange}
+                agencies={agencies} />
 
             </CardContent>
           </Card>

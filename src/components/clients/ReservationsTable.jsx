@@ -18,12 +18,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator } from
 "@/components/ui/dropdown-menu";
-import { ListFilter, ChevronUp, ChevronDown, Edit, Calendar as CalendarIcon } from 'lucide-react';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from
+"@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ListFilter, ChevronUp, ChevronDown, Edit, Calendar as CalendarIcon, Download, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 const columnsConfig = [
 { id: 'clientName', label: 'Client', defaultVisible: true, sortable: true },
 { id: 'clientNumber', label: 'Client #', defaultVisible: true, sortable: true },
+{ id: 'agencyName', label: 'Agency', defaultVisible: true, sortable: true },
 { id: 'siteName', label: 'Site', defaultVisible: true, sortable: true },
 { id: 'roomName', label: 'Room', defaultVisible: true, sortable: true },
 { id: 'date_checkin', label: 'Check-in', defaultVisible: true, sortable: true },
@@ -36,8 +47,9 @@ const columnsConfig = [
 { id: 'contactName', label: 'Contact', defaultVisible: false, sortable: true },
 { id: 'contactEmail', label: 'Contact Email', defaultVisible: false, sortable: true },
 { id: 'contactPhone', label: 'Contact Phone', defaultVisible: false, sortable: true },
-{ id: 'agencyName', label: 'Agency', defaultVisible: false, sortable: true },
-{ id: 'comment', label: 'Comment', defaultVisible: false, sortable: false }];
+{ id: 'comment', label: 'Comment', defaultVisible: false, sortable: false },
+{ id: 'created_date', label: 'Created Date', defaultVisible: false, sortable: true },
+{ id: 'updated_date', label: 'Updated Date', defaultVisible: false, sortable: true }];
 
 
 const getStatusColor = (status) => {
@@ -56,12 +68,19 @@ export default function ReservationsTable({
   isLoading,
   onEditReservation,
   columnVisibility: externalColumnVisibility,
-  onColumnVisibilityChange
+  onColumnVisibilityChange,
+  agencies
 }) {
   const [columnVisibility, setColumnVisibility] = useState(
     columnsConfig.reduce((acc, col) => ({ ...acc, [col.id]: col.defaultVisible }), {})
   );
   const [sortConfig, setSortConfig] = useState({ key: 'date_checkin', direction: 'asc' });
+  
+  // Local filters
+  const [filterAgency, setFilterAgency] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterDateStart, setFilterDateStart] = useState(null);
+  const [filterDateEnd, setFilterDateEnd] = useState(null);
 
   // Load external column visibility when it becomes available
   useEffect(() => {
@@ -92,7 +111,42 @@ export default function ReservationsTable({
   };
 
   const sortedReservations = useMemo(() => {
-    let sorted = [...reservations];
+    let filtered = [...reservations];
+    
+    // Apply agency filter
+    if (filterAgency !== 'all') {
+      filtered = filtered.filter(r => r.agencyId === filterAgency);
+    }
+    
+    // Apply status filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(r => r.status === filterStatus);
+    }
+    
+    // Apply date range filter
+    if (filterDateStart) {
+      filtered = filtered.filter(r => {
+        try {
+          const checkin = new Date(r.date_checkin);
+          return checkin >= filterDateStart;
+        } catch {
+          return false;
+        }
+      });
+    }
+    
+    if (filterDateEnd) {
+      filtered = filtered.filter(r => {
+        try {
+          const checkout = new Date(r.date_checkout);
+          return checkout <= filterDateEnd;
+        } catch {
+          return false;
+        }
+      });
+    }
+    
+    let sorted = filtered;
 
     // Sort
     if (sortConfig.key) {
@@ -126,9 +180,51 @@ export default function ReservationsTable({
     }
 
     return sorted;
-  }, [reservations, sortConfig]);
+  }, [reservations, sortConfig, filterAgency, filterStatus, filterDateStart, filterDateEnd]);
 
   const visibleColumns = columnsConfig.filter((c) => columnVisibility[c.id]);
+  
+  const exportToCSV = () => {
+    const headers = visibleColumns.map(col => col.label);
+    const rows = sortedReservations.map(reservation => {
+      return visibleColumns.map(col => {
+        let value = reservation[col.id];
+        
+        if (col.id === 'date_checkin' || col.id === 'date_checkout') {
+          try {
+            if (!value) return '';
+            const date = new Date(value + 'T00:00:00');
+            return isNaN(date.getTime()) ? '' : format(date, 'dd/MM/yyyy');
+          } catch {
+            return '';
+          }
+        }
+        
+        if (col.id === 'created_date' || col.id === 'updated_date') {
+          try {
+            if (!value) return '';
+            const date = new Date(value);
+            return isNaN(date.getTime()) ? '' : format(date, 'dd/MM/yyyy HH:mm');
+          } catch {
+            return '';
+          }
+        }
+        
+        return value || '';
+      });
+    });
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `reservations_${format(new Date(), 'yyyy-MM-dd_HHmm')}.csv`;
+    link.click();
+  };
 
   const renderSortIcon = (columnId) => {
     const column = columnsConfig.find((c) => c.id === columnId);
@@ -160,38 +256,141 @@ export default function ReservationsTable({
   return (
     <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
       <CardHeader className="border-b border-slate-100">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-slate-800">
-            <CalendarIcon className="w-5 h-5 text-blue-600" />
-            All Reservations
-            <Badge variant="secondary" className="ml-2">
-              {sortedReservations.length} reservations
-            </Badge>
-          </CardTitle>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <ListFilter className="mr-2 h-4 w-4" />
-                Columns
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <CalendarIcon className="w-5 h-5 text-blue-600" />
+              All Reservations
+              <Badge variant="secondary" className="ml-2">
+                {sortedReservations.length} reservations
+              </Badge>
+            </CardTitle>
+            
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={exportToCSV}>
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {columnsConfig.map((column) =>
-              <DropdownMenuCheckboxItem
-                key={column.id}
-                checked={columnVisibility[column.id]}
-                onCheckedChange={(value) =>
-                handleColumnVisibilityChange(column.id, !!value)
-                }>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <ListFilter className="mr-2 h-4 w-4" />
+                    Columns
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {columnsConfig.map((column) =>
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    checked={columnVisibility[column.id]}
+                    onCheckedChange={(value) =>
+                    handleColumnVisibilityChange(column.id, !!value)
+                    }>
 
-                  {column.label}
-                </DropdownMenuCheckboxItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                      {column.label}
+                    </DropdownMenuCheckboxItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          
+          {/* Filters Row */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={filterAgency} onValueChange={setFilterAgency}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All Agencies" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Agencies</SelectItem>
+                {agencies?.map(agency => (
+                  <SelectItem key={agency.id} value={agency.id}>{agency.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="OPTION">OPTION</SelectItem>
+                <SelectItem value="RESERVE">RESERVE</SelectItem>
+                <SelectItem value="CONFIRME">CONFIRME</SelectItem>
+                <SelectItem value="PAYE">PAYE</SelectItem>
+                <SelectItem value="ANNULE">ANNULE</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[180px] justify-start">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filterDateStart ? format(filterDateStart, 'dd/MM/yyyy') : 'Date from'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filterDateStart}
+                  onSelect={setFilterDateStart}
+                  initialFocus
+                />
+                {filterDateStart && (
+                  <div className="p-2 border-t">
+                    <Button variant="ghost" size="sm" onClick={() => setFilterDateStart(null)} className="w-full">
+                      Clear
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[180px] justify-start">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filterDateEnd ? format(filterDateEnd, 'dd/MM/yyyy') : 'Date to'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filterDateEnd}
+                  onSelect={setFilterDateEnd}
+                  initialFocus
+                />
+                {filterDateEnd && (
+                  <div className="p-2 border-t">
+                    <Button variant="ghost" size="sm" onClick={() => setFilterDateEnd(null)} className="w-full">
+                      Clear
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+            
+            {(filterAgency !== 'all' || filterStatus !== 'all' || filterDateStart || filterDateEnd) && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  setFilterAgency('all');
+                  setFilterStatus('all');
+                  setFilterDateStart(null);
+                  setFilterDateEnd(null);
+                }}
+                className="text-slate-600 hover:text-slate-900"
+              >
+                <X className="mr-1 h-4 w-4" />
+                Clear filters
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-6">
@@ -253,12 +452,14 @@ export default function ReservationsTable({
                       }
                           {col.id === 'date_checkin' && formatDate(reservation.date_checkin)}
                           {col.id === 'date_checkout' && formatDate(reservation.date_checkout)}
+                          {col.id === 'created_date' && reservation.created_date && format(new Date(reservation.created_date), 'dd/MM/yyyy HH:mm')}
+                          {col.id === 'updated_date' && reservation.updated_date && format(new Date(reservation.updated_date), 'dd/MM/yyyy HH:mm')}
                           
                           {col.id === 'contactEmail' && reservation.contactEmail ?
                       <a href={`mailto:${reservation.contactEmail}`} className="text-blue-600 hover:underline">
                               {reservation.contactEmail}
                             </a> :
-                      !['clientName', 'clientNumber', 'status', 'date_checkin', 'date_checkout', 'contactEmail'].includes(col.id) && (
+                      !['clientName', 'clientNumber', 'status', 'date_checkin', 'date_checkout', 'created_date', 'updated_date', 'contactEmail'].includes(col.id) && (
                       reservation[col.id] || '-')}
 
                         </TableCell>
