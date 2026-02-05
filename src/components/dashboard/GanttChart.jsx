@@ -339,7 +339,7 @@ export default function GanttChart({
               return (
                 <div
                   key={`${room.id}-${roomIndex}`}
-                  className="flex border-b border-slate-100 group relative"
+                  className="flex border-b border-slate-200 group relative"
                   style={{ height: '50px' }}>
 
                   <div
@@ -372,7 +372,7 @@ export default function GanttChart({
                       {dateColumns.map((date, dateIndex) => (
                         <div
                           key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-100 flex items-center justify-center relative group/cell cursor-pointer hover:bg-blue-50 flex-shrink-0 ${
+                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell cursor-pointer hover:bg-blue-50 flex-shrink-0 ${
                               highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''
                           } ${format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
                           style={{
