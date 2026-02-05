@@ -451,25 +451,36 @@ export default function ClientsPage() {
   };
 
   const filteredClients = React.useMemo(() => {
-    let currentFilteredClients = [...clients]; // Create a new array to ensure re-render
+    console.log('🔍 FILTRE CLIENTS - START', { 
+      totalClients: clients.length, 
+      searchTerm, 
+      selectedAgencyId,
+      clientSearchDate
+    });
+    
+    let currentFilteredClients = [...clients];
 
     // 1. Filter by agency if current user is an agency user
     if (currentUser?.custom_role === 'agency' && currentUser?.agency_id) {
       currentFilteredClients = currentFilteredClients.filter((client) => client.agency_id === currentUser.agency_id);
+      console.log('After agency user filter:', currentFilteredClients.length);
     }
 
     // 2. Filter by selected agency (only visible to non-agency users)
     if (selectedAgencyId !== 'all') {
       currentFilteredClients = currentFilteredClients.filter((client) => client.agency_id === selectedAgencyId);
+      console.log('After selected agency filter:', currentFilteredClients.length);
     }
 
     // 3. Search filter (by text)
     if (searchTerm && searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase().trim();
+      console.log('Filtering by searchTerm:', searchLower);
       
       currentFilteredClients = currentFilteredClients.filter((client) => {
         // Search in client_number
         if (client.client_number && String(client.client_number).toLowerCase().includes(searchLower)) {
+          console.log('✓ MATCH client_number:', client.name, client.client_number);
           return true;
         }
         
@@ -502,6 +513,7 @@ export default function ClientsPage() {
           return false;
         });
       });
+      console.log('After search filter:', currentFilteredClients.length);
     }
 
     // 4. Date filter
@@ -522,10 +534,17 @@ export default function ClientsPage() {
       });
     }
 
+    console.log('🔍 FILTRE CLIENTS - FINAL RESULT:', currentFilteredClients.length);
     return currentFilteredClients;
   }, [clients, currentUser, searchTerm, selectedAgencyId, clientSearchDate, getClientReservations, agencies, rooms, sites]);
 
   const getEnrichedFilteredReservations = React.useMemo(() => {
+    console.log('🔍 FILTRE RESERVATIONS - START', { 
+      totalReservations: reservations.length, 
+      searchTerm,
+      clientSearchDate
+    });
+    
     let currentReservations = reservations;
 
     // Filter reservations based on current user's agency role
@@ -534,6 +553,7 @@ export default function ClientsPage() {
       filter((c) => c.agency_id === currentUser.agency_id).
       map((c) => c.id);
       currentReservations = currentReservations.filter((res) => agencyClientIds.includes(res.client_id));
+      console.log('After agency filter:', currentReservations.length);
     }
 
     // Enriche reservations with client, room, site, agency info
@@ -559,13 +579,18 @@ export default function ClientsPage() {
 
     // Apply text search filter on enriched data
     let filteredEnrichedReservations = enrichedReservations;
-    if (searchTerm) {
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      console.log('Filtering reservations by searchTerm:', searchLower);
+      
       filteredEnrichedReservations = filteredEnrichedReservations.filter((res) => {
-        const searchLower = searchTerm.toLowerCase();
         
         // Client info
         if (res.clientName?.toLowerCase().includes(searchLower)) return true;
-        if (res.clientNumber && String(res.clientNumber).toLowerCase().includes(searchLower)) return true;
+        if (res.clientNumber && String(res.clientNumber).toLowerCase().includes(searchLower)) {
+          console.log('✓ MATCH clientNumber in reservation:', res.clientName, res.clientNumber);
+          return true;
+        }
         if (res.contactName?.toLowerCase().includes(searchLower)) return true;
         if (res.contactEmail?.toLowerCase().includes(searchLower)) return true;
         if (res.contactPhone?.toLowerCase().includes(searchLower)) return true;
@@ -589,6 +614,7 @@ export default function ClientsPage() {
         
         return false;
       });
+      console.log('After search filter:', filteredEnrichedReservations.length);
     }
 
     // Apply date search filter
@@ -603,8 +629,10 @@ export default function ClientsPage() {
           return false;
         }
       });
+      console.log('After date filter:', filteredEnrichedReservations.length);
     }
 
+    console.log('🔍 FILTRE RESERVATIONS - FINAL RESULT:', filteredEnrichedReservations.length);
     return filteredEnrichedReservations;
   }, [reservations, clients, rooms, sites, agencies, currentUser, searchTerm, clientSearchDate]);
 
