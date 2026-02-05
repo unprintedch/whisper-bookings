@@ -538,14 +538,7 @@ export default function ClientsPage() {
     return currentFilteredClients;
   }, [clients, currentUser, searchTerm, selectedAgencyId, clientSearchDate, getClientReservations, agencies, rooms, sites]);
 
-  const getEnrichedFilteredReservations = React.useMemo(() => {
-    console.log('🔍 FILTRE RESERVATIONS - START', { 
-      totalReservations: reservations.length, 
-      searchTerm,
-      clientSearchDate,
-      selectedAgencyId
-    });
-    
+  const getEnrichedReservations = React.useMemo(() => {
     let currentReservations = reservations;
 
     // Filter reservations based on current user's agency role
@@ -554,7 +547,6 @@ export default function ClientsPage() {
       filter((c) => c.agency_id === currentUser.agency_id).
       map((c) => c.id);
       currentReservations = currentReservations.filter((res) => agencyClientIds.includes(res.client_id));
-      console.log('After agency filter:', currentReservations.length);
     }
 
     // Enriche reservations with client, room, site, agency info
@@ -574,77 +566,13 @@ export default function ClientsPage() {
         contactPhone: client?.contact_phone,
         roomName: room ? `${site?.name || 'Unknown Site'} – ${room.name}` : 'Unknown Room',
         siteName: site?.name || 'Unknown Site',
-        agencyName: agency?.name || ''
+        agencyName: agency?.name || '',
+        agencyId: client?.agency_id
       };
     });
 
-    // Apply text search filter on enriched data
-    let filteredEnrichedReservations = enrichedReservations;
-    if (searchTerm && searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase().trim();
-      console.log('Filtering reservations by searchTerm:', searchLower);
-      
-      filteredEnrichedReservations = filteredEnrichedReservations.filter((res) => {
-        
-        // Client info
-        if (res.clientName?.toLowerCase().includes(searchLower)) return true;
-        if (res.clientNumber && String(res.clientNumber).toLowerCase().includes(searchLower)) {
-          console.log('✓ MATCH clientNumber in reservation:', res.clientName, res.clientNumber);
-          return true;
-        }
-        if (res.contactName?.toLowerCase().includes(searchLower)) return true;
-        if (res.contactEmail?.toLowerCase().includes(searchLower)) return true;
-        if (res.contactPhone?.toLowerCase().includes(searchLower)) return true;
-        
-        // Room and site info
-        if (res.roomName?.toLowerCase().includes(searchLower)) return true;
-        if (res.siteName?.toLowerCase().includes(searchLower)) return true;
-        
-        // Agency info
-        if (res.agencyName?.toLowerCase().includes(searchLower)) return true;
-        
-        // Reservation specific fields
-        if (res.id?.toLowerCase().includes(searchLower)) return true;
-        if (res.status?.toLowerCase().includes(searchLower)) return true;
-        if (res.comment?.toLowerCase().includes(searchLower)) return true;
-        if (res.bed_configuration?.toLowerCase().includes(searchLower)) return true;
-        
-        // Room number
-        const room = rooms.find(r => r.id === res.room_id);
-        if (room?.number?.toLowerCase().includes(searchLower)) return true;
-        
-        return false;
-      });
-      console.log('After search filter:', filteredEnrichedReservations.length);
-    }
-
-    // Apply agency filter AFTER search filter (so search works across all agencies)
-    if (selectedAgencyId !== 'all') {
-      filteredEnrichedReservations = filteredEnrichedReservations.filter((res) => {
-        const client = clients.find(c => c.id === res.client_id);
-        return client?.agency_id === selectedAgencyId;
-      });
-      console.log('After selectedAgency filter:', filteredEnrichedReservations.length);
-    }
-
-    // Apply date search filter
-    if (clientSearchDate) {
-      filteredEnrichedReservations = filteredEnrichedReservations.filter((res) => {
-        try {
-          const checkinDate = new Date(res.date_checkin);
-          const checkoutDate = new Date(res.date_checkout);
-          const normalizedSearchDate = new Date(clientSearchDate.getFullYear(), clientSearchDate.getMonth(), clientSearchDate.getDate());
-          return normalizedSearchDate >= checkinDate && normalizedSearchDate < checkoutDate;
-        } catch (error) {
-          return false;
-        }
-      });
-      console.log('After date filter:', filteredEnrichedReservations.length);
-    }
-
-    console.log('🔍 FILTRE RESERVATIONS - FINAL RESULT:', filteredEnrichedReservations.length);
-    return filteredEnrichedReservations;
-  }, [reservations, clients, rooms, sites, agencies, currentUser, searchTerm, clientSearchDate, selectedAgencyId]);
+    return enrichedReservations;
+  }, [reservations, clients, rooms, sites, agencies, currentUser]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 px-6 py-6">
@@ -1007,11 +935,12 @@ export default function ClientsPage() {
             </CardHeader>
             <CardContent className="p-0">
               <ReservationsTable
-                reservations={getEnrichedFilteredReservations}
+                reservations={getEnrichedReservations}
                 isLoading={isLoading}
                 onEditReservation={handleEditReservation}
                 searchText={searchTerm}
                 searchDate={clientSearchDate}
+                selectedAgencyId={selectedAgencyId}
                 columnVisibility={columnVisibility}
                 onColumnVisibilityChange={handleColumnVisibilityChange} />
 

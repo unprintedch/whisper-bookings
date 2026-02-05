@@ -57,6 +57,7 @@ export default function ReservationsTable({
   onEditReservation,
   searchText,
   searchDate,
+  selectedAgencyId,
   columnVisibility: externalColumnVisibility, // Renamed to avoid collision with internal state
   onColumnVisibilityChange
 }) {
@@ -95,23 +96,34 @@ export default function ReservationsTable({
 
   const filteredAndSortedReservations = useMemo(() => {
     let filtered = reservations.filter((reservation) => {
-      // Apply global search from parent component
-      const matchesGlobalSearch = !searchText ||
-      reservation.clientName.toLowerCase().includes(searchText.toLowerCase()) ||
-      (reservation.clientNumber && String(reservation.clientNumber).toLowerCase().includes(searchText.toLowerCase())) ||
-      reservation.contactName && reservation.contactName.toLowerCase().includes(searchText.toLowerCase()) ||
-      reservation.contactEmail && reservation.contactEmail.toLowerCase().includes(searchText.toLowerCase()) ||
-      reservation.roomName && reservation.roomName.toLowerCase().includes(searchText.toLowerCase()) ||
-      reservation.siteName && reservation.siteName.toLowerCase().includes(searchText.toLowerCase()) ||
-      reservation.agencyName && reservation.agencyName.toLowerCase().includes(searchText.toLowerCase()) ||
-      reservation.comment && reservation.comment.toLowerCase().includes(searchText.toLowerCase()) ||
-      reservation.status && reservation.status.toLowerCase().includes(searchText.toLowerCase());
+      // 1. Apply text search filter
+      if (searchText && searchText.trim()) {
+        const searchLower = searchText.toLowerCase().trim();
+        const matchesSearch = 
+          (reservation.clientName && reservation.clientName.toLowerCase().includes(searchLower)) ||
+          (reservation.clientNumber && String(reservation.clientNumber).toLowerCase().includes(searchLower)) ||
+          (reservation.contactName && reservation.contactName.toLowerCase().includes(searchLower)) ||
+          (reservation.contactEmail && reservation.contactEmail.toLowerCase().includes(searchLower)) ||
+          (reservation.contactPhone && reservation.contactPhone.toLowerCase().includes(searchLower)) ||
+          (reservation.roomName && reservation.roomName.toLowerCase().includes(searchLower)) ||
+          (reservation.siteName && reservation.siteName.toLowerCase().includes(searchLower)) ||
+          (reservation.agencyName && reservation.agencyName.toLowerCase().includes(searchLower)) ||
+          (reservation.comment && reservation.comment.toLowerCase().includes(searchLower)) ||
+          (reservation.status && reservation.status.toLowerCase().includes(searchLower)) ||
+          (reservation.bed_configuration && reservation.bed_configuration.toLowerCase().includes(searchLower));
+        
+        if (!matchesSearch) return false;
+      }
 
-      if (!matchesGlobalSearch) return false;
+      // 2. Apply agency filter AFTER search (so search works across agencies)
+      if (selectedAgencyId && selectedAgencyId !== 'all') {
+        if (reservation.agencyId !== selectedAgencyId) {
+          return false;
+        }
+      }
 
-      // Apply global date filter from parent component
+      // 3. Apply date filter
       if (searchDate) {
-        // Safely handle date parsing
         if (!reservation.date_checkin || !reservation.date_checkout) {
           return false;
         }
@@ -120,7 +132,6 @@ export default function ReservationsTable({
           const checkin = new Date(reservation.date_checkin + 'T00:00:00');
           const checkout = new Date(reservation.date_checkout + 'T00:00:00');
 
-          // Check if dates are valid
           if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) {
             return false;
           }
@@ -172,7 +183,7 @@ export default function ReservationsTable({
     }
 
     return filtered;
-  }, [reservations, searchText, searchDate, sortConfig]);
+  }, [reservations, searchText, searchDate, selectedAgencyId, sortConfig]);
 
   const visibleColumns = columnsConfig.filter((c) => columnVisibility[c.id]);
 
