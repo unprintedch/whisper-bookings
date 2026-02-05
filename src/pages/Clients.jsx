@@ -453,14 +453,21 @@ export default function ClientsPage() {
   const filteredClients = React.useMemo(() => {
     let currentFilteredClients = clients;
 
+    console.log('=== FILTRE CLIENT START ===');
+    console.log('Total clients:', clients.length);
+    console.log('SearchTerm:', searchTerm);
+    console.log('SelectedAgencyId:', selectedAgencyId);
+
     // 1. Filter by agency if current user is an agency user
     if (currentUser?.custom_role === 'agency' && currentUser?.agency_id) {
       currentFilteredClients = currentFilteredClients.filter((client) => client.agency_id === currentUser.agency_id);
+      console.log('After user agency filter:', currentFilteredClients.length);
     }
 
     // 2. Filter by selected agency (only visible to non-agency users)
     if (selectedAgencyId !== 'all') {
       currentFilteredClients = currentFilteredClients.filter((client) => client.agency_id === selectedAgencyId);
+      console.log('After selected agency filter:', currentFilteredClients.length);
     }
 
     // 3. Search filter (by text)
@@ -468,12 +475,18 @@ export default function ClientsPage() {
       const searchLower = searchTerm.toLowerCase().trim();
       
       currentFilteredClients = currentFilteredClients.filter((client) => {
+        // Check client_number match
+        const clientNumberMatch = client.client_number && String(client.client_number).toLowerCase().includes(searchLower);
+        if (clientNumberMatch) {
+          console.log('✓ MATCH client_number:', client.name, client.client_number);
+          return true;
+        }
+        
         // Search in client fields
         if (client.name?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_name?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_email?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_phone?.toLowerCase().includes(searchLower)) return true;
-        if (client.client_number && String(client.client_number).toLowerCase().includes(searchLower)) return true;
         if (client.notes?.toLowerCase().includes(searchLower)) return true;
         
         // Search in agency name
@@ -498,6 +511,7 @@ export default function ClientsPage() {
           return false;
         });
       });
+      console.log('After search filter:', currentFilteredClients.length);
     }
 
     // 4. Date filter
@@ -518,6 +532,7 @@ export default function ClientsPage() {
       });
     }
 
+    console.log('=== FINAL FILTERED CLIENTS:', currentFilteredClients.length, '===');
     return currentFilteredClients;
   }, [clients, currentUser, searchTerm, selectedAgencyId, clientSearchDate, getClientReservations]);
 
