@@ -55,10 +55,7 @@ export default function ReservationsTable({
   reservations,
   isLoading,
   onEditReservation,
-  searchText,
-  searchDate,
-  selectedAgencyId,
-  columnVisibility: externalColumnVisibility, // Renamed to avoid collision with internal state
+  columnVisibility: externalColumnVisibility,
   onColumnVisibilityChange
 }) {
   const [columnVisibility, setColumnVisibility] = useState(
@@ -94,66 +91,12 @@ export default function ReservationsTable({
     }));
   };
 
-  const filteredAndSortedReservations = useMemo(() => {
-    let filtered = reservations.filter((reservation) => {
-      // 1. Apply text search filter
-      if (searchText && searchText.trim()) {
-        const searchLower = searchText.toLowerCase().trim();
-        const matchesSearch = 
-          (reservation.clientName && reservation.clientName.toLowerCase().includes(searchLower)) ||
-          (reservation.clientNumber && String(reservation.clientNumber).toLowerCase().includes(searchLower)) ||
-          (reservation.contactName && reservation.contactName.toLowerCase().includes(searchLower)) ||
-          (reservation.contactEmail && reservation.contactEmail.toLowerCase().includes(searchLower)) ||
-          (reservation.contactPhone && reservation.contactPhone.toLowerCase().includes(searchLower)) ||
-          (reservation.roomName && reservation.roomName.toLowerCase().includes(searchLower)) ||
-          (reservation.siteName && reservation.siteName.toLowerCase().includes(searchLower)) ||
-          (reservation.agencyName && reservation.agencyName.toLowerCase().includes(searchLower)) ||
-          (reservation.comment && reservation.comment.toLowerCase().includes(searchLower)) ||
-          (reservation.status && reservation.status.toLowerCase().includes(searchLower)) ||
-          (reservation.bed_configuration && reservation.bed_configuration.toLowerCase().includes(searchLower));
-        
-        if (!matchesSearch) return false;
-      }
-
-      // 2. Apply agency filter AFTER search (so search works across agencies)
-      if (selectedAgencyId && selectedAgencyId !== 'all') {
-        if (reservation.agencyId !== selectedAgencyId) {
-          return false;
-        }
-      }
-
-      // 3. Apply date filter
-      if (searchDate) {
-        if (!reservation.date_checkin || !reservation.date_checkout) {
-          return false;
-        }
-
-        try {
-          const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-          const checkout = new Date(reservation.date_checkout + 'T00:00:00');
-
-          if (isNaN(checkin.getTime()) || isNaN(checkout.getTime())) {
-            return false;
-          }
-
-          const searchDateNormalized = new Date(searchDate.getFullYear(), searchDate.getMonth(), searchDate.getDate());
-          const checkinNormalized = new Date(checkin.getFullYear(), checkin.getMonth(), checkin.getDate());
-          const checkoutNormalized = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-
-          const matchesDate = searchDateNormalized >= checkinNormalized && searchDateNormalized < checkoutNormalized;
-          if (!matchesDate) return false;
-        } catch (error) {
-          console.warn('Error parsing dates for reservation:', reservation.id, error);
-          return false;
-        }
-      }
-
-      return true;
-    });
+  const sortedReservations = useMemo(() => {
+    let sorted = [...reservations];
 
     // Sort
     if (sortConfig.key) {
-      filtered.sort((a, b) => {
+      sorted.sort((a, b) => {
         let aVal = a[sortConfig.key];
         let bVal = b[sortConfig.key];
 
@@ -182,8 +125,8 @@ export default function ReservationsTable({
       });
     }
 
-    return filtered;
-  }, [reservations, searchText, searchDate, selectedAgencyId, sortConfig]);
+    return sorted;
+  }, [reservations, sortConfig]);
 
   const visibleColumns = columnsConfig.filter((c) => columnVisibility[c.id]);
 
@@ -222,7 +165,7 @@ export default function ReservationsTable({
             <CalendarIcon className="w-5 h-5 text-blue-600" />
             All Reservations
             <Badge variant="secondary" className="ml-2">
-              {filteredAndSortedReservations.length} reservations
+              {sortedReservations.length} reservations
             </Badge>
           </CardTitle>
           
@@ -274,8 +217,8 @@ export default function ReservationsTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAndSortedReservations.length > 0 ?
-              filteredAndSortedReservations.map((reservation) => {
+              {sortedReservations.length > 0 ?
+              sortedReservations.map((reservation) => {
                 // Safely format dates for display
                 const formatDate = (dateStr) => {
                   try {
@@ -336,10 +279,7 @@ export default function ReservationsTable({
 
               <TableRow>
                   <TableCell colSpan={visibleColumns.length + 1} className="h-24 text-center">
-                    {searchText || searchDate ?
-                  'No reservations match your search criteria.' :
-                  'No reservations found.'
-                  }
+                    No reservations found.
                   </TableCell>
                 </TableRow>
               }
@@ -348,7 +288,7 @@ export default function ReservationsTable({
         </div>
         
         <div className="mt-4 text-sm text-slate-600">
-          Showing {filteredAndSortedReservations.length} of {reservations.length} reservations
+          Showing {sortedReservations.length} reservations
         </div>
       </CardContent>
     </Card>);

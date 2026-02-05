@@ -538,19 +538,17 @@ export default function ClientsPage() {
     return currentFilteredClients;
   }, [clients, currentUser, searchTerm, selectedAgencyId, clientSearchDate, getClientReservations, agencies, rooms, sites]);
 
-  const getEnrichedReservations = React.useMemo(() => {
-    let currentReservations = reservations;
+  const filteredEnrichedReservations = React.useMemo(() => {
+    let currentReservations = [...reservations];
 
     // Filter reservations based on current user's agency role
     if (currentUser?.custom_role === 'agency' && currentUser?.agency_id) {
-      const agencyClientIds = clients.
-      filter((c) => c.agency_id === currentUser.agency_id).
-      map((c) => c.id);
+      const agencyClientIds = clients.filter((c) => c.agency_id === currentUser.agency_id).map((c) => c.id);
       currentReservations = currentReservations.filter((res) => agencyClientIds.includes(res.client_id));
     }
 
-    // Enriche reservations with client, room, site, agency info
-    const enrichedReservations = currentReservations.map((reservation) => {
+    // Enrich reservations
+    let enriched = currentReservations.map((reservation) => {
       const client = clients.find((c) => c.id === reservation.client_id);
       const room = rooms.find((r) => r.id === reservation.room_id);
       const site = sites.find((s) => s.id === room?.site_id);
@@ -571,8 +569,45 @@ export default function ClientsPage() {
       };
     });
 
-    return enrichedReservations;
-  }, [reservations, clients, rooms, sites, agencies, currentUser]);
+    // Apply text search
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      enriched = enriched.filter((res) => 
+        (res.clientName && res.clientName.toLowerCase().includes(searchLower)) ||
+        (res.clientNumber && String(res.clientNumber).toLowerCase().includes(searchLower)) ||
+        (res.contactName && res.contactName.toLowerCase().includes(searchLower)) ||
+        (res.contactEmail && res.contactEmail.toLowerCase().includes(searchLower)) ||
+        (res.contactPhone && res.contactPhone.toLowerCase().includes(searchLower)) ||
+        (res.roomName && res.roomName.toLowerCase().includes(searchLower)) ||
+        (res.siteName && res.siteName.toLowerCase().includes(searchLower)) ||
+        (res.agencyName && res.agencyName.toLowerCase().includes(searchLower)) ||
+        (res.comment && res.comment.toLowerCase().includes(searchLower)) ||
+        (res.status && res.status.toLowerCase().includes(searchLower)) ||
+        (res.bed_configuration && res.bed_configuration.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Apply agency filter AFTER search
+    if (selectedAgencyId !== 'all') {
+      enriched = enriched.filter((res) => res.agencyId === selectedAgencyId);
+    }
+
+    // Apply date filter
+    if (clientSearchDate) {
+      enriched = enriched.filter((res) => {
+        try {
+          const checkin = new Date(res.date_checkin);
+          const checkout = new Date(res.date_checkout);
+          const searchDateNormalized = new Date(clientSearchDate.getFullYear(), clientSearchDate.getMonth(), clientSearchDate.getDate());
+          return searchDateNormalized >= checkin && searchDateNormalized < checkout;
+        } catch (error) {
+          return false;
+        }
+      });
+    }
+
+    return enriched;
+  }, [reservations, clients, rooms, sites, agencies, currentUser, searchTerm, selectedAgencyId, clientSearchDate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 px-6 py-6">
@@ -935,12 +970,9 @@ export default function ClientsPage() {
             </CardHeader>
             <CardContent className="p-0">
               <ReservationsTable
-                reservations={getEnrichedReservations}
+                reservations={filteredEnrichedReservations}
                 isLoading={isLoading}
                 onEditReservation={handleEditReservation}
-                searchText={searchTerm}
-                searchDate={clientSearchDate}
-                selectedAgencyId={selectedAgencyId}
                 columnVisibility={columnVisibility}
                 onColumnVisibilityChange={handleColumnVisibilityChange} />
 
