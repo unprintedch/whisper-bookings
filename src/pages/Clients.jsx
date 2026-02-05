@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Client, Agency, Reservation, Room, Site, User, BedConfiguration } from "@/entities/all";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -470,7 +469,9 @@ export default function ClientsPage() {
         client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.contact_name && client.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.contact_email && client.contact_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.client_number && client.client_number.toLowerCase().includes(searchTerm.toLowerCase())
+        client.contact_phone && client.contact_phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.client_number && client.client_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.notes && client.notes.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -531,6 +532,7 @@ export default function ClientsPage() {
     let filteredEnrichedReservations = enrichedReservations;
     if (searchTerm) {
       filteredEnrichedReservations = filteredEnrichedReservations.filter((res) =>
+        res.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         res.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         res.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         res.siteName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -538,7 +540,10 @@ export default function ClientsPage() {
         res.clientNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         res.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         res.contactEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.contactPhone?.toLowerCase().includes(searchTerm.toLowerCase())
+        res.contactPhone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        res.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        res.bed_configuration?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        res.comment?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -571,7 +576,7 @@ export default function ClientsPage() {
                 {/* Search and Filters */}
                 <div className="flex flex-1 items-center gap-3 min-w-[300px]">
                   <Input
-                    placeholder="Search by name, contact, email, client number..."
+                    placeholder="Search clients, contacts, phone, notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-9" />
@@ -849,7 +854,7 @@ export default function ClientsPage() {
                 {/* Search and Filters */}
                 <div className="flex flex-1 items-center gap-3 min-w-[300px]">
                   <Input
-                    placeholder="Search by client, room, site..."
+                    placeholder="Search reservations, clients, rooms, status..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-9" />
