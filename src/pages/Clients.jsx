@@ -465,14 +465,39 @@ export default function ClientsPage() {
 
     // 3. Search filter (by text)
     if (searchTerm) {
-      currentFilteredClients = currentFilteredClients.filter((client) =>
-        client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.contact_name && client.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.contact_email && client.contact_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.contact_phone && client.contact_phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.client_number && client.client_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.notes && client.notes.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      currentFilteredClients = currentFilteredClients.filter((client) => {
+        const searchLower = searchTerm.toLowerCase();
+        
+        // Search in client fields
+        if (client.name?.toLowerCase().includes(searchLower)) return true;
+        if (client.contact_name?.toLowerCase().includes(searchLower)) return true;
+        if (client.contact_email?.toLowerCase().includes(searchLower)) return true;
+        if (client.contact_phone?.toLowerCase().includes(searchLower)) return true;
+        if (client.client_number?.toLowerCase().includes(searchLower)) return true;
+        if (client.notes?.toLowerCase().includes(searchLower)) return true;
+        
+        // Search in agency name
+        const agency = agencies.find(a => a.id === client.agency_id);
+        if (agency?.name?.toLowerCase().includes(searchLower)) return true;
+        
+        // Search in client's reservations
+        const clientReservations = getClientReservations(client.id);
+        return clientReservations.some((res) => {
+          if (res.id?.toLowerCase().includes(searchLower)) return true;
+          if (res.comment?.toLowerCase().includes(searchLower)) return true;
+          if (res.status?.toLowerCase().includes(searchLower)) return true;
+          if (res.bed_configuration?.toLowerCase().includes(searchLower)) return true;
+          
+          const room = rooms.find(r => r.id === res.room_id);
+          if (room?.name?.toLowerCase().includes(searchLower)) return true;
+          if (room?.number?.toLowerCase().includes(searchLower)) return true;
+          
+          const site = sites.find(s => s.id === room?.site_id);
+          if (site?.name?.toLowerCase().includes(searchLower)) return true;
+          
+          return false;
+        });
+      });
     }
 
     // 4. Date filter
@@ -531,20 +556,35 @@ export default function ClientsPage() {
     // Apply text search filter on enriched data
     let filteredEnrichedReservations = enrichedReservations;
     if (searchTerm) {
-      filteredEnrichedReservations = filteredEnrichedReservations.filter((res) =>
-        res.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.siteName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.agencyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.clientNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.contactEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.contactPhone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.bed_configuration?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.comment?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filteredEnrichedReservations = filteredEnrichedReservations.filter((res) => {
+        const searchLower = searchTerm.toLowerCase();
+        
+        // Client info
+        if (res.clientName?.toLowerCase().includes(searchLower)) return true;
+        if (res.clientNumber?.toLowerCase().includes(searchLower)) return true;
+        if (res.contactName?.toLowerCase().includes(searchLower)) return true;
+        if (res.contactEmail?.toLowerCase().includes(searchLower)) return true;
+        if (res.contactPhone?.toLowerCase().includes(searchLower)) return true;
+        
+        // Room and site info
+        if (res.roomName?.toLowerCase().includes(searchLower)) return true;
+        if (res.siteName?.toLowerCase().includes(searchLower)) return true;
+        
+        // Agency info
+        if (res.agencyName?.toLowerCase().includes(searchLower)) return true;
+        
+        // Reservation specific fields
+        if (res.id?.toLowerCase().includes(searchLower)) return true;
+        if (res.status?.toLowerCase().includes(searchLower)) return true;
+        if (res.comment?.toLowerCase().includes(searchLower)) return true;
+        if (res.bed_configuration?.toLowerCase().includes(searchLower)) return true;
+        
+        // Room number
+        const room = rooms.find(r => r.id === res.room_id);
+        if (room?.number?.toLowerCase().includes(searchLower)) return true;
+        
+        return false;
+      });
     }
 
     // Apply date search filter
@@ -576,7 +616,7 @@ export default function ClientsPage() {
                 {/* Search and Filters */}
                 <div className="flex flex-1 items-center gap-3 min-w-[300px]">
                   <Input
-                    placeholder="Search clients, contacts, phone, notes..."
+                    placeholder="Search by name, contact, email, client number..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-9" />
@@ -854,7 +894,7 @@ export default function ClientsPage() {
                 {/* Search and Filters */}
                 <div className="flex flex-1 items-center gap-3 min-w-[300px]">
                   <Input
-                    placeholder="Search reservations, clients, rooms, status..."
+                    placeholder="Search by client, room, site..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-9" />
