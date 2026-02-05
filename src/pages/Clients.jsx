@@ -473,7 +473,7 @@ export default function ClientsPage() {
         if (client.contact_name?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_email?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_phone?.toLowerCase().includes(searchLower)) return true;
-        if (client.client_number?.toString().toLowerCase().includes(searchLower)) return true;
+        if (client.client_number && String(client.client_number).toLowerCase().includes(searchLower)) return true;
         if (client.notes?.toLowerCase().includes(searchLower)) return true;
         
         // Search in agency name
@@ -561,7 +561,7 @@ export default function ClientsPage() {
         
         // Client info
         if (res.clientName?.toLowerCase().includes(searchLower)) return true;
-        if (res.clientNumber?.toString().toLowerCase().includes(searchLower)) return true;
+        if (res.clientNumber && String(res.clientNumber).toLowerCase().includes(searchLower)) return true;
         if (res.contactName?.toLowerCase().includes(searchLower)) return true;
         if (res.contactEmail?.toLowerCase().includes(searchLower)) return true;
         if (res.contactPhone?.toLowerCase().includes(searchLower)) return true;
