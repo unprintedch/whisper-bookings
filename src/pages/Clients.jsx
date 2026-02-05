@@ -473,7 +473,7 @@ export default function ClientsPage() {
         if (client.contact_name?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_email?.toLowerCase().includes(searchLower)) return true;
         if (client.contact_phone?.toLowerCase().includes(searchLower)) return true;
-        if (client.client_number?.toLowerCase().includes(searchLower)) return true;
+        if (client.client_number?.toString().toLowerCase().includes(searchLower)) return true;
         if (client.notes?.toLowerCase().includes(searchLower)) return true;
         
         // Search in agency name
@@ -561,7 +561,7 @@ export default function ClientsPage() {
         
         // Client info
         if (res.clientName?.toLowerCase().includes(searchLower)) return true;
-        if (res.clientNumber?.toLowerCase().includes(searchLower)) return true;
+        if (res.clientNumber?.toString().toLowerCase().includes(searchLower)) return true;
         if (res.contactName?.toLowerCase().includes(searchLower)) return true;
         if (res.contactEmail?.toLowerCase().includes(searchLower)) return true;
         if (res.contactPhone?.toLowerCase().includes(searchLower)) return true;
@@ -616,7 +616,7 @@ export default function ClientsPage() {
                 {/* Search and Filters */}
                 <div className="flex flex-1 items-center gap-3 min-w-[300px]">
                   <Input
-                    placeholder="Search by name, contact, email, client number..."
+                    placeholder="Search clients, contacts, phone, notes, client#..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-9" />
@@ -894,7 +894,7 @@ export default function ClientsPage() {
                 {/* Search and Filters */}
                 <div className="flex flex-1 items-center gap-3 min-w-[300px]">
                   <Input
-                    placeholder="Search by client, room, site..."
+                    placeholder="Search reservations, clients, rooms, status, client#..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full h-9" />
