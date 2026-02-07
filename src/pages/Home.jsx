@@ -17,20 +17,19 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const [submittedBookingDetails, setSubmittedBookingDetails] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkAuthAndRedirect();
+    checkAuth();
   }, []);
 
-  const checkAuthAndRedirect = async () => {
+  const checkAuth = async () => {
     try {
       const isAuth = await base44.auth.isAuthenticated();
-      if (isAuth) {
-        navigate(createPageUrl('Dashboard'));
-        return;
-      }
+      setIsAuthenticated(isAuth);
     } catch (error) {
       console.error('Error checking auth:', error);
+      setIsAuthenticated(false);
     }
     loadData();
   };
