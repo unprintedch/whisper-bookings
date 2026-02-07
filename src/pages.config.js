@@ -53,15 +53,15 @@ import Clients from './pages/Clients';
 import Dashboard from './pages/Dashboard';
 import DataHealth from './pages/DataHealth';
 import Groups from './pages/Groups';
+import Home from './pages/Home';
 import Profile from './pages/Profile';
+import PublicBooking from './pages/PublicBooking';
 import Reports from './pages/Reports';
 import Rooms from './pages/Rooms';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
 import dashboard from './pages/dashboard';
 import index from './pages/index';
-import PublicBooking from './pages/PublicBooking';
-import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -72,19 +72,19 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DataHealth": DataHealth,
     "Groups": Groups,
+    "Home": Home,
     "Profile": Profile,
+    "PublicBooking": PublicBooking,
     "Reports": Reports,
     "Rooms": Rooms,
     "Settings": Settings,
     "Users": Users,
     "dashboard": dashboard,
     "index": index,
-    "PublicBooking": PublicBooking,
-    "Home": Home,
 }
 
 export const pagesConfig = {
-    mainPage: "Dashboard",
+    mainPage: "Profile",
     Pages: PAGES,
     Layout: __Layout,
 };
