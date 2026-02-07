@@ -127,6 +127,24 @@ export default function HomePage() {
     });
   };
 
+  const handleCalendarCellClick = (room, date) => {
+    setSelectedRoomForBooking(room);
+    setSelectedDateForBooking(date);
+    setShowCalendarBookingForm(true);
+  };
+
+  const handleCalendarBookingSubmit = async (bookingData) => {
+    try {
+      await Reservation.create(bookingData);
+      setShowCalendarBookingForm(false);
+      setSelectedRoomForBooking(null);
+      setSelectedDateForBooking(null);
+      loadData();
+    } catch (error) {
+      console.error('Error creating booking:', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center">
