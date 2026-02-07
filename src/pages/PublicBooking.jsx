@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Room, Site, BedConfiguration, Client, Reservation } from "@/entities/all";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, CheckCircle } from "lucide-react";
-import PublicBookingForm from "../components/bookings/PublicBookingForm";
+import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
 
 export default function PublicBookingPage() {
   const [rooms, setRooms] = useState([]);
