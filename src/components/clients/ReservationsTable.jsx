@@ -1,6 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -18,19 +16,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator } from
 "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem
-} from
-"@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ListFilter, ChevronUp, ChevronDown, Edit, Calendar as CalendarIcon, Download, X } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { ListFilter, ChevronUp, ChevronDown, Edit, Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { Input } from "@/components/ui/input";
 
 const columnsConfig = [
 { id: 'clientName', label: 'Client', defaultVisible: true, sortable: true },
@@ -69,20 +57,12 @@ export default function ReservationsTable({
   isLoading,
   onEditReservation,
   columnVisibility: externalColumnVisibility,
-  onColumnVisibilityChange,
-  agencies
+  onColumnVisibilityChange
 }) {
   const [columnVisibility, setColumnVisibility] = useState(
     columnsConfig.reduce((acc, col) => ({ ...acc, [col.id]: col.defaultVisible }), {})
   );
   const [sortConfig, setSortConfig] = useState({ key: 'date_checkin', direction: 'asc' });
-  
-  // Local filters
-  const [filterAgency, setFilterAgency] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterDateStart, setFilterDateStart] = useState(null);
-  const [filterDateEnd, setFilterDateEnd] = useState(null);
-  const [searchText, setSearchText] = useState('');
 
   // Load external column visibility when it becomes available
   useEffect(() => {
@@ -113,60 +93,7 @@ export default function ReservationsTable({
   };
 
   const sortedReservations = useMemo(() => {
-    let filtered = [...reservations];
-    
-    // Apply text search
-    if (searchText && searchText.trim()) {
-      const searchLower = searchText.toLowerCase().trim();
-      filtered = filtered.filter(r => 
-        (r.clientName && r.clientName.toLowerCase().includes(searchLower)) ||
-        (r.clientNumber && String(r.clientNumber).toLowerCase().includes(searchLower)) ||
-        (r.contactName && r.contactName.toLowerCase().includes(searchLower)) ||
-        (r.contactEmail && r.contactEmail.toLowerCase().includes(searchLower)) ||
-        (r.contactPhone && r.contactPhone.toLowerCase().includes(searchLower)) ||
-        (r.roomName && r.roomName.toLowerCase().includes(searchLower)) ||
-        (r.siteName && r.siteName.toLowerCase().includes(searchLower)) ||
-        (r.agencyName && r.agencyName.toLowerCase().includes(searchLower)) ||
-        (r.comment && r.comment.toLowerCase().includes(searchLower)) ||
-        (r.status && r.status.toLowerCase().includes(searchLower)) ||
-        (r.bed_configuration && r.bed_configuration.toLowerCase().includes(searchLower))
-      );
-    }
-    
-    // Apply agency filter
-    if (filterAgency !== 'all') {
-      filtered = filtered.filter(r => r.agencyId === filterAgency);
-    }
-    
-    // Apply status filter
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(r => r.status === filterStatus);
-    }
-    
-    // Apply date range filter
-    if (filterDateStart) {
-      filtered = filtered.filter(r => {
-        try {
-          const checkin = new Date(r.date_checkin);
-          return checkin >= filterDateStart;
-        } catch {
-          return false;
-        }
-      });
-    }
-    
-    if (filterDateEnd) {
-      filtered = filtered.filter(r => {
-        try {
-          const checkout = new Date(r.date_checkout);
-          return checkout <= filterDateEnd;
-        } catch {
-          return false;
-        }
-      });
-    }
-    
-    let sorted = filtered;
+    let sorted = [...reservations];
 
     // Sort
     if (sortConfig.key) {
@@ -200,7 +127,7 @@ export default function ReservationsTable({
     }
 
     return sorted;
-  }, [reservations, sortConfig, filterAgency, filterStatus, filterDateStart, filterDateEnd, searchText]);
+  }, [reservations, sortConfig]);
 
   const visibleColumns = columnsConfig.filter((c) => columnVisibility[c.id]);
   
@@ -318,107 +245,7 @@ export default function ReservationsTable({
             </div>
           </div>
           
-          {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3">
-            <Input
-              placeholder="Search reservations, clients, rooms..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-full max-w-md h-9"
-            />
-            
-            <Select value={filterAgency} onValueChange={setFilterAgency}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="All Agencies" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Agencies</SelectItem>
-                {agencies?.map(agency => (
-                  <SelectItem key={agency.id} value={agency.id}>{agency.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="OPTION">OPTION</SelectItem>
-                <SelectItem value="RESERVE">RESERVE</SelectItem>
-                <SelectItem value="CONFIRME">CONFIRME</SelectItem>
-                <SelectItem value="PAYE">PAYE</SelectItem>
-                <SelectItem value="ANNULE">ANNULE</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[180px] justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filterDateStart ? format(filterDateStart, 'dd/MM/yyyy') : 'Date from'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={filterDateStart}
-                  onSelect={setFilterDateStart}
-                  initialFocus
-                />
-                {filterDateStart && (
-                  <div className="p-2 border-t">
-                    <Button variant="ghost" size="sm" onClick={() => setFilterDateStart(null)} className="w-full">
-                      Clear
-                    </Button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[180px] justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filterDateEnd ? format(filterDateEnd, 'dd/MM/yyyy') : 'Date to'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={filterDateEnd}
-                  onSelect={setFilterDateEnd}
-                  initialFocus
-                />
-                {filterDateEnd && (
-                  <div className="p-2 border-t">
-                    <Button variant="ghost" size="sm" onClick={() => setFilterDateEnd(null)} className="w-full">
-                      Clear
-                    </Button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
-            
-            {(searchText || filterAgency !== 'all' || filterStatus !== 'all' || filterDateStart || filterDateEnd) && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => {
-                  setSearchText('');
-                  setFilterAgency('all');
-                  setFilterStatus('all');
-                  setFilterDateStart(null);
-                  setFilterDateEnd(null);
-                }}
-                className="text-slate-600 hover:text-slate-900"
-              >
-                <X className="mr-1 h-4 w-4" />
-                Clear filters
-              </Button>
-            )}
-          </div>
+
         </div>
       </CardHeader>
       <CardContent className="p-6">

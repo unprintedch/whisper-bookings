@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { createPageUrl } from "@/utils";
+import { X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -54,10 +55,12 @@ export default function ClientsPage() {
 
   // State for controls (previously in Layout.js)
   const [searchTerm, setSearchTerm] = useState(''); // Renamed from clientSearchText
-  const [clientSearchDate, setClientSearchDate] = useState(null);
   const [clientViewMode, setClientViewMode] = useState('reservations'); // 'clients' or 'reservations'
   const [columnVisibility, setColumnVisibility] = useState(null); // Will be loaded from user preferences
-  const [selectedAgencyId, setSelectedAgencyId] = useState('all'); // Added
+  const [selectedAgencyId, setSelectedAgencyId] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [filterDateStart, setFilterDateStart] = useState(null);
+  const [filterDateEnd, setFilterDateEnd] = useState(null);
 
   // Dialog states
   const [showClientForm, setShowClientForm] = useState(false);
@@ -451,36 +454,25 @@ export default function ClientsPage() {
   };
 
   const filteredClients = React.useMemo(() => {
-    console.log('🔍 FILTRE CLIENTS - START', { 
-      totalClients: clients.length, 
-      searchTerm, 
-      selectedAgencyId,
-      clientSearchDate
-    });
-    
     let currentFilteredClients = [...clients];
 
     // 1. Filter by agency if current user is an agency user
     if (currentUser?.custom_role === 'agency' && currentUser?.agency_id) {
       currentFilteredClients = currentFilteredClients.filter((client) => client.agency_id === currentUser.agency_id);
-      console.log('After agency user filter:', currentFilteredClients.length);
     }
 
-    // 2. Filter by selected agency (only visible to non-agency users)
+    // 2. Filter by selected agency
     if (selectedAgencyId !== 'all') {
       currentFilteredClients = currentFilteredClients.filter((client) => client.agency_id === selectedAgencyId);
-      console.log('After selected agency filter:', currentFilteredClients.length);
     }
 
     // 3. Search filter (by text)
     if (searchTerm && searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase().trim();
-      console.log('Filtering by searchTerm:', searchLower);
       
       currentFilteredClients = currentFilteredClients.filter((client) => {
         // Search in client_number
         if (client.client_number && String(client.client_number).toLowerCase().includes(searchLower)) {
-          console.log('✓ MATCH client_number:', client.name, client.client_number);
           return true;
         }
         
@@ -513,30 +505,47 @@ export default function ClientsPage() {
           return false;
         });
       });
-      console.log('After search filter:', currentFilteredClients.length);
     }
 
-    // 4. Date filter
-    if (clientSearchDate) {
+    // 4. Filter by status
+    if (selectedStatus !== 'all') {
       currentFilteredClients = currentFilteredClients.filter((client) => {
         const clientReservations = getClientReservations(client.id);
-        const hasReservationOnDate = clientReservations.some((res) => {
-          try {
-            const checkinDate = new Date(res.date_checkin);
-            const checkoutDate = new Date(res.date_checkout);
-            const normalizedSearchDate = new Date(clientSearchDate.getFullYear(), clientSearchDate.getMonth(), clientSearchDate.getDate());
-            return normalizedSearchDate >= checkinDate && normalizedSearchDate < checkoutDate;
-          } catch (error) {
-            return false;
-          }
-        });
-        return hasReservationOnDate;
+        return clientReservations.some((res) => res.status === selectedStatus);
       });
     }
 
-    console.log('🔍 FILTRE CLIENTS - FINAL RESULT:', currentFilteredClients.length);
+    // 5. Date range filter
+    if (filterDateStart) {
+      currentFilteredClients = currentFilteredClients.filter((client) => {
+        const clientReservations = getClientReservations(client.id);
+        return clientReservations.some((res) => {
+          try {
+            const checkin = new Date(res.date_checkin);
+            return checkin >= filterDateStart;
+          } catch {
+            return false;
+          }
+        });
+      });
+    }
+
+    if (filterDateEnd) {
+      currentFilteredClients = currentFilteredClients.filter((client) => {
+        const clientReservations = getClientReservations(client.id);
+        return clientReservations.some((res) => {
+          try {
+            const checkout = new Date(res.date_checkout);
+            return checkout <= filterDateEnd;
+          } catch {
+            return false;
+          }
+        });
+      });
+    }
+
     return currentFilteredClients;
-  }, [clients, currentUser, searchTerm, selectedAgencyId, clientSearchDate, getClientReservations, agencies, rooms, sites]);
+  }, [clients, currentUser, searchTerm, selectedAgencyId, selectedStatus, filterDateStart, filterDateEnd, getClientReservations, agencies, rooms, sites]);
 
   const filteredEnrichedReservations = React.useMemo(() => {
     let currentReservations = [...reservations];
@@ -587,27 +596,41 @@ export default function ClientsPage() {
       );
     }
 
-    // Apply agency filter AFTER search
+    // Apply agency filter
     if (selectedAgencyId !== 'all') {
       enriched = enriched.filter((res) => res.agencyId === selectedAgencyId);
     }
 
-    // Apply date filter
-    if (clientSearchDate) {
+    // Apply status filter
+    if (selectedStatus !== 'all') {
+      enriched = enriched.filter((res) => res.status === selectedStatus);
+    }
+
+    // Apply date range filter
+    if (filterDateStart) {
       enriched = enriched.filter((res) => {
         try {
           const checkin = new Date(res.date_checkin);
+          return checkin >= filterDateStart;
+        } catch {
+          return false;
+        }
+      });
+    }
+
+    if (filterDateEnd) {
+      enriched = enriched.filter((res) => {
+        try {
           const checkout = new Date(res.date_checkout);
-          const searchDateNormalized = new Date(clientSearchDate.getFullYear(), clientSearchDate.getMonth(), clientSearchDate.getDate());
-          return searchDateNormalized >= checkin && searchDateNormalized < checkout;
-        } catch (error) {
+          return checkout <= filterDateEnd;
+        } catch {
           return false;
         }
       });
     }
 
     return enriched;
-  }, [reservations, clients, rooms, sites, agencies, currentUser, searchTerm, selectedAgencyId, clientSearchDate]);
+  }, [reservations, clients, rooms, sites, agencies, currentUser, searchTerm, selectedAgencyId, selectedStatus, filterDateStart, filterDateEnd]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 px-6 py-6">
@@ -850,9 +873,9 @@ export default function ClientsPage() {
           // Reservations Table View (new)
           <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
             <CardHeader className="border-b border-slate-100 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                {/* View Toggles and Actions */}
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  {/* View Toggles */}
                   <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-lg">
                     <Button
                       size="sm"
@@ -871,11 +894,116 @@ export default function ClientsPage() {
                       By Client
                     </Button>
                   </div>
+                  
+                  <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Client
+                  </Button>
                 </div>
-                <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Client
-                </Button>
+                
+                {/* Filters Row */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    placeholder="Search clients, reservations, rooms..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full max-w-md h-9"
+                  />
+                  
+                  {currentUser?.custom_role !== 'agency' && (
+                    <Select value={selectedAgencyId} onValueChange={setSelectedAgencyId}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="All Agencies" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Agencies</SelectItem>
+                        {agencies?.map(agency => (
+                          <SelectItem key={agency.id} value={agency.id}>{agency.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="OPTION">OPTION</SelectItem>
+                      <SelectItem value="RESERVE">RESERVE</SelectItem>
+                      <SelectItem value="CONFIRME">CONFIRME</SelectItem>
+                      <SelectItem value="PAYE">PAYE</SelectItem>
+                      <SelectItem value="ANNULE">ANNULE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-[180px] justify-start">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filterDateStart ? format(filterDateStart, 'dd/MM/yyyy') : 'Date from'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterDateStart}
+                        onSelect={setFilterDateStart}
+                        initialFocus
+                      />
+                      {filterDateStart && (
+                        <div className="p-2 border-t">
+                          <Button variant="ghost" size="sm" onClick={() => setFilterDateStart(null)} className="w-full">
+                            Clear
+                          </Button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-[180px] justify-start">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filterDateEnd ? format(filterDateEnd, 'dd/MM/yyyy') : 'Date to'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterDateEnd}
+                        onSelect={setFilterDateEnd}
+                        initialFocus
+                      />
+                      {filterDateEnd && (
+                        <div className="p-2 border-t">
+                          <Button variant="ghost" size="sm" onClick={() => setFilterDateEnd(null)} className="w-full">
+                            Clear
+                          </Button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  
+                  {(searchTerm || selectedAgencyId !== 'all' || selectedStatus !== 'all' || filterDateStart || filterDateEnd) && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedAgencyId('all');
+                        setSelectedStatus('all');
+                        setFilterDateStart(null);
+                        setFilterDateEnd(null);
+                      }}
+                      className="text-slate-600 hover:text-slate-900"
+                    >
+                      <X className="mr-1 h-4 w-4" />
+                      Clear filters
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -884,8 +1012,7 @@ export default function ClientsPage() {
                 isLoading={isLoading}
                 onEditReservation={handleEditReservation}
                 columnVisibility={columnVisibility}
-                onColumnVisibilityChange={handleColumnVisibilityChange}
-                agencies={agencies} />
+                onColumnVisibilityChange={handleColumnVisibilityChange} />
 
             </CardContent>
           </Card>
