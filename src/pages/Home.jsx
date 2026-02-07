@@ -1,67 +1,181 @@
-import React from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState, useEffect } from "react";
+import { Room, Site, BedConfiguration, Client, Reservation } from "@/entities/all";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Building2, Users, BarChart3 } from "lucide-react";
+import { CheckCircle, LogIn } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
 
 export default function HomePage() {
-  const handleLogin = () => {
-    base44.auth.redirectToLogin();
+  const [rooms, setRooms] = useState([]);
+  const [sites, setSites] = useState([]);
+  const [bedConfigurations, setBedConfigurations] = useState([]);
+  const [reservations, setReservations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [bookingSubmitted, setBookingSubmitted] = useState(false);
+  const [submittedBookingDetails, setSubmittedBookingDetails] = useState(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [roomsData, sitesData, bedConfigsData, reservationsData] = await Promise.all([
+        Room.list(),
+        Site.list(),
+        BedConfiguration.list('sort_order'),
+        Reservation.list()
+      ]);
+      setRooms(roomsData);
+      setSites(sitesData);
+      setBedConfigurations(bedConfigsData);
+      setReservations(reservationsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+    setIsLoading(false);
   };
 
+  const handleBookingSubmit = async (bookingData) => {
+    try {
+      const existingClients = await Client.filter({ contact_email: bookingData.contact_email });
+      
+      let clientId;
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else {
+        const newClient = await Client.create({
+          name: bookingData.contact_name || 'Guest',
+          contact_name: bookingData.contact_name,
+          contact_email: bookingData.contact_email,
+          contact_phone: bookingData.contact_phone,
+          notes: bookingData.notes || '',
+          color_hex: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
+        });
+        clientId = newClient.id;
+      }
+
+      await Reservation.create({
+        client_id: clientId,
+        room_id: bookingData.room_id,
+        bed_configuration: bookingData.bed_configuration,
+        date_checkin: bookingData.date_checkin,
+        date_checkout: bookingData.date_checkout,
+        status: 'OPTION',
+        adults_count: bookingData.adults_count || 0,
+        children_count: bookingData.children_count || 0,
+        infants_count: bookingData.infants_count || 0,
+        comment: bookingData.comment || ''
+      });
+
+      const room = rooms.find(r => r.id === bookingData.room_id);
+      const site = sites.find(s => s.id === room?.site_id);
+
+      setSubmittedBookingDetails({
+        roomName: room?.name,
+        siteName: site?.name,
+        checkin: bookingData.date_checkin,
+        checkout: bookingData.date_checkout
+      });
+
+      setBookingSubmitted(true);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      alert('An error occurred while creating your booking. Please try again.');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading availability...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingSubmitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center p-6">
+        <Card className="max-w-2xl w-full">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-slate-800 mb-4">
+              Booking Request Received!
+            </h1>
+            <p className="text-lg text-slate-600 mb-6">
+              Thank you for your booking request. Your reservation is currently on hold (OPTION status) and awaiting confirmation.
+            </p>
+            {submittedBookingDetails && (
+              <div className="bg-slate-50 rounded-lg p-6 mb-6 text-left">
+                <h2 className="font-semibold text-slate-800 mb-3">Booking Details:</h2>
+                <div className="space-y-2 text-slate-700">
+                  <p><strong>Site:</strong> {submittedBookingDetails.siteName}</p>
+                  <p><strong>Room:</strong> {submittedBookingDetails.roomName}</p>
+                  <p><strong>Check-in:</strong> {submittedBookingDetails.checkin}</p>
+                  <p><strong>Check-out:</strong> {submittedBookingDetails.checkout}</p>
+                </div>
+              </div>
+            )}
+            <p className="text-slate-600 mb-8">
+              We will contact you shortly to confirm your reservation and provide further details.
+            </p>
+            <button
+              onClick={() => {
+                setBookingSubmitted(false);
+                setSubmittedBookingDetails(null);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+            >
+              Make Another Booking
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center px-4">
-      <div className="max-w-4xl mx-auto text-center">
-        {/* Logo */}
-        <img 
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" 
-          alt="Whisper B. Logo" 
-          className="w-24 h-24 mx-auto mb-8" 
-        />
-
-        {/* Title */}
-        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-          Whisper B.
-        </h1>
-        
-        <p className="text-xl md:text-2xl text-slate-300 mb-12">
-          Système de gestion de réservations pour lodges de safari
-        </p>
-
-        {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <Calendar className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-            <h3 className="text-white font-semibold mb-2">Calendrier</h3>
-            <p className="text-slate-300 text-sm">Vue d'ensemble des réservations</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4 relative">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" 
+              alt="Whisper B. Logo" 
+              className="w-12 h-12" 
+            />
+            <h1 className="text-4xl font-bold text-slate-800">Whisper B.</h1>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-900"
+              onClick={() => base44.auth.redirectToLogin()}
+            >
+              <LogIn className="w-4 h-4 mr-1" />
+              Admin
+            </Button>
           </div>
-          
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <Building2 className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-            <h3 className="text-white font-semibold mb-2">Chambres</h3>
-            <p className="text-slate-300 text-sm">Gestion de l'inventaire</p>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <Users className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-            <h3 className="text-white font-semibold mb-2">Clients</h3>
-            <p className="text-slate-300 text-sm">Base de données clients</p>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <BarChart3 className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-            <h3 className="text-white font-semibold mb-2">Rapports</h3>
-            <p className="text-slate-300 text-sm">Statistiques et exports</p>
-          </div>
+          <p className="text-xl text-slate-600">Book Your Safari Lodge Stay</p>
         </div>
 
-        {/* CTA */}
-        <Button 
-          onClick={handleLogin}
-          size="lg"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-6 text-lg font-semibold rounded-xl shadow-2xl"
-        >
-          Connexion
-        </Button>
+        <Card className="max-w-4xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <PublicBookingForm
+              rooms={rooms}
+              sites={sites}
+              bedConfigurations={bedConfigurations}
+              reservations={reservations}
+              onSubmit={handleBookingSubmit}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
