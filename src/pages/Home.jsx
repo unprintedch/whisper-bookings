@@ -8,7 +8,7 @@ import { CheckCircle, LogIn, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
-import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
+import AirbnbStyleBooking from "../components/bookings/AirbnbStyleBooking.jsx";
 import GanttChart from "../components/dashboard/GanttChart";
 import BookingForm from "../components/bookings/BookingForm";
 
@@ -234,17 +234,15 @@ export default function HomePage() {
           <p className="text-xl text-slate-600">Book Your Safari Lodge Stay</p>
         </div>
 
-        <Card className="max-w-4xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <PublicBookingForm
-              rooms={rooms}
-              sites={sites}
-              bedConfigurations={bedConfigurations}
-              reservations={reservations}
-              onSubmit={handleBookingSubmit}
-            />
-          </CardContent>
-        </Card>
+        <div className="max-w-6xl mx-auto">
+          <AirbnbStyleBooking
+            rooms={rooms}
+            sites={sites}
+            bedConfigurations={bedConfigurations}
+            reservations={reservations}
+            onSubmit={handleBookingSubmit}
+          />
+        </div>
 
         <Card className="max-w-7xl mx-auto mt-8 border border-slate-200 bg-white/90 backdrop-blur-sm">
           <CardContent className="p-6">
