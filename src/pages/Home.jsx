@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Room, Site, BedConfiguration, Client, Reservation } from "@/entities/all";
+import { Room, Site, BedConfiguration, Client, Reservation, Agency } from "@/entities/all";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, LogIn, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, LogIn, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
 import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
 import GanttChart from "../components/dashboard/GanttChart";
+import BookingForm from "../components/bookings/BookingForm";
 
 export default function HomePage() {
   const navigate = useNavigate();
