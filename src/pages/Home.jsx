@@ -149,7 +149,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-700 mx-auto"></div>
           <p className="mt-4 text-slate-600">Loading availability...</p>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function HomePage() {
                 setBookingSubmitted(false);
                 setSubmittedBookingDetails(null);
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+              className="bg-yellow-700 hover:bg-yellow-800 text-white px-8 py-3 rounded-lg font-medium transition-colors"
             >
               Make Another Booking
             </button>
@@ -214,7 +214,7 @@ export default function HomePage() {
               <Button
                 variant="default"
                 size="sm"
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700"
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-yellow-700 hover:bg-yellow-800"
                 onClick={() => navigate(createPageUrl('Dashboard'))}
               >
                 Go to Dashboard

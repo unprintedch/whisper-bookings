@@ -247,7 +247,7 @@ export default function Layout({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-700 mx-auto"></div>
           <p className="mt-4 text-slate-600">Loading...</p>
         </div>
       </div>
@@ -447,7 +447,7 @@ export default function Layout({ children }) {
           <div className="flex items-center gap-4">
             {isDashboardPage && (
               <>
-                <Button asChild variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
+                <Button asChild variant="outline" className="border-blue-300 text-yellow-700 hover:bg-blue-50">
                   <Link to={createPageUrl("Clients")}>
                     <Users className="w-4 h-4 mr-2" />
                     All bookings
@@ -462,7 +462,7 @@ export default function Layout({ children }) {
 
             {(isClientManagementPage || isAgencyManagementPage || isRoomsPage || isBedConfigurationsPage || isSettingsPage || isUsersPage) && (
               <>
-                <Button asChild variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
+                <Button asChild variant="outline" className="border-blue-300 text-yellow-700 hover:bg-blue-50">
                   <Link to={createPageUrl("Dashboard")}>
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     Calendar

@@ -390,7 +390,7 @@ export default function AirbnbStyleBooking({
                     <span>Up to {room.capacity_max} guests</span>
                   </div>
 
-                  <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
+                  <Button className="w-full mt-4 bg-yellow-700 hover:bg-yellow-800">
                     Reserve
                   </Button>
                 </CardContent>
@@ -546,7 +546,7 @@ export default function AirbnbStyleBooking({
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-yellow-700 hover:bg-yellow-800"
                   onClick={handleFinalSubmit}
                 >
                   Confirm Booking

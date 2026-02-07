@@ -571,7 +571,7 @@ export default function PublicBookingForm({
 
         {/* Submit */}
         <div className="flex justify-end pt-4">
-          <Button type="submit" size="lg" className="bg-blue-600 hover:bg-blue-700 px-8">
+          <Button type="submit" size="lg" className="bg-yellow-700 hover:bg-yellow-800 px-8">
             Request Booking
           </Button>
         </div>

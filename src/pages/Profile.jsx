@@ -60,7 +60,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 px-6 py-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-700 mx-auto mb-4"></div>
           <p className="text-slate-600">Loading your profile...</p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 px-6 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <UserIcon className="w-8 h-8 text-blue-600" />
+          <UserIcon className="w-8 h-8 text-yellow-700" />
           <h1 className="text-3xl font-bold text-slate-800">My Profile</h1>
         </div>
 
@@ -170,7 +170,7 @@ export default function ProfilePage() {
               <Button
                 onClick={handleSave}
                 disabled={isSaving || fullName === (user?.full_name || '')}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-yellow-700 hover:bg-yellow-800"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? 'Saving...' : 'Save Changes'}

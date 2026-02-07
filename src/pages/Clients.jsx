@@ -661,7 +661,7 @@ export default function ClientsPage() {
                     </Button>
                   </div>
                   
-                  <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
+                  <Button onClick={handleNewClient} className="bg-yellow-700 hover:bg-yellow-800 h-9">
                     <Plus className="w-4 h-4 mr-2" />
                     New Client
                   </Button>
@@ -858,7 +858,7 @@ export default function ClientsPage() {
                                     <Button
                                       variant="default"
                                       size="sm"
-                                      className="bg-blue-600 hover:bg-blue-700 h-7 px-2 text-xs"
+                                      className="bg-yellow-700 hover:bg-yellow-800 h-7 px-2 text-xs"
                                       onClick={() => {
                                         // Create new booking for this client
                                         setClientForNewBooking(client); // Set the client for the new booking
@@ -880,7 +880,7 @@ export default function ClientsPage() {
                                     {client.contact_name || client.contact_email || client.contact_phone ?
                                       <div className="flex flex-col gap-1 text-sm text-slate-600">
                                         {client.contact_name && <div className="flex items-center gap-1"><Users className="w-4 h-4" /><span>{client.contact_name}</span></div>}
-                                        {client.contact_email && <div className="flex items-center gap-1"><Mail className="w-4 h-4" /><a href={`mailto:${client.contact_email}`} className="text-blue-600 hover:underline">{client.contact_email}</a></div>}
+                                        {client.contact_email && <div className="flex items-center gap-1"><Mail className="w-4 h-4" /><a href={`mailto:${client.contact_email}`} className="text-yellow-700 hover:underline">{client.contact_email}</a></div>}
                                         {client.contact_phone && <div className="flex items-center gap-1"><Phone className="w-4 h-4" /><span>{client.contact_phone}</span></div>}
                                       </div> :
                                       <p className="text-sm text-slate-500 italic">None</p>}
@@ -893,7 +893,7 @@ export default function ClientsPage() {
                                       {agencyContact.name || agencyContact.email || agencyContact.phone ?
                                         <div className="flex flex-col gap-1 text-sm text-slate-600">
                                           {agencyContact.name && agencyContact.name !== agency.name && <div className="flex items-center gap-1"><Users className="w-4 h-4" /><span>{agencyContact.name}</span></div>}
-                                          {agencyContact.email && <div className="flex items-center gap-1"><Mail className="w-4 h-4" /><a href={`mailto:${agencyContact.email}`} className="text-blue-600 hover:underline">{agencyContact.email}</a></div>}
+                                          {agencyContact.email && <div className="flex items-center gap-1"><Mail className="w-4 h-4" /><a href={`mailto:${agencyContact.email}`} className="text-yellow-700 hover:underline">{agencyContact.email}</a></div>}
                                           {agencyContact.phone && <div className="flex items-center gap-1"><Phone className="w-4 h-4" /><span>{agencyContact.phone}</span></div>}
                                         </div> :
                                         <p className="text-sm text-slate-500 italic">No contact info</p>}
@@ -999,7 +999,7 @@ export default function ClientsPage() {
                     </Button>
                   </div>
                   
-                  <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
+                  <Button onClick={handleNewClient} className="bg-yellow-700 hover:bg-yellow-800 h-9">
                     <Plus className="w-4 h-4 mr-2" />
                     New Client
                   </Button>
