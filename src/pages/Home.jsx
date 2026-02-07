@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Room, Site, BedConfiguration, Client, Reservation } from "@/entities/all";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, LogIn } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [sites, setSites] = useState([]);
   const [bedConfigurations, setBedConfigurations] = useState([]);
@@ -16,8 +19,21 @@ export default function HomePage() {
   const [submittedBookingDetails, setSubmittedBookingDetails] = useState(null);
 
   useEffect(() => {
-    loadData();
+    checkAuthAndRedirect();
   }, []);
+
+  const checkAuthAndRedirect = async () => {
+    try {
+      const isAuth = await base44.auth.isAuthenticated();
+      if (isAuth) {
+        navigate(createPageUrl('Dashboard'));
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking auth:', error);
+    }
+    loadData();
+  };
 
   const loadData = async () => {
     setIsLoading(true);
