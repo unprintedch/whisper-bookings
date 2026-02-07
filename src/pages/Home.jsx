@@ -18,6 +18,8 @@ export default function HomePage() {
   const [sites, setSites] = useState([]);
   const [bedConfigurations, setBedConfigurations] = useState([]);
   const [reservations, setReservations] = useState([]);
+  const [agencies, setAgencies] = useState([]);
+  const [clients, setClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const [submittedBookingDetails, setSubmittedBookingDetails] = useState(null);
@@ -25,6 +27,9 @@ export default function HomePage() {
   const [selectedSiteName, setSelectedSiteName] = useState('all');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filters, setFilters] = useState({ bedConfigId: 'all' });
+  const [showCalendarBookingForm, setShowCalendarBookingForm] = useState(false);
+  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
+  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
 
   useEffect(() => {
     checkAuth();
