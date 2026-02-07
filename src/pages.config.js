@@ -61,6 +61,7 @@ import Users from './pages/Users';
 import dashboard from './pages/dashboard';
 import index from './pages/index';
 import PublicBooking from './pages/PublicBooking';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -79,6 +80,7 @@ export const PAGES = {
     "dashboard": dashboard,
     "index": index,
     "PublicBooking": PublicBooking,
+    "Home": Home,
 }
 
 export const pagesConfig = {

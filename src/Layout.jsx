@@ -123,17 +123,12 @@ export default function Layout({ children }) {
   const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
 
-  // Load current user on mount only
+  // Load current user on mount
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (isAuth) {
-          const user = await base44.auth.me();
-          setCurrentUser(user);
-        } else {
-          setCurrentUser(null);
-        }
+        const user = await base44.auth.me();
+        setCurrentUser(user);
       } catch (error) {
         console.error('Error loading user:', error);
         setCurrentUser(null);
@@ -142,18 +137,7 @@ export default function Layout({ children }) {
       }
     };
     loadUser();
-  }, []); // Only on mount
-
-  // Redirect non-authenticated users to public booking page
-  useEffect(() => {
-    if (isCheckingAuth) return;
-    
-    const isPublicRoute = location.pathname === '/PublicBooking';
-    
-    if (!currentUser && !isPublicRoute) {
-      navigate('/PublicBooking', { replace: true });
-    }
-  }, [isCheckingAuth, currentUser, location.pathname, navigate]);
+  }, []);
 
   // Load bed configurations on mount
   useEffect(() => {
@@ -259,17 +243,11 @@ export default function Layout({ children }) {
     );
   }
 
-  // Public booking page - no header/navigation
-  const isPublicBookingPage = location.pathname === '/PublicBooking';
+  // Home page - no layout
+  const isHomePage = location.pathname === '/' || location.pathname === '/Home';
 
-  if (isPublicBookingPage && !currentUser) {
-    return (
-      <div className="min-h-screen flex flex-col w-full bg-slate-50">
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
-          {children}
-        </main>
-      </div>
-    );
+  if (isHomePage) {
+    return children;
   }
 
   return (
