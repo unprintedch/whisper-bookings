@@ -363,7 +363,7 @@ export default function HomePage() {
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
               highlightDate={startOfDay(new Date())}
               isLoading={isLoading}
-              onCellClick={null}
+              onCellClick={handleCalendarCellClick}
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
@@ -371,6 +371,62 @@ export default function HomePage() {
           </CardContent>
         </Card>
       </div>
+
+      {showCalendarBookingForm && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={() => {
+            setShowCalendarBookingForm(false);
+            setSelectedRoomForBooking(null);
+            setSelectedDateForBooking(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-xl border border-slate-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold text-slate-800">Create New Booking</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setShowCalendarBookingForm(false);
+                  setSelectedRoomForBooking(null);
+                  setSelectedDateForBooking(null);
+                }}
+                className="h-9 w-9"
+              >
+                <X className="h-5 w-5 text-slate-500" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <BookingForm
+                onSave={handleCalendarBookingSubmit}
+                onCancel={() => {
+                  setShowCalendarBookingForm(false);
+                  setSelectedRoomForBooking(null);
+                  setSelectedDateForBooking(null);
+                }}
+                initialRoom={selectedRoomForBooking}
+                initialDates={selectedDateForBooking ? {
+                  checkin: format(selectedDateForBooking, 'yyyy-MM-dd'),
+                  checkout: format(addDays(selectedDateForBooking, 1), 'yyyy-MM-dd')
+                } : null}
+                existingBooking={null}
+                rooms={rooms}
+                clients={clients}
+                groups={[]}
+                sites={sites}
+                agencies={agencies}
+                reservations={reservations}
+                allBedConfigs={bedConfigurations}
+                selectedSiteName={selectedSiteName}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
