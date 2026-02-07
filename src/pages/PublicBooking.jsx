@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Room, Site, BedConfiguration, Client, Reservation } from "@/entities/all";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, CheckCircle, LogIn } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
 
 export default function PublicBookingPage() {
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [sites, setSites] = useState([]);
   const [bedConfigurations, setBedConfigurations] = useState([]);
@@ -14,10 +17,22 @@ export default function PublicBookingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const [submittedBookingDetails, setSubmittedBookingDetails] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    loadData();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      const isAuth = await base44.auth.isAuthenticated();
+      setIsAuthenticated(isAuth);
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      setIsAuthenticated(false);
+    }
+    loadData();
+  };
 
   const loadData = async () => {
     setIsLoading(true);
