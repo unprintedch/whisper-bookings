@@ -448,12 +448,12 @@ export default function Layout({ children }) {
             {isDashboardPage &&
             <>
                 <Button asChild variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
-                  <Link to={createPageUrl("Clients")} className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border bg-background shadow-sm hover:text-accent-foreground h-9 px-4 py-2 border-yellow-70 text-yellow-700 hover:bg-blue-50">All bookings
-
-
-                </Link>
+                  <Link to={createPageUrl("Clients")}>
+                    <Users className="w-4 h-4 mr-2" />
+                    All bookings
+                  </Link>
                 </Button>
-                <Button onClick={handleOpenNewBooking} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={handleOpenNewBooking} className="bg-yellow-700 text-primary-foreground px-4 py-2 text-sm font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow h-9 hover:bg-yellow-700">
                   <Plus className="w-4 h-4 mr-2" />
                   New Booking
                 </Button>
