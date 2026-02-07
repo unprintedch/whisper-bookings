@@ -353,6 +353,7 @@ export default function PublicBookingPage() {
                 onCellClick={null}
                 onBookingEdit={null}
                 onRoomEdit={null}
+                isPublicView={true}
               />
             </CardContent>
           </Card>
