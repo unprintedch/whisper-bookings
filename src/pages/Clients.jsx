@@ -679,10 +679,10 @@ export default function ClientsPage() {
                   <div className="text-center py-12 text-slate-500">
                     <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium mb-2">
-                      {searchTerm || clientSearchDate ? 'No clients match your search' : 'No clients created yet'}
+                      {searchTerm || selectedStatus !== 'all' || filterDateStart || filterDateEnd ? 'No clients match your filters' : 'No clients created yet'}
                     </p>
                     <p className="text-sm">
-                      {searchTerm || clientSearchDate ? 'Try adjusting your search criteria' : 'Create your first client to get started'}
+                      {searchTerm || selectedStatus !== 'all' || filterDateStart || filterDateEnd ? 'Try adjusting your filters' : 'Create your first client to get started'}
                     </p>
                   </div> :
 

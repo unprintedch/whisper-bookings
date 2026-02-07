@@ -188,67 +188,60 @@ export default function ReservationsTable({
 
   if (isLoading) {
     return (
-      <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            {Array(8).fill(0).map((_, i) =>
-            <div key={i} className="animate-pulse bg-slate-100 rounded-lg h-16"></div>
-            )}
-          </div>
-        </CardContent>
-      </Card>);
-
+      <div className="p-6">
+        <div className="space-y-4">
+          {Array(8).fill(0).map((_, i) =>
+          <div key={i} className="animate-pulse bg-slate-100 rounded-lg h-16"></div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-      <CardHeader className="border-b border-slate-100">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-slate-800">
-              <CalendarIcon className="w-5 h-5 text-blue-600" />
-              All Reservations
-              <Badge variant="secondary" className="ml-2">
-                {sortedReservations.length} reservations
-              </Badge>
-            </CardTitle>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={exportToCSV}>
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    <ListFilter className="mr-2 h-4 w-4" />
-                    Columns
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {columnsConfig.map((column) =>
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={columnVisibility[column.id]}
-                    onCheckedChange={(value) =>
-                    handleColumnVisibilityChange(column.id, !!value)
-                    }>
-
-                      {column.label}
-                    </DropdownMenuCheckboxItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+    <div className="w-full">
+      <div className="border-b border-slate-100 p-4 bg-slate-50/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">
+              {sortedReservations.length} reservations
+            </Badge>
           </div>
           
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={exportToCSV}>
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <ListFilter className="mr-2 h-4 w-4" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {columnsConfig.map((column) =>
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={columnVisibility[column.id]}
+                  onCheckedChange={(value) =>
+                  handleColumnVisibilityChange(column.id, !!value)
+                  }>
 
+                    {column.label}
+                  </DropdownMenuCheckboxItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent className="p-6">
+      </div>
+      
+      <div className="p-6">
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -346,7 +339,7 @@ export default function ReservationsTable({
         <div className="mt-4 text-sm text-slate-600">
           Showing {sortedReservations.length} reservations
         </div>
-      </CardContent>
-    </Card>);
-
+      </div>
+    </div>
+  );
 }
