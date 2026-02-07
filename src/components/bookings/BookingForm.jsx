@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1759,21 +1758,27 @@ export default function BookingForm({
           <div className="flex items-end gap-3">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleChange('status', value)}
-                required
-              >
-                <SelectTrigger className="h-9 w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="OPTION" className="cursor-pointer">Option</SelectItem>
-                  <SelectItem value="RESERVE" className="cursor-pointer">Reserved</SelectItem>
-                  <SelectItem value="CONFIRME" className="cursor-pointer">Confirmed</SelectItem>
-                  <SelectItem value="PAYE" className="cursor-pointer">Paid</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                {[
+                  { value: 'OPTION', label: 'Option', color: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' },
+                  { value: 'RESERVE', label: 'Reserved', color: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' },
+                  { value: 'CONFIRME', label: 'Confirmed', color: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' },
+                  { value: 'PAYE', label: 'Paid', color: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' }
+                ].map((status) => (
+                  <button
+                    key={status.value}
+                    type="button"
+                    onClick={() => handleChange('status', status.value)}
+                    className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                      formData.status === status.value 
+                        ? `${status.color} ring-2 ring-offset-1 ring-current` 
+                        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                    }`}
+                  >
+                    {status.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {formData.status === 'OPTION' && (
