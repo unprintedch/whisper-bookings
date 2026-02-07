@@ -639,9 +639,9 @@ export default function ClientsPage() {
           // Client List View (existing)
           <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
             <CardHeader className="border-b border-slate-100 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                {/* View Toggles and Actions */}
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  {/* View Toggles */}
                   <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-lg">
                     <Button
                       size="sm"
@@ -660,11 +660,116 @@ export default function ClientsPage() {
                       By Client
                     </Button>
                   </div>
+                  
+                  <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Client
+                  </Button>
                 </div>
-                <Button onClick={handleNewClient} className="bg-blue-600 hover:bg-blue-700 h-9">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Client
-                </Button>
+                
+                {/* Filters Row */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    placeholder="Search clients, reservations, rooms..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full max-w-md h-9"
+                  />
+                  
+                  {currentUser?.custom_role !== 'agency' && (
+                    <Select value={selectedAgencyId} onValueChange={setSelectedAgencyId}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="All Agencies" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Agencies</SelectItem>
+                        {agencies?.map(agency => (
+                          <SelectItem key={agency.id} value={agency.id}>{agency.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="OPTION">OPTION</SelectItem>
+                      <SelectItem value="RESERVE">RESERVE</SelectItem>
+                      <SelectItem value="CONFIRME">CONFIRME</SelectItem>
+                      <SelectItem value="PAYE">PAYE</SelectItem>
+                      <SelectItem value="ANNULE">ANNULE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-[180px] justify-start">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filterDateStart ? format(filterDateStart, 'dd/MM/yyyy') : 'Date from'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterDateStart}
+                        onSelect={setFilterDateStart}
+                        initialFocus
+                      />
+                      {filterDateStart && (
+                        <div className="p-2 border-t">
+                          <Button variant="ghost" size="sm" onClick={() => setFilterDateStart(null)} className="w-full">
+                            Clear
+                          </Button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-[180px] justify-start">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filterDateEnd ? format(filterDateEnd, 'dd/MM/yyyy') : 'Date to'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filterDateEnd}
+                        onSelect={setFilterDateEnd}
+                        initialFocus
+                      />
+                      {filterDateEnd && (
+                        <div className="p-2 border-t">
+                          <Button variant="ghost" size="sm" onClick={() => setFilterDateEnd(null)} className="w-full">
+                            Clear
+                          </Button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  
+                  {(searchTerm || selectedAgencyId !== 'all' || selectedStatus !== 'all' || filterDateStart || filterDateEnd) && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedAgencyId('all');
+                        setSelectedStatus('all');
+                        setFilterDateStart(null);
+                        setFilterDateEnd(null);
+                      }}
+                      className="text-slate-600 hover:text-slate-900"
+                    >
+                      <X className="mr-1 h-4 w-4" />
+                      Clear filters
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
