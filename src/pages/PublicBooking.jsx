@@ -34,6 +34,10 @@ export default function PublicBookingPage() {
     loadData();
   };
 
+  const [selectedSiteName, setSelectedSiteName] = useState('all');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [filters, setFilters] = useState({ bedConfigId: 'all' });
+
   const loadData = async () => {
     setIsLoading(true);
     try {
