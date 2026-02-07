@@ -21,6 +21,9 @@ export default function HomePage() {
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const [submittedBookingDetails, setSubmittedBookingDetails] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [selectedSiteName, setSelectedSiteName] = useState('all');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [filters, setFilters] = useState({ bedConfigId: 'all' });
 
   useEffect(() => {
     checkAuth();
