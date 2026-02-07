@@ -217,6 +217,131 @@ export default function HomePage() {
             />
           </CardContent>
         </Card>
+
+        <Card className="max-w-7xl mx-auto mt-8 border border-slate-200 bg-white/90 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-slate-800 mb-4">Room Availability Calendar</h2>
+              
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSelectedSiteName('all')}
+                    className={`transition-all ${
+                      selectedSiteName === 'all' 
+                        ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' 
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    All Sites
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSelectedSiteName('Tarangire')}
+                    className={`transition-all ${
+                      selectedSiteName === 'Tarangire' 
+                        ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' 
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    Tarangire
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSelectedSiteName('Serengeti')}
+                    className={`transition-all ${
+                      selectedSiteName === 'Serengeti' 
+                        ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' 
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    Serengeti
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigateDate('prev')}
+                    className="hover:bg-blue-50 h-9 w-9"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentDate(new Date())}
+                    className="hover:bg-blue-50 h-9"
+                  >
+                    Today
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigateDate('next')}
+                    className="hover:bg-blue-50 h-9 w-9"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Select 
+                  value={filters.bedConfigId} 
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, bedConfigId: value }))}
+                >
+                  <SelectTrigger className="w-52">
+                    <SelectValue placeholder="Bed configuration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All bed configurations</SelectItem>
+                    {bedConfigurations.map(config => (
+                      <SelectItem key={config.id} value={config.id}>
+                        {config.name} ({config.max_occupancy} max)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <GanttChart
+              rooms={(() => {
+                let filteredRooms = rooms.filter(room => room.is_active);
+                
+                if (selectedSiteName !== 'all') {
+                  const site = sites.find(s => s.name === selectedSiteName);
+                  if (site) {
+                    filteredRooms = filteredRooms.filter(room => room.site_id === site.id);
+                  }
+                }
+                
+                if (filters.bedConfigId !== 'all') {
+                  filteredRooms = filteredRooms.filter(room => 
+                    room.bed_configuration_ids?.includes(filters.bedConfigId)
+                  );
+                }
+                
+                return filteredRooms;
+              })()}
+              reservations={reservations}
+              clients={[]}
+              groups={[]}
+              sites={sites}
+              dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
+              highlightDate={startOfDay(new Date())}
+              isLoading={isLoading}
+              onCellClick={null}
+              onBookingEdit={null}
+              onRoomEdit={null}
+              isPublicView={true}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
