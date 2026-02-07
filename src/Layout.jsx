@@ -123,7 +123,7 @@ export default function Layout({ children }) {
   const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
 
-  // Load current user and handle authentication
+  // Load current user on mount only
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -142,22 +142,16 @@ export default function Layout({ children }) {
       }
     };
     loadUser();
-  }, [location.pathname]); // Reload when route changes
+  }, []); // Only on mount
 
   // Redirect non-authenticated users to public booking page
   useEffect(() => {
-    // Don't redirect if on public booking page or if still checking auth
     if (isCheckingAuth) return;
     
     const isPublicRoute = location.pathname === '/PublicBooking';
     
     if (!currentUser && !isPublicRoute) {
-      // Give a small delay to allow auth redirect to complete
-      const timer = setTimeout(() => {
-        navigate('/PublicBooking', { replace: true });
-      }, 500);
-      
-      return () => clearTimeout(timer);
+      navigate('/PublicBooking', { replace: true });
     }
   }, [isCheckingAuth, currentUser, location.pathname, navigate]);
 
