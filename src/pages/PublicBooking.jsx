@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Room, Site, BedConfiguration, Client, Reservation } from "@/entities/all";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, CheckCircle, LogIn } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
 
 export default function PublicBookingPage() {
@@ -151,13 +153,21 @@ export default function PublicBookingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-4 relative">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" 
               alt="Whisper B. Logo" 
               className="w-12 h-12" 
             />
             <h1 className="text-4xl font-bold text-slate-800">Whisper B.</h1>
+            <Button
+              variant="outline"
+              className="absolute right-0 top-1/2 -translate-y-1/2"
+              onClick={() => base44.auth.redirectToLogin()}
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Login
+            </Button>
           </div>
           <p className="text-xl text-slate-600">Book Your Stay</p>
         </div>
