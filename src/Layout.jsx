@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { User } from "@/entities/User"; // Add User import
+import { base44 } from "@/api/base44Client";
 import { 
   Calendar as CalendarIcon, // Renamed to avoid conflict with the component
   Building2, 
@@ -97,9 +97,11 @@ const adminNavItems = [
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Add user state
   const [currentUser, setCurrentUser] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // All dashboard state is now managed here
   const [selectedSiteName, setSelectedSiteName] = useState("all");
@@ -121,18 +123,33 @@ export default function Layout({ children }) {
   const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
 
-  // Load current user
+  // Load current user and handle authentication
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await User.me();
-        setCurrentUser(user);
+        const isAuth = await base44.auth.isAuthenticated();
+        if (isAuth) {
+          const user = await base44.auth.me();
+          setCurrentUser(user);
+        } else {
+          setCurrentUser(null);
+        }
       } catch (error) {
         console.error('Error loading user:', error);
+        setCurrentUser(null);
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
     loadUser();
   }, []);
+
+  // Redirect non-authenticated users to public booking page
+  useEffect(() => {
+    if (!isCheckingAuth && !currentUser && location.pathname !== '/PublicBooking') {
+      navigate('/PublicBooking', { replace: true });
+    }
+  }, [isCheckingAuth, currentUser, location.pathname, navigate]);
 
   // Load bed configurations on mount
   useEffect(() => {
@@ -225,6 +242,31 @@ export default function Layout({ children }) {
   const agencyManagementPageProps = {
     // Add any agency-specific props here if needed in the future
   };
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Public booking page - no header/navigation
+  const isPublicBookingPage = location.pathname === '/PublicBooking';
+
+  if (isPublicBookingPage && !currentUser) {
+    return (
+      <div className="min-h-screen flex flex-col w-full bg-slate-50">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-slate-50">
@@ -502,7 +544,7 @@ export default function Layout({ children }) {
                   onClick={async () => {
                     if (confirm('Are you sure you want to log out?')) {
                       try {
-                        await User.logout();
+                        await base44.auth.logout();
                       } catch (error) {
                         console.error('Error logging out:', error);
                       }
