@@ -292,6 +292,7 @@ export default function GanttChart({
   const ROOM_COLUMN_WIDTH = 230;
 
   const canSeeClientName = (reservation) => {
+    if (isPublicView) return false;
     if (!currentUser) return true;
     if (currentUser.custom_role !== 'agency') return true;
     
