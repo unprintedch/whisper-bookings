@@ -55,7 +55,6 @@ import DataHealth from './pages/DataHealth';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
-import PublicBooking from './pages/PublicBooking';
 import Reports from './pages/Reports';
 import Rooms from './pages/Rooms';
 import Settings from './pages/Settings';
@@ -74,7 +73,6 @@ export const PAGES = {
     "Groups": Groups,
     "Home": Home,
     "Profile": Profile,
-    "PublicBooking": PublicBooking,
     "Reports": Reports,
     "Rooms": Rooms,
     "Settings": Settings,
@@ -84,7 +82,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "PublicBooking",
+    mainPage: "Agencies",
     Pages: PAGES,
     Layout: __Layout,
 };
