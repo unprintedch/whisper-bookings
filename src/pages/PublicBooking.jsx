@@ -175,14 +175,25 @@ export default function PublicBookingPage() {
               className="w-12 h-12" 
             />
             <h1 className="text-4xl font-bold text-slate-800">Whisper B.</h1>
-            <Button
-              variant="outline"
-              className="absolute right-0 top-1/2 -translate-y-1/2"
-              onClick={() => base44.auth.redirectToLogin()}
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              Login
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                variant="default"
+                size="sm"
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700"
+                onClick={() => navigate(createPageUrl('Dashboard'))}
+              >
+                Go to Dashboard
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="absolute right-0 top-1/2 -translate-y-1/2"
+                onClick={() => base44.auth.redirectToLogin()}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Login
+              </Button>
+            )}
           </div>
           <p className="text-xl text-slate-600">Book Your Stay</p>
         </div>
