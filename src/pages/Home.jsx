@@ -167,15 +167,26 @@ export default function HomePage() {
               className="w-12 h-12" 
             />
             <h1 className="text-4xl font-bold text-slate-800">Whisper B.</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-900"
-              onClick={() => base44.auth.redirectToLogin()}
-            >
-              <LogIn className="w-4 h-4 mr-1" />
-              Admin
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                variant="default"
+                size="sm"
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700"
+                onClick={() => navigate(createPageUrl('Dashboard'))}
+              >
+                Go to Dashboard
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-900"
+                onClick={() => base44.auth.redirectToLogin()}
+              >
+                <LogIn className="w-4 h-4 mr-1" />
+                Admin
+              </Button>
+            )}
           </div>
           <p className="text-xl text-slate-600">Book Your Safari Lodge Stay</p>
         </div>
