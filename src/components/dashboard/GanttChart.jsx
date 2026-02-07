@@ -357,7 +357,9 @@ export default function GanttChart({
                           <h4 className="font-semibold text-slate-800 text-sm truncate">
                             {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
                           </h4>
-                          <Eye className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                          {!isPublicView && (
+                            <Eye className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                          )}
                         </div>
                         <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
                             <span className="truncate">{room.type_label}</span>
