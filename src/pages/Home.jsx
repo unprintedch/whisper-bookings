@@ -49,16 +49,20 @@ export default function HomePage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [roomsData, sitesData, bedConfigsData, reservationsData] = await Promise.all([
+      const [roomsData, sitesData, bedConfigsData, reservationsData, agenciesData, clientsData] = await Promise.all([
         Room.list(),
         Site.list(),
         BedConfiguration.list('sort_order'),
-        Reservation.list()
+        Reservation.list(),
+        Agency.list(),
+        Client.list()
       ]);
       setRooms(roomsData);
       setSites(sitesData);
       setBedConfigurations(bedConfigsData);
       setReservations(reservationsData);
+      setAgencies(agenciesData);
+      setClients(clientsData);
     } catch (error) {
       console.error('Error loading data:', error);
     }
