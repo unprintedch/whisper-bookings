@@ -8,7 +8,7 @@ import { Calendar, CheckCircle, LogIn, ChevronLeft, ChevronRight } from "lucide-
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { addDays, format, startOfDay } from "date-fns";
-import PublicBookingForm from "../components/bookings/PublicBookingForm.jsx";
+import AirbnbStyleBooking from "../components/bookings/AirbnbStyleBooking.jsx";
 import GanttChart from "../components/dashboard/GanttChart";
 
 export default function PublicBookingPage() {
@@ -205,17 +205,15 @@ export default function PublicBookingPage() {
           <p className="text-xl text-slate-600">Book Your Stay</p>
         </div>
 
-        <Card className="max-w-4xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <PublicBookingForm
-              rooms={rooms}
-              sites={sites}
-              bedConfigurations={bedConfigurations}
-              reservations={reservations}
-              onSubmit={handleBookingSubmit}
-            />
-          </CardContent>
-        </Card>
+        <div className="max-w-6xl mx-auto">
+          <AirbnbStyleBooking
+            rooms={rooms}
+            sites={sites}
+            bedConfigurations={bedConfigurations}
+            reservations={reservations}
+            onSubmit={handleBookingSubmit}
+          />
+        </div>
 
         {/* Availability Calendar Section */}
         <div className="max-w-7xl mx-auto mt-12">
