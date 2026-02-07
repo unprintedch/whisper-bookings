@@ -108,6 +108,15 @@ export default function HomePage() {
     }
   };
 
+  const navigateDate = (direction) => {
+    const days = direction === 'prev' ? -7 : 7;
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setDate(newDate.getDate() + days);
+      return newDate;
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center">
