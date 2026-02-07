@@ -462,7 +462,7 @@ export default function Layout({ children }) {
 
             {(isClientManagementPage || isAgencyManagementPage || isRoomsPage || isBedConfigurationsPage || isSettingsPage || isUsersPage) && (
               <>
-                <Button asChild variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50">
+                <Button asChild variant="outline" className="!border-yellow-700 text-yellow-700 hover:bg-yellow-50">
                   <Link to={createPageUrl("Dashboard")}>
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     Calendar
