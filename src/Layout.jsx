@@ -453,7 +453,7 @@ export default function Layout({ children }) {
                     All bookings
                   </Link>
                 </Button>
-                <Button onClick={handleOpenNewBooking} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={handleOpenNewBooking} className="!bg-yellow-700 hover:!bg-yellow-800">
                   <Plus className="w-4 h-4 mr-2" />
                   New Booking
                 </Button>
