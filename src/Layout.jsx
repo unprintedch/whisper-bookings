@@ -352,7 +352,7 @@ export default function Layout({ children }) {
                   variant="outline"
                   size="icon"
                   onClick={() => navigateDate('prev')}
-                  className="hover:bg-blue-50 h-9 w-9"
+                  className="hover:bg-yellow-50 h-9 w-9"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
@@ -360,7 +360,7 @@ export default function Layout({ children }) {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentDate(new Date())}
-                  className="hover:bg-blue-50 h-9"
+                  className="hover:bg-yellow-50 h-9"
                 >
                   Today
                 </Button>
@@ -387,7 +387,7 @@ export default function Layout({ children }) {
                   variant="outline"
                   size="icon"
                   onClick={() => navigateDate('next')}
-                  className="hover:bg-blue-50 h-9 w-9"
+                  className="hover:bg-yellow-50 h-9 w-9"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -462,7 +462,7 @@ export default function Layout({ children }) {
 
             {(isClientManagementPage || isAgencyManagementPage || isRoomsPage || isBedConfigurationsPage || isSettingsPage || isUsersPage) && (
               <>
-                <Button asChild variant="outline" className="border-blue-300 text-yellow-700 hover:bg-blue-50">
+                <Button asChild variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50">
                   <Link to={createPageUrl("Dashboard")}>
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     Calendar
