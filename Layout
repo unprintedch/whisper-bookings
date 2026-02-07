@@ -240,11 +240,11 @@ export default function Layout({ children }) {
   // No specific props for Agency Management page in this layout, but good to have the pattern
   const agencyManagementPageProps = {
 
-
-
     // Add any agency-specific props here if needed in the future
-  }; // Show loading while checking authentication
-  if (isCheckingAuth) {return (
+  };
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -310,12 +310,12 @@ export default function Layout({ children }) {
                   <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setSelectedSiteName('all')} className="bg-yellow-700 text-white px-3 text-xs font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-8 transition-all hover:bg-slate-700 hover:text-white">
-
-
-
-
-
+                onClick={() => setSelectedSiteName('all')}
+                className={`transition-all ${
+                selectedSiteName === 'all' ?
+                'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
+                'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
+                }>
 
                     All Sites
                   </Button>
@@ -448,12 +448,12 @@ export default function Layout({ children }) {
             {isDashboardPage &&
             <>
                 <Button asChild variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
-                  <Link to={createPageUrl("Clients")} className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border bg-background shadow-sm hover:text-accent-foreground h-9 px-4 py-2 border-yellow-700 text-yellow-700 hover:bg-blue-50">All bookings
+                  <Link to={createPageUrl("Clients")} className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border bg-background shadow-sm hover:text-accent-foreground h-9 px-4 py-2 border-yellow-70 text-yellow-700 hover:bg-blue-50">All bookings
 
 
                 </Link>
                 </Button>
-                <Button onClick={handleOpenNewBooking} className="bg-yellow-700 text-primary-foreground px-4 py-2 text-sm font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow h-9 hover:bg-emerald-700">
+                <Button onClick={handleOpenNewBooking} className="bg-emerald-600 hover:bg-emerald-700">
                   <Plus className="w-4 h-4 mr-2" />
                   New Booking
                 </Button>
