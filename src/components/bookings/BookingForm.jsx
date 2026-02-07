@@ -1242,7 +1242,7 @@ export default function BookingForm({
                       size="icon"
                       onClick={handleSaveClientNumber}
                       disabled={editingClientNumber === (selectedClient.client_number || '')}
-                      className="h-10 w-10 flex-shrink-0 bg-blue-600 hover:bg-blue-700"
+                      className="h-10 w-10 flex-shrink-0 bg-yellow-700 hover:bg-yellow-800"
                       title="Save"
                     >
                       <Check className="w-4 h-4" />
@@ -1281,7 +1281,7 @@ export default function BookingForm({
                         {agencyContactDisplay.email && (
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4 text-slate-500" />
-                            <a href={`mailto:${agencyContactDisplay.email}`} className="text-blue-600 hover:underline">{agencyContactDisplay.email}</a>
+                            <a href={`mailto:${agencyContactDisplay.email}`} className="text-yellow-700 hover:underline">{agencyContactDisplay.email}</a>
                           </div>
                         )}
                         {agencyContactDisplay.phone && (
@@ -1320,7 +1320,7 @@ export default function BookingForm({
                     {selectedClient.contact_email && (
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-slate-500" />
-                        <a href={`mailto:${selectedClient.contact_email}`} className="text-blue-600 hover:underline">{selectedClient.contact_email}</a>
+                        <a href={`mailto:${selectedClient.contact_email}`} className="text-yellow-700 hover:underline">{selectedClient.contact_email}</a>
                       </div>
                     )}
                     {selectedClient.contact_phone && (
@@ -1818,7 +1818,7 @@ export default function BookingForm({
               </div>
             )}
 
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="bg-yellow-700 hover:bg-yellow-800">
               {submitButtonText}
             </Button>
           </div>

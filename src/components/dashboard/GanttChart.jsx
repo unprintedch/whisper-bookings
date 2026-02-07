@@ -18,7 +18,7 @@ const statusColors = {
 
 const statusIcons = {
   OPTION: { icon: Clock, color: "text-amber-600" },
-  RESERVE: { icon: Clock, color: "text-blue-600" },
+  RESERVE: { icon: Clock, color: "text-yellow-700" },
   CONFIRME: { icon: CheckCircle2, color: "text-emerald-600" },
   PAYE: { icon: DollarSign, color: "text-green-600" },
   ANNULE: { icon: X, color: "text-gray-500" }
@@ -56,7 +56,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <Building2 className="w-5 h-5 text-blue-600" />
+            <Building2 className="w-5 h-5 text-yellow-700" />
             {room.name}
           </DialogTitle>
         </DialogHeader>
@@ -129,7 +129,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
               Close
             </Button>
             {isAdmin && (
-              <Button onClick={() => onEdit(room)} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => onEdit(room)} className="bg-yellow-700 hover:bg-yellow-800">
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Room
               </Button>
@@ -390,7 +390,7 @@ export default function GanttChart({
                           onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                           {!isPublicView && (
-                            <div className="flex items-center gap-1 text-blue-600 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>

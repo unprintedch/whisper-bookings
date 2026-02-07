@@ -147,7 +147,7 @@ export default function AvailableRooms({
                           {/* Action Button */}
                           <Button 
                             onClick={() => onRoomSelect(room)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                            className="w-full bg-yellow-700 hover:bg-yellow-800 transition-colors"
                             size="sm"
                           >
                             <Plus className="w-4 h-4 mr-2" />
