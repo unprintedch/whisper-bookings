@@ -345,9 +345,11 @@ export default function GanttChart({
                   style={{ height: '50px' }}>
 
                   <div
-                    className="bg-white border-r border-slate-200 cursor-pointer hover:bg-blue-50/50 p-3 flex-shrink-0 sticky left-0 z-40 h-full"
+                    className={`bg-white border-r border-slate-200 p-3 flex-shrink-0 sticky left-0 z-40 h-full ${
+                      !isPublicView ? 'cursor-pointer hover:bg-blue-50/50' : ''
+                    }`}
                     style={{ width: `${ROOM_COLUMN_WIDTH}px` }}
-                    onClick={() => handleRoomClick(room)}>
+                    onClick={!isPublicView ? () => handleRoomClick(room) : undefined}>
 
                     <div className="flex items-center gap-2 h-full">
                       <div className="flex flex-col justify-center flex-1 min-w-0">
