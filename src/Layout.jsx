@@ -146,7 +146,12 @@ export default function Layout({ children }) {
 
   // Redirect non-authenticated users to public booking page
   useEffect(() => {
-    if (!isCheckingAuth && !currentUser && location.pathname !== '/PublicBooking') {
+    // Don't redirect if on public booking page or auth pages
+    const isAuthPage = location.pathname.startsWith('/auth') || 
+                       location.pathname.startsWith('/login') ||
+                       location.pathname.startsWith('/signup');
+    
+    if (!isCheckingAuth && !currentUser && location.pathname !== '/PublicBooking' && !isAuthPage) {
       navigate('/PublicBooking', { replace: true });
     }
   }, [isCheckingAuth, currentUser, location.pathname, navigate]);
