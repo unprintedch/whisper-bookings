@@ -139,6 +139,17 @@ export default function Layout({ children }) {
     loadUser();
   }, []);
 
+  // Redirect non-authenticated users to Home
+  useEffect(() => {
+    if (isCheckingAuth) return;
+    
+    const isHomePage = location.pathname === '/' || location.pathname === '/Home';
+    
+    if (!currentUser && !isHomePage) {
+      navigate('/Home');
+    }
+  }, [isCheckingAuth, currentUser, location.pathname, navigate]);
+
   // Load bed configurations on mount
   useEffect(() => {
     const loadBedConfigs = async () => {
