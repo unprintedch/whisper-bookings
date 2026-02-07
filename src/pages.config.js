@@ -84,7 +84,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Profile",
+    mainPage: "PublicBooking",
     Pages: PAGES,
     Layout: __Layout,
 };
