@@ -248,9 +248,15 @@ export default function HomePage() {
                 let filteredRooms = rooms.filter(room => room.is_active);
                 
                 if (selectedSiteName !== 'all') {
-                  const site = sites.find(s => s.name === selectedSiteName);
-                  if (site) {
-                    filteredRooms = filteredRooms.filter(room => room.site_id === site.id);
+                  // Find all site IDs that match the selected site name
+                  const matchingSiteIds = sites
+                    .filter(s => s.name === selectedSiteName)
+                    .map(s => s.id);
+                  
+                  if (matchingSiteIds.length > 0) {
+                    filteredRooms = filteredRooms.filter(room => 
+                      matchingSiteIds.includes(room.site_id)
+                    );
                   }
                 }
                 
