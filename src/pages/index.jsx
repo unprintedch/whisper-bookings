@@ -4,12 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LogIn, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { LogIn, ChevronLeft, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
-import BookingForm from "../components/bookings/BookingForm";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -17,16 +16,14 @@ export default function HomePage() {
   const [sites, setSites] = useState([]);
   const [bedConfigurations, setBedConfigurations] = useState([]);
   const [reservations, setReservations] = useState([]);
-  const [agencies, setAgencies] = useState([]);
+
   const [clients, setClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedSiteName, setSelectedSiteName] = useState('all');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filters, setFilters] = useState({ bedConfigId: 'all' });
-  const [showCalendarBookingForm, setShowCalendarBookingForm] = useState(false);
-  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
-  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
+
 
   useEffect(() => {
     checkAuth();
@@ -79,27 +76,7 @@ export default function HomePage() {
     });
   };
 
-  const handleCalendarCellClick = (room, date) => {
-    setSelectedRoomForBooking(room);
-    setSelectedDateForBooking(date);
-    setShowCalendarBookingForm(true);
-  };
 
-  const handleCalendarBookingSubmit = async (bookingData) => {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isTestMode = urlParams.get('base44_data_env') === 'dev';
-      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
-      
-      await dbClient.entities.Reservation.create(bookingData);
-      setShowCalendarBookingForm(false);
-      setSelectedRoomForBooking(null);
-      setSelectedDateForBooking(null);
-      loadData();
-    } catch (error) {
-      console.error('Error creating booking:', error);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -245,7 +222,6 @@ export default function HomePage() {
                 let filteredRooms = rooms.filter(room => room.is_active);
                 
                 if (selectedSiteName !== 'all') {
-                  // Find all site IDs that match the selected site name
                   const matchingSiteIds = sites
                     .filter(s => s.name === selectedSiteName)
                     .map(s => s.id);
@@ -263,16 +239,23 @@ export default function HomePage() {
                   );
                 }
                 
-                return filteredRooms;
+                return filteredRooms.sort((a, b) => {
+                  const siteA = sites.find(s => s.id === a.site_id)?.name || '';
+                  const siteB = sites.find(s => s.id === b.site_id)?.name || '';
+                  if (siteA !== siteB) {
+                      return siteA.localeCompare(siteB);
+                  }
+                  return a.number.localeCompare(b.number, undefined, { numeric: true });
+                });
               })()}
               reservations={reservations}
-              clients={[]}
+              clients={clients}
               groups={[]}
               sites={sites}
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
-              highlightDate={startOfDay(new Date())}
+              highlightDate={currentDate}
               isLoading={isLoading}
-              onCellClick={handleCalendarCellClick}
+              onCellClick={() => {}}
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
@@ -281,61 +264,7 @@ export default function HomePage() {
         </Card>
       </div>
 
-      {showCalendarBookingForm && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-          onClick={() => {
-            setShowCalendarBookingForm(false);
-            setSelectedRoomForBooking(null);
-            setSelectedDateForBooking(null);
-          }}
-        >
-          <div
-            className="bg-white rounded-xl border border-slate-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-bold text-slate-800">Create New Booking</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setShowCalendarBookingForm(false);
-                  setSelectedRoomForBooking(null);
-                  setSelectedDateForBooking(null);
-                }}
-                className="h-9 w-9"
-              >
-                <X className="h-5 w-5 text-slate-500" />
-              </Button>
-            </div>
-            <div className="p-4">
-              <BookingForm
-                onSave={handleCalendarBookingSubmit}
-                onCancel={() => {
-                  setShowCalendarBookingForm(false);
-                  setSelectedRoomForBooking(null);
-                  setSelectedDateForBooking(null);
-                }}
-                initialRoom={selectedRoomForBooking}
-                initialDates={selectedDateForBooking ? {
-                  checkin: format(selectedDateForBooking, 'yyyy-MM-dd'),
-                  checkout: format(addDays(selectedDateForBooking, 1), 'yyyy-MM-dd')
-                } : null}
-                existingBooking={null}
-                rooms={rooms}
-                clients={clients}
-                groups={[]}
-                sites={sites}
-                agencies={agencies}
-                reservations={reservations}
-                allBedConfigs={bedConfigurations}
-                selectedSiteName={selectedSiteName}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
