@@ -46,13 +46,18 @@ export default function HomePage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
+      // Detect test mode from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTestMode = urlParams.get('base44_data_env') === 'dev';
+      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
+      
       const [roomsData, sitesData, bedConfigsData, reservationsData, agenciesData, clientsData] = await Promise.all([
-        base44.entities.Room.list(),
-        base44.entities.Site.list(),
-        base44.entities.BedConfiguration.list('sort_order'),
-        base44.entities.Reservation.list(),
-        base44.entities.Agency.list(),
-        base44.entities.Client.list()
+        dbClient.entities.Room.list(),
+        dbClient.entities.Site.list(),
+        dbClient.entities.BedConfiguration.list('sort_order'),
+        dbClient.entities.Reservation.list(),
+        dbClient.entities.Agency.list(),
+        dbClient.entities.Client.list()
       ]);
       setRooms(roomsData);
       setSites(sitesData);
@@ -85,7 +90,11 @@ export default function HomePage() {
 
   const handleCalendarBookingSubmit = async (bookingData) => {
     try {
-      await base44.entities.Reservation.create(bookingData);
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTestMode = urlParams.get('base44_data_env') === 'dev';
+      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
+      
+      await dbClient.entities.Reservation.create(bookingData);
       setShowCalendarBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
