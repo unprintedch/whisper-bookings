@@ -46,24 +46,21 @@ export default function HomePage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // Detect test mode from URL
       const urlParams = new URLSearchParams(window.location.search);
       const isTestMode = urlParams.get('base44_data_env') === 'dev';
       const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
       
-      const [roomsData, sitesData, bedConfigsData, reservationsData, agenciesData, clientsData] = await Promise.all([
-        dbClient.entities.Room.list(),
+      const [roomsData, sitesData, bedConfigsData, reservationsData, clientsData] = await Promise.all([
+        dbClient.entities.Room.list('-name'),
         dbClient.entities.Site.list(),
         dbClient.entities.BedConfiguration.list('sort_order'),
-        dbClient.entities.Reservation.list(),
-        dbClient.entities.Agency.list(),
+        dbClient.entities.Reservation.list('-created_date'),
         dbClient.entities.Client.list()
       ]);
       setRooms(roomsData);
       setSites(sitesData);
       setBedConfigurations(bedConfigsData);
       setReservations(reservationsData);
-      setAgencies(agenciesData);
       setClients(clientsData);
     } catch (error) {
       console.error('Error loading data:', error);
