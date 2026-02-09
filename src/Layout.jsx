@@ -39,38 +39,44 @@ const navigationItems = [
   {
     title: "Dashboard",
     url: createPageUrl("Dashboard"),
-    icon: CalendarIcon, // Using CalendarIcon here
-    description: "All sites overview"
+    icon: CalendarIcon,
+    description: "All sites overview",
+    pageName: "Dashboard"
   },
   {
     title: "Rooms",
     url: createPageUrl("Rooms"),
     icon: Building2,
-    description: "Manage inventory"
+    description: "Manage inventory",
+    pageName: "Rooms"
   },
   {
     title: "Bed Configurations",
     url: createPageUrl("BedConfigurations"),
     icon: Bed,
-    description: "Manage bed configurations"
+    description: "Manage bed configurations",
+    pageName: "BedConfigurations"
   },
   {
-    title: "Bookings", // Changed from "Clients"
-    url: createPageUrl("Clients"), // The page remains "Clients.js"
+    title: "Bookings",
+    url: createPageUrl("Clients"),
     icon: Users,
-    description: "Manage bookings and clients" // Changed from "Manage booking clients"
+    description: "Manage bookings and clients",
+    pageName: "Clients"
   },
   {
     title: "Agencies",
     url: createPageUrl("Agencies"),
     icon: Briefcase,
-    description: "Manage partner agencies"
+    description: "Manage partner agencies",
+    pageName: "Agencies"
   },
   {
     title: "Reports",
     url: createPageUrl("Reports"),
     icon: BarChart3,
-    description: "Statistics and exports"
+    description: "Statistics and exports",
+    pageName: "Reports"
   }
 ];
 
@@ -79,19 +85,22 @@ const adminNavItems = [
     title: "Users",
     url: createPageUrl("Users"),
     icon: Users,
-    description: "Manage user roles"
+    description: "Manage user roles",
+    pageName: "Users"
   },
   {
     title: "Data Health",
     url: createPageUrl("DataHealth"),
     icon: Database,
-    description: "Fix data inconsistencies"
+    description: "Fix data inconsistencies",
+    pageName: "DataHealth"
   },
   {
     title: "Settings",
     url: createPageUrl("Settings"),
     icon: Settings,
-    description: "Manage application settings"
+    description: "Manage application settings",
+    pageName: "Settings"
   }
 ];
 
@@ -204,9 +213,7 @@ export default function Layout({ children }) {
 
   // Filter navigation items based on user role
   const filteredNavigationItems = navigationItems.filter(item => {
-    // Extract page name from URL (e.g., "/Dashboard" -> "Dashboard")
-    const pageName = item.url.split('/').pop().split('?')[0];
-    return canAccessPage(pageName);
+    return canAccessPage(item.pageName);
   });
 
   // Updated logic to detect dashboard pages and client management page
