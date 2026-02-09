@@ -254,7 +254,7 @@ export default function Layout({ children }) {
   }
 
   // Home page - no layout
-  const isHomePage = location.pathname === '/' || location.pathname === '/Home';
+  const isHomePage = location.pathname === '/' || location.pathname === '/Home' || location.pathname === '/index';
 
   if (isHomePage) {
     return children;
