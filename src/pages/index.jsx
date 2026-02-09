@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Room, Site, BedConfiguration, Client, Reservation, Agency } from "@/entities/all";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,12 +47,12 @@ export default function HomePage() {
     setIsLoading(true);
     try {
       const [roomsData, sitesData, bedConfigsData, reservationsData, agenciesData, clientsData] = await Promise.all([
-        Room.list(),
-        Site.list(),
-        BedConfiguration.list('sort_order'),
-        Reservation.list(),
-        Agency.list(),
-        Client.list()
+        base44.entities.Room.list(),
+        base44.entities.Site.list(),
+        base44.entities.BedConfiguration.list('sort_order'),
+        base44.entities.Reservation.list(),
+        base44.entities.Agency.list(),
+        base44.entities.Client.list()
       ]);
       setRooms(roomsData);
       setSites(sitesData);
@@ -85,7 +85,7 @@ export default function HomePage() {
 
   const handleCalendarBookingSubmit = async (bookingData) => {
     try {
-      await Reservation.create(bookingData);
+      await base44.entities.Reservation.create(bookingData);
       setShowCalendarBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
