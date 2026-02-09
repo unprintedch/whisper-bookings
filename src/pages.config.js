@@ -53,7 +53,6 @@ import Clients from './pages/Clients';
 import Dashboard from './pages/Dashboard';
 import DataHealth from './pages/DataHealth';
 import Groups from './pages/Groups';
-import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Rooms from './pages/Rooms';
@@ -71,7 +70,6 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DataHealth": DataHealth,
     "Groups": Groups,
-    "Home": Home,
     "Profile": Profile,
     "Reports": Reports,
     "Rooms": Rooms,
