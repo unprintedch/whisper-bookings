@@ -60,6 +60,7 @@ import Settings from './pages/Settings';
 import Users from './pages/Users';
 import dashboard from './pages/dashboard';
 import index from './pages/index';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -77,6 +78,7 @@ export const PAGES = {
     "Users": Users,
     "dashboard": dashboard,
     "index": index,
+    "Home": Home,
 }
 
 export const pagesConfig = {
