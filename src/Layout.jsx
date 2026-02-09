@@ -210,8 +210,7 @@ export default function Layout({ children }) {
   });
 
   // Updated logic to detect dashboard pages and client management page
-  const isDashboardPage = location.pathname === '/' || 
-                         location.pathname.includes('Dashboard') || 
+  const isDashboardPage = location.pathname.includes('Dashboard') || 
                          location.pathname === '/Dashboard';
 
   const isClientManagementPage = location.pathname.includes('Clients');
