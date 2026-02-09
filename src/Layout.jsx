@@ -152,10 +152,10 @@ export default function Layout({ children }) {
   useEffect(() => {
     if (isCheckingAuth) return;
     
-    const isHomePage = location.pathname === '/' || location.pathname === '/Home';
+    const isHomePage = location.pathname === '/' || location.pathname === '/index';
     
     if (!currentUser && !isHomePage) {
-      navigate('/Home');
+      navigate('/');
     }
   }, [isCheckingAuth, currentUser, location.pathname, navigate]);
 
@@ -261,7 +261,7 @@ export default function Layout({ children }) {
   }
 
   // Home page - no layout
-  const isHomePage = location.pathname === '/' || location.pathname === '/Home' || location.pathname === '/index';
+  const isHomePage = location.pathname === '/' || location.pathname === '/index';
 
   if (isHomePage) {
     return children;
