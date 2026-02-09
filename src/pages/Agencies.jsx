@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Agency } from "@/entities/Agency";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Briefcase, Mail, Phone, User } from "lucide-react";
 import AgencyForm from "../components/agencies/AgencyForm";
 import { Input } from "@/components/ui/input";
+import { base44 } from "@/api/base44Client";
 
 export default function AgenciesPage() {
+  const navigate = useNavigate();
   const [agencies, setAgencies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
