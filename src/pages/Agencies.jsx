@@ -105,8 +105,20 @@ export default function AgenciesPage() {
   }, [migrateAgencyCodes]);
 
   useEffect(() => {
-    loadAgencies();
-  }, [loadAgencies]);
+    const checkAuth = async () => {
+      try {
+        const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) {
+          navigate('/Home');
+          return;
+        }
+        loadAgencies();
+      } catch (error) {
+        navigate('/Home');
+      }
+    };
+    checkAuth();
+  }, [loadAgencies, navigate]);
 
   const handleOpenForm = (agency = null) => {
     setEditingAgency(agency);
