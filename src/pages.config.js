@@ -60,6 +60,7 @@ import Rooms from './pages/Rooms';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
 import dashboard from './pages/dashboard';
+import index from './pages/index';
 import __Layout from './Layout.jsx';
 
 
@@ -77,6 +78,7 @@ export const PAGES = {
     "Settings": Settings,
     "Users": Users,
     "dashboard": dashboard,
+    "index": index,
 }
 
 export const pagesConfig = {
