@@ -378,7 +378,7 @@ export default function GanttChart({
                       {dateColumns.map((date, dateIndex) =>
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 relative group/cell flex-shrink-0 ${
+                        className={`border-r border-slate-200 relative flex-shrink-0 ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
@@ -389,7 +389,7 @@ export default function GanttChart({
 
                           {!isPublicView && onCellClick && (
                             <div 
-                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center"
+                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center group/cell"
                               style={{ width: '60px' }}
                               onClick={() => onCellClick(room, date)}
                             >
