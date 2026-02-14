@@ -41,6 +41,8 @@ export default function HomePage() {
       const isAuth = await base44.auth.isAuthenticated();
       setIsAuthenticated(isAuth);
       
+      let shouldLoadData = false;
+      
       // Check if password protection is enabled
       const settingsList = await base44.entities.PublicAccessSettings.list();
       if (settingsList.length > 0) {
@@ -50,27 +52,31 @@ export default function HomePage() {
         // If authenticated or not protected, grant access
         if (isAuth || !settings.is_password_protected) {
           setHasAccess(true);
+          shouldLoadData = true;
         } else {
           // Check if password was previously entered (stored in sessionStorage)
           const storedAccess = sessionStorage.getItem('publicPageAccess');
           if (storedAccess === 'granted') {
             setHasAccess(true);
+            shouldLoadData = true;
+          } else {
+            setIsLoading(false);
           }
         }
       } else {
         // No settings, grant access by default
         setHasAccess(true);
+        shouldLoadData = true;
+      }
+      
+      if (shouldLoadData) {
+        loadData();
       }
     } catch (error) {
       console.error('Error checking auth:', error);
       setIsAuthenticated(false);
-      setHasAccess(true); // Grant access on error
-    }
-    
-    if (isAuthenticated || hasAccess) {
+      setHasAccess(true);
       loadData();
-    } else {
-      setIsLoading(false);
     }
   };
 
