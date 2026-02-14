@@ -378,27 +378,25 @@ export default function GanttChart({
                       {dateColumns.map((date, dateIndex) =>
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        className={`border-r border-slate-200 relative flex-shrink-0 ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
                         style={{
                           width: '120px',
                           height: '100%'
-                        }}
->
+                        }}>
 
                           {!isPublicView && onCellClick && (
                             <div 
-                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center group/booknow z-10"
+                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50/50 transition-colors flex items-center justify-center z-10 group/booknow"
                               style={{ width: '60px' }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onCellClick(room, date);
                               }}
                             >
-                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/booknow:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/booknow:opacity-100 transition-opacity pointer-events-none">
                                 <Plus className="w-4 h-4" />
                                 <span>Book</span>
                               </div>
@@ -408,7 +406,7 @@ export default function GanttChart({
                       )}
                     </div>
 
-                    <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 pointer-events-none z-20">
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
