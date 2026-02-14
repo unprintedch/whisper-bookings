@@ -383,6 +383,9 @@ export default function GanttChart({
                           return cellDate >= checkin && cellDate < checkout;
                         });
 
+                        const isLastColumn = dateIndex === dateColumns.length - 1;
+                        const hoverWidth = isLastColumn ? '60px' : '120px';
+
                         return (
                         <div
                           key={`${room.id}-${date.toISOString()}-${dateIndex}`}
@@ -397,7 +400,13 @@ export default function GanttChart({
 
                             {!isPublicView && onCellClick && !hasReservation && (
                               <div 
-                                className="absolute inset-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center z-30"
+                                className="absolute cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center z-30"
+                                style={{
+                                  left: '60px',
+                                  width: hoverWidth,
+                                  top: 0,
+                                  bottom: 0
+                                }}
                                 onClick={() => onCellClick(room, date)}
                               >
                                 <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -409,7 +418,13 @@ export default function GanttChart({
 
                             {isPublicView && onCellClick && !hasReservation && (
                               <div 
-                                className="absolute right-0 top-0 bottom-0 w-[60px] cursor-pointer hover:bg-blue-100 transition-colors flex items-center justify-center z-30"
+                                className="absolute cursor-pointer hover:bg-blue-100 transition-colors flex items-center justify-center z-30"
+                                style={{
+                                  left: '60px',
+                                  width: hoverWidth,
+                                  top: 0,
+                                  bottom: 0
+                                }}
                                 onClick={() => onCellClick(room, date)}
                               >
                                 <div className="flex items-center gap-1 text-yellow-700 text-xs font-medium opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -423,7 +438,7 @@ export default function GanttChart({
                       })}
                     </div>
 
-                    <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 pointer-events-none z-20">
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
