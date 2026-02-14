@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LogIn, ChevronLeft, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -23,6 +25,11 @@ export default function HomePage() {
   const [selectedSiteName, setSelectedSiteName] = useState('all');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filters, setFilters] = useState({ bedConfigId: 'all' });
+  
+  const [isPasswordProtected, setIsPasswordProtected] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
 
 
   useEffect(() => {
