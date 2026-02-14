@@ -374,30 +374,28 @@ export default function GanttChart({
                   </div>
 
                   <div className="relative flex-shrink-0 h-full">
-                    <div className="flex h-full">
+                    <div className="flex h-full relative z-10">
                       {dateColumns.map((date, dateIndex) => (
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 relative flex-shrink-0 ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}>
-
+                        <div
+                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                          className={`border-r border-slate-200 relative flex-shrink-0 ${
+                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
+                          style={{
+                            width: '120px',
+                            height: '100%'
+                          }}>
                           {!isPublicView && onCellClick && (
                             <div 
-                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-100/60 transition-colors flex items-center justify-center group/book"
-                              style={{ width: '60px' }}
+                              className="absolute right-0 top-0 bottom-0 w-[60px] cursor-pointer hover:bg-blue-100 transition-colors flex items-center justify-center group/book z-30"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onCellClick(room, date);
                               }}
                             >
-                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/book:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-1 text-yellow-700 text-xs font-medium opacity-0 group-hover/book:opacity-100 transition-opacity">
                                 <Plus className="w-4 h-4" />
-                                <span className="text-xs font-medium">Book</span>
+                                <span>Book</span>
                               </div>
                             </div>
                           )}
@@ -405,7 +403,7 @@ export default function GanttChart({
                       ))}
                     </div>
 
-                    <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 pointer-events-none z-20">
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
