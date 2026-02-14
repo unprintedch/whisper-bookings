@@ -450,7 +450,7 @@ export default function GanttChart({
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
                             <div
-                              className={`absolute inset-0 w-full flex flex-col justify-center relative rounded px-2 py-1 ${position.startsBefore ? 'rounded-l-none' : ''} ${position.endsAfter ? 'rounded-r-none' : ''} ${
+                              className={`absolute inset-0 w-full flex flex-col justify-center relative rounded px-2 ${position.startsBefore ? 'rounded-l-none' : ''} ${position.endsAfter ? 'rounded-r-none' : ''} ${
                                 !isOwnAgency ? 'opacity-40' : ''
                               } ${isOwnAgency ? 'shadow-sm' : ''}`}
                               style={{
