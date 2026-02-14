@@ -696,6 +696,7 @@ export default function ClientsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="REQUEST">REQUEST</SelectItem>
                       <SelectItem value="OPTION">OPTION</SelectItem>
                       <SelectItem value="RESERVE">RESERVE</SelectItem>
                       <SelectItem value="CONFIRME">CONFIRME</SelectItem>
@@ -1034,6 +1035,7 @@ export default function ClientsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="REQUEST">REQUEST</SelectItem>
                       <SelectItem value="OPTION">OPTION</SelectItem>
                       <SelectItem value="RESERVE">RESERVE</SelectItem>
                       <SelectItem value="CONFIRME">CONFIRME</SelectItem>
