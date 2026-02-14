@@ -439,13 +439,12 @@ export default function GanttChart({
                         return (
                           <div
                             key={position.reservation.id}
-                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
+                            className={`absolute top-0 h-full pointer-events-auto transition-all duration-200 ${
                               isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'
                             }`}
                             style={{
                               left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
