@@ -389,11 +389,11 @@ export default function GanttChart({
 
                           {!isPublicView && onCellClick && (
                             <div 
-                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center group/cell"
+                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center group"
                               style={{ width: '60px' }}
                               onClick={() => onCellClick(room, date)}
                             >
-                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Plus className="w-4 h-4" />
                                 <span>Book</span>
                               </div>
