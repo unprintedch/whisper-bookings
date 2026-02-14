@@ -401,7 +401,7 @@ export default function GanttChart({
 
                           {isPublicView && onCellClick && (
                             <div 
-                              className="absolute inset-0 cursor-pointer hover:bg-blue-100 transition-colors flex items-center justify-center z-30"
+                              className="absolute right-0 top-0 bottom-0 w-[60px] cursor-pointer hover:bg-blue-100 transition-colors flex items-center justify-center z-30"
                               onClick={() => onCellClick(room, date)}
                             >
                               <div className="flex items-center gap-1 text-yellow-700 text-xs font-medium opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -414,7 +414,7 @@ export default function GanttChart({
                       )}
                     </div>
 
-                    <div className="absolute inset-0 pointer-events-none z-20">
+                    <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
