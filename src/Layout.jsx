@@ -96,11 +96,18 @@ const adminNavItems = [
     pageName: "DataHealth"
   },
   {
-    title: "Settings",
+    title: "Email Settings",
     url: createPageUrl("Settings"),
     icon: Settings,
-    description: "Manage application settings",
+    description: "Manage email notifications",
     pageName: "Settings"
+  },
+  {
+    title: "Public Access",
+    url: createPageUrl("PublicAccessSettings"),
+    icon: Settings,
+    description: "Manage public page access",
+    pageName: "PublicAccessSettings"
   }
 ];
 

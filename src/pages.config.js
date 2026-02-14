@@ -53,6 +53,7 @@ import Clients from './pages/Clients';
 import Dashboard from './pages/Dashboard';
 import DataHealth from './pages/DataHealth';
 import Groups from './pages/Groups';
+import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Rooms from './pages/Rooms';
@@ -60,7 +61,7 @@ import Settings from './pages/Settings';
 import Users from './pages/Users';
 import dashboard from './pages/dashboard';
 import index from './pages/index';
-import Home from './pages/Home';
+import PublicAccessSettings from './pages/PublicAccessSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -71,6 +72,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DataHealth": DataHealth,
     "Groups": Groups,
+    "Home": Home,
     "Profile": Profile,
     "Reports": Reports,
     "Rooms": Rooms,
@@ -78,7 +80,7 @@ export const PAGES = {
     "Users": Users,
     "dashboard": dashboard,
     "index": index,
-    "Home": Home,
+    "PublicAccessSettings": PublicAccessSettings,
 }
 
 export const pagesConfig = {

@@ -33,11 +33,60 @@ export default function HomePage() {
     try {
       const isAuth = await base44.auth.isAuthenticated();
       setIsAuthenticated(isAuth);
+      
+      // Check if password protection is enabled
+      const settingsList = await base44.entities.PublicAccessSettings.list();
+      if (settingsList.length > 0) {
+        const settings = settingsList[0];
+        setIsPasswordProtected(settings.is_password_protected || false);
+        
+        // If authenticated or not protected, grant access
+        if (isAuth || !settings.is_password_protected) {
+          setHasAccess(true);
+        } else {
+          // Check if password was previously entered (stored in sessionStorage)
+          const storedAccess = sessionStorage.getItem('publicPageAccess');
+          if (storedAccess === 'granted') {
+            setHasAccess(true);
+          }
+        }
+      } else {
+        // No settings, grant access by default
+        setHasAccess(true);
+      }
     } catch (error) {
       console.error('Error checking auth:', error);
       setIsAuthenticated(false);
+      setHasAccess(true); // Grant access on error
     }
-    loadData();
+    
+    if (isAuthenticated || hasAccess) {
+      loadData();
+    } else {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError(false);
+    
+    try {
+      const settingsList = await base44.entities.PublicAccessSettings.list();
+      if (settingsList.length > 0) {
+        const settings = settingsList[0];
+        if (passwordInput === settings.access_password) {
+          setHasAccess(true);
+          sessionStorage.setItem('publicPageAccess', 'granted');
+          loadData();
+        } else {
+          setPasswordError(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      setPasswordError(true);
+    }
   };
 
   const loadData = async () => {
@@ -85,6 +134,64 @@ export default function HomePage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-700 mx-auto"></div>
           <p className="mt-4 text-slate-600">Loading availability...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!hasAccess && isPasswordProtected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center mb-6">
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" 
+                alt="Whisper B. Logo" 
+                className="w-16 h-16 mx-auto mb-3" 
+              />
+              <h1 className="text-2xl font-bold text-slate-800">Whisper B.</h1>
+              <p className="text-slate-600 mt-2">This page is password protected</p>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  className="mt-1"
+                />
+                {passwordError && (
+                  <p className="text-sm text-red-600 mt-1">Incorrect password</p>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full bg-yellow-700 hover:bg-yellow-800">
+                Access Page
+              </Button>
+            </form>
+
+            {!isAuthenticated && (
+              <div className="mt-4 text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => base44.auth.redirectToLogin()}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  <LogIn className="w-4 h-4 mr-1" />
+                  Or login as admin
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
