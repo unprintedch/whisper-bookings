@@ -378,22 +378,27 @@ export default function GanttChart({
                       {dateColumns.map((date, dateIndex) =>
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 relative flex-shrink-0 ${
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
                         style={{
                           width: '120px',
                           height: '100%'
-                        }}>
+                        }}
+>
 
                           {!isPublicView && onCellClick && (
                             <div 
-                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center group"
+                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center group/booknow z-10"
                               style={{ width: '60px' }}
-                              onClick={() => onCellClick(room, date)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCellClick(room, date);
+                              }}
                             >
-                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/booknow:opacity-100 transition-opacity">
                                 <Plus className="w-4 h-4" />
                                 <span>Book</span>
                               </div>
