@@ -431,7 +431,7 @@ export default function HomePage() {
               onCellClick={handleCellClick}
               onBookingEdit={null}
               onRoomEdit={null}
-              isPublicView={false}
+              isPublicView={true}
             />
           </CardContent>
         </Card>
