@@ -468,7 +468,7 @@ export default function GanttChart({
                               {isOwnAgency && (
                                 <div>
                                   {(occupancyDisplay || position.reservation.bed_configuration) && (
-                                    <div className="text-xs text-slate-600 truncate">
+                                    <div className="text-xs text-slate-700 font-medium truncate">
                                       {occupancyDisplay && position.reservation.bed_configuration ?
                                         `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
                                         occupancyDisplay || position.reservation.bed_configuration}
