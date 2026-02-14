@@ -16,6 +16,7 @@ export default function PublicBookingForm({
   sites = [],
   bedConfigurations = [],
   reservations = [],
+  agencies = [],
   onSubmit,
   initialRoom = null,
   initialDate = null
@@ -24,6 +25,8 @@ export default function PublicBookingForm({
     contact_name: '',
     contact_email: '',
     contact_phone: '',
+    agency_id: '',
+    request_type: 'provisoire',
     room_id: initialRoom?.id || '',
     bed_configuration: '',
     date_checkin: initialDate ? format(initialDate, 'yyyy-MM-dd') : '',
@@ -271,6 +274,7 @@ export default function PublicBookingForm({
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contact_email)) {
       newErrors.contact_email = "Invalid email format";
     }
+    if (!formData.request_type) newErrors.request_type = "Request type is required";
     if (!selectedBedConfigId) newErrors.bed_configuration = "Bed setup is required";
     if (!formData.room_id) newErrors.room_id = "Room is required";
     if (!formData.date_checkin) newErrors.date_checkin = "Check-in date is required";
@@ -347,7 +351,7 @@ export default function PublicBookingForm({
         {/* Contact Information */}
         <Card className="p-6 bg-slate-50/50">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">Your Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="space-y-2">
               <Label htmlFor="contact_name" className={errors.contact_name ? 'text-red-600' : ''}>
                 Full Name {errors.contact_name && <span className="text-red-500">*</span>}
@@ -384,6 +388,46 @@ export default function PublicBookingForm({
                 onChange={(e) => handleChange('contact_phone', e.target.value)}
                 placeholder="+1 234 567 8900"
               />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="agency_id">Agency (Optional)</Label>
+              <Select
+                value={formData.agency_id}
+                onValueChange={(value) => handleChange('agency_id', value)}
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select an agency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>No agency</SelectItem>
+                  {agencies.map((agency) => (
+                    <SelectItem key={agency.id} value={agency.id}>
+                      {agency.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="request_type" className={errors.request_type ? 'text-red-600' : ''}>
+                Request Type {errors.request_type && <span className="text-red-500">*</span>}
+              </Label>
+              <Select
+                value={formData.request_type}
+                onValueChange={(value) => handleChange('request_type', value)}
+              >
+                <SelectTrigger className={`h-11 ${errors.request_type ? 'border-red-300 focus-visible:ring-red-300' : ''}`}>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="provisoire">Provisoire</SelectItem>
+                  <SelectItem value="ferme">Ferme</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </Card>

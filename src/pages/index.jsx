@@ -22,6 +22,7 @@ export default function HomePage() {
   const [reservations, setReservations] = useState([]);
 
   const [clients, setClients] = useState([]);
+  const [agencies, setAgencies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedSiteName, setSelectedSiteName] = useState('all');
@@ -115,18 +116,20 @@ export default function HomePage() {
       const isTestMode = urlParams.get('base44_data_env') === 'dev';
       const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
       
-      const [roomsData, sitesData, bedConfigsData, reservationsData, clientsData] = await Promise.all([
+      const [roomsData, sitesData, bedConfigsData, reservationsData, clientsData, agenciesData] = await Promise.all([
         dbClient.entities.Room.list('-name'),
         dbClient.entities.Site.list(),
         dbClient.entities.BedConfiguration.list('sort_order'),
         dbClient.entities.Reservation.list('-created_date'),
-        dbClient.entities.Client.list()
+        dbClient.entities.Client.list(),
+        dbClient.entities.Agency.list()
       ]);
       setRooms(roomsData);
       setSites(sitesData);
       setBedConfigurations(bedConfigsData);
       setReservations(reservationsData);
       setClients(clientsData);
+      setAgencies(agenciesData);
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -157,7 +160,8 @@ export default function HomePage() {
         name: formData.contact_name,
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
-        notes: `Public booking request from website. ${formData.comment || ''}`
+        agency_id: formData.agency_id || undefined,
+        notes: `Public booking request from website. Type: ${formData.request_type}. ${formData.comment || ''}`
       };
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -176,7 +180,7 @@ export default function HomePage() {
         adults_count: formData.adults_count,
         children_count: formData.children_count,
         infants_count: formData.infants_count,
-        comment: formData.comment,
+        comment: `[${formData.request_type.toUpperCase()}] ${formData.comment || ''}`,
         status: 'REQUEST'
       };
 
@@ -454,6 +458,7 @@ export default function HomePage() {
             sites={sites}
             bedConfigurations={bedConfigurations}
             reservations={reservations}
+            agencies={agencies}
             onSubmit={handleBookingSubmit}
             initialRoom={selectedRoomForBooking}
             initialDate={selectedDateForBooking}
