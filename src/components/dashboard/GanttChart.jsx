@@ -378,23 +378,27 @@ export default function GanttChart({
                       {dateColumns.map((date, dateIndex) =>
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        onCellClick ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        className={`border-r border-slate-200 relative group/cell flex-shrink-0 ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
                         style={{
                           width: '120px',
                           height: '100%'
-                        }}
-                        onClick={onCellClick ? () => onCellClick(room, date) : undefined}>
+                        }}>
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
+                          {!isPublicView && onCellClick && (
+                            <div 
+                              className="absolute right-0 top-0 bottom-0 cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center"
+                              style={{ width: '60px' }}
+                              onClick={() => onCellClick(room, date)}
+                            >
+                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                                <Plus className="w-4 h-4" />
+                                <span>Book</span>
+                              </div>
                             </div>
-                        }
+                          )}
                         </div>
                       )}
                     </div>
