@@ -455,6 +455,8 @@ export default function HomePage() {
             bedConfigurations={bedConfigurations}
             reservations={reservations}
             onSubmit={handleBookingSubmit}
+            initialRoom={selectedRoomForBooking}
+            initialDate={selectedDateForBooking}
           />
         </DialogContent>
       </Dialog>

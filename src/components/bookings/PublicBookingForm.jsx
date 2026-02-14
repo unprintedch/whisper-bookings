@@ -16,16 +16,18 @@ export default function PublicBookingForm({
   sites = [],
   bedConfigurations = [],
   reservations = [],
-  onSubmit
+  onSubmit,
+  initialRoom = null,
+  initialDate = null
 }) {
   const [formData, setFormData] = useState({
     contact_name: '',
     contact_email: '',
     contact_phone: '',
-    room_id: '',
+    room_id: initialRoom?.id || '',
     bed_configuration: '',
-    date_checkin: '',
-    date_checkout: '',
+    date_checkin: initialDate ? format(initialDate, 'yyyy-MM-dd') : '',
+    date_checkout: initialDate ? format(addDays(initialDate, 1), 'yyyy-MM-dd') : '',
     adults_count: 2,
     children_count: 0,
     infants_count: 0,
@@ -35,6 +37,22 @@ export default function PublicBookingForm({
 
   const [selectedBedConfigId, setSelectedBedConfigId] = useState('');
   const [nights, setNights] = useState(1);
+
+  // Pre-select bed configuration if initial room is provided
+  useEffect(() => {
+    if (initialRoom && initialRoom.bed_configuration_ids && initialRoom.bed_configuration_ids.length > 0) {
+      const firstConfigId = initialRoom.bed_configuration_ids[0];
+      const config = bedConfigurations.find(c => c.id === firstConfigId);
+      if (config) {
+        setSelectedBedConfigId(firstConfigId);
+        setFormData(prev => ({
+          ...prev,
+          bed_configuration: config.name,
+          adults_count: config.max_occupancy
+        }));
+      }
+    }
+  }, [initialRoom, bedConfigurations]);
   const [errors, setErrors] = useState({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [checkinPopoverOpen, setCheckinPopoverOpen] = useState(false);
