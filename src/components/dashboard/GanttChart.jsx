@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
 
 const statusColors = {
-  REQUEST: "bg-purple-100 border-purple-300 text-purple-800",
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
   RESERVE: "bg-blue-100 border-blue-300 text-blue-800",
   CONFIRME: "bg-emerald-100 border-emerald-300 text-emerald-800",
@@ -18,7 +17,6 @@ const statusColors = {
 };
 
 const statusIcons = {
-  REQUEST: { icon: Clock, color: "text-purple-600" },
   OPTION: { icon: Clock, color: "text-amber-600" },
   RESERVE: { icon: Clock, color: "text-yellow-700" },
   CONFIRME: { icon: CheckCircle2, color: "text-emerald-600" },
@@ -27,7 +25,6 @@ const statusIcons = {
 };
 
 const statusBackgrounds = {
-  REQUEST: '#f3e8ff',
   OPTION: '#fef3c7',
   RESERVE: '#dbeafe',
   CONFIRME: '#d1fae5',
@@ -382,7 +379,7 @@ export default function GanttChart({
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        onCellClick ? 'cursor-pointer hover:bg-blue-50' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
@@ -390,9 +387,9 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={onCellClick ? () => onCellClick(room, date) : undefined}>
 
-                          {!isPublicView &&
+                          {onCellClick &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
