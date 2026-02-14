@@ -177,7 +177,7 @@ export default function HomePage() {
         children_count: formData.children_count,
         infants_count: formData.infants_count,
         comment: formData.comment,
-        status: 'OPTION'
+        status: 'REQUEST'
       };
 
       await dbClient.entities.Reservation.create(reservationData);
