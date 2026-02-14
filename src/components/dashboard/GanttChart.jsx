@@ -439,17 +439,18 @@ export default function GanttChart({
                         return (
                           <div
                             key={position.reservation.id}
-                            className={`absolute top-0 h-full pointer-events-auto transition-all duration-200 ${
+                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
                               isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'
                             }`}
                             style={{
                               left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              height: '100%'
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
                             <div
-                              className={`absolute inset-0 w-full flex flex-col justify-center relative rounded px-2 ${position.startsBefore ? 'rounded-l-none' : ''} ${position.endsAfter ? 'rounded-r-none' : ''} ${
+                              className={`absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 ${position.startsBefore ? 'rounded-l-none' : ''} ${position.endsAfter ? 'rounded-r-none' : ''} ${
                                 !isOwnAgency ? 'opacity-40' : ''
                               } ${isOwnAgency ? 'shadow-sm' : ''}`}
                               style={{
@@ -467,7 +468,7 @@ export default function GanttChart({
                               {isOwnAgency && (
                                 <div>
                                   {(occupancyDisplay || position.reservation.bed_configuration) && (
-                                    <div className="text-xs text-slate-700 font-medium truncate">
+                                    <div className="text-xs text-slate-600 truncate">
                                       {occupancyDisplay && position.reservation.bed_configuration ?
                                         `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
                                         occupancyDisplay || position.reservation.bed_configuration}
