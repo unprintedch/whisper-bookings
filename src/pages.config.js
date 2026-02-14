@@ -55,13 +55,13 @@ import DataHealth from './pages/DataHealth';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import PublicAccessSettings from './pages/PublicAccessSettings';
 import Reports from './pages/Reports';
 import Rooms from './pages/Rooms';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
 import dashboard from './pages/dashboard';
 import index from './pages/index';
-import PublicAccessSettings from './pages/PublicAccessSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -74,13 +74,13 @@ export const PAGES = {
     "Groups": Groups,
     "Home": Home,
     "Profile": Profile,
+    "PublicAccessSettings": PublicAccessSettings,
     "Reports": Reports,
     "Rooms": Rooms,
     "Settings": Settings,
     "Users": Users,
     "dashboard": dashboard,
     "index": index,
-    "PublicAccessSettings": PublicAccessSettings,
 }
 
 export const pagesConfig = {

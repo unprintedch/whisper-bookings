@@ -421,7 +421,7 @@ export default function HomePage() {
                   return a.number.localeCompare(b.number, undefined, { numeric: true });
                 });
               })()}
-              reservations={reservations}
+              reservations={reservations.filter(r => r.status !== 'OPTION' && r.status !== 'REQUEST')}
               clients={clients}
               groups={[]}
               sites={sites}
