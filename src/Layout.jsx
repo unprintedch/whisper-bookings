@@ -166,12 +166,21 @@ export default function Layout({ children }) {
     }
   }, [isCheckingAuth, currentUser, location.pathname, navigate]);
 
-  // Load bed configurations on mount
+  const [allRooms, setAllRooms] = useState([]);
+  const [allSites, setAllSites] = useState([]);
+
+  // Load bed configurations and rooms/sites on mount
   useEffect(() => {
     const loadBedConfigs = async () => {
       try {
-        const configs = await BedConfiguration.list('sort_order');
+        const [configs, rooms, sites] = await Promise.all([
+          BedConfiguration.list('sort_order'),
+          (await import('@/api/base44Client')).base44.entities.Room.list(),
+          (await import('@/api/base44Client')).base44.entities.Site.list(),
+        ]);
         setBedConfigurations(configs);
+        setAllRooms(rooms);
+        setAllSites(sites);
       } catch (error) {
         console.error('Error loading bed configurations:', error);
       }
