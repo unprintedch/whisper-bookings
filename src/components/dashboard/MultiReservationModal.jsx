@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { base44 } from "@/api/base44Client";
 
-export default function MultiReservationModal({ isOpen, onClose, mergedRanges, rooms, clients, sites, allBedConfigs, onSuccess }) {
+export default function MultiReservationModal({ isOpen, onClose, mergedRanges, rooms, clients, sites, allBedConfigs, agencies = [], onSuccess }) {
   const [clientId, setClientId] = useState("");
+  const [agencyId, setAgencyId] = useState("");
+  const [agencyContactIdx, setAgencyContactIdx] = useState("");
   const [status, setStatus] = useState("REQUEST");
   const [groupPax, setGroupPax] = useState("");
   const [perRoomDetails, setPerRoomDetails] = useState({});
@@ -17,9 +19,14 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   const [clientSearch, setClientSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredClients = clients.filter(c =>
-    c.name.toLowerCase().includes(clientSearch.toLowerCase())
-  );
+  const selectedAgency = agencies.find(a => a.id === agencyId);
+  const agencyContacts = selectedAgency?.contacts || [];
+
+  const filteredClients = clients.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(clientSearch.toLowerCase());
+    const matchesAgency = !agencyId || c.agency_id === agencyId;
+    return matchesSearch && matchesAgency;
+  });
 
   const getRoomName = (roomId) => {
     const room = rooms.find(r => r.id === roomId);
