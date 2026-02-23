@@ -163,7 +163,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
               {/* Autocomplete input */}
               <div className="flex-1 relative" ref={searchRef}>
                 <Input
-                  placeholder="Rechercher ou créer un client..."
+                  placeholder="Search or create a client..."
                   value={clientSearch}
                   onChange={e => {
                     setClientSearch(e.target.value);
