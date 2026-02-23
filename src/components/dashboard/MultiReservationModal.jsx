@@ -277,7 +277,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                       <Edit className="w-3 h-3 mr-1" /> Edit
                     </Button>
                   </div>
-                  {agencyForSelectedClient ? (
+                  {selectedClient && agencyForSelectedClient ? (
                     <div className="space-y-2 text-slate-700">
                       <p className="font-semibold">{agencyForSelectedClient.name}</p>
                       {agencyContactDisplay && (
