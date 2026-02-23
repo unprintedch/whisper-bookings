@@ -13,22 +13,18 @@ import ClientForm from "@/components/clients/ClientForm";
 
 export default function MultiReservationModal({ isOpen, onClose, mergedRanges, rooms, clients, sites, allBedConfigs, agencies = [], onSuccess }) {
   const [clientId, setClientId] = useState("");
-  const [agencyId, setAgencyId] = useState("");
-  const [agencyContactIdx, setAgencyContactIdx] = useState("");
   const [status, setStatus] = useState("REQUEST");
   const [groupPax, setGroupPax] = useState("");
   const [perRoomDetails, setPerRoomDetails] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
   const [clientSearch, setClientSearch] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClientEditOpen, setIsClientEditOpen] = useState(false);
-  const [isAgencyEditOpen, setIsAgencyEditOpen] = useState(false);
   const [editingClientNumber, setEditingClientNumber] = useState("");
   const [isEditingClientNumber, setIsEditingClientNumber] = useState(false);
   const [localClients, setLocalClients] = useState(clients);
-
-  const selectedAgency = agencies.find(a => a.id === agencyId);
-  const agencyContacts = selectedAgency?.contacts || [];
+  const searchRef = useRef(null);
 
   const selectedClient = localClients.find(c => c.id === clientId) || clients.find(c => c.id === clientId);
   const agencyForSelectedClient = selectedClient?.agency_id ? agencies.find(a => a.id === selectedClient.agency_id) : null;
