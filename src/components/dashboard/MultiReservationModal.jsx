@@ -17,8 +17,6 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   const [clientSearch, setClientSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) return null;
-
   const filteredClients = clients.filter(c =>
     c.name.toLowerCase().includes(clientSearch.toLowerCase())
   );
