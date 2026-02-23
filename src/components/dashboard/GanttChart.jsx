@@ -27,19 +27,16 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-// A single "free slot" between two bookings (or start/end of view)
-// startPx and endPx are the pixel boundaries of this free segment
-function FreeSlot({ startPx, endPx, room, startDate, onCellClick }) {
+// One hover cell per day column in a free segment
+function FreeCell({ leftPx, date, room, onCellClick }) {
   const [hovered, setHovered] = useState(false);
-  const width = endPx - startPx;
-  if (width <= 0 || !onCellClick) return null;
 
   return (
     <div
       style={{
         position: 'absolute',
-        left: `${startPx}px`,
-        width: `${width}px`,
+        left: `${leftPx}px`,
+        width: `${COL_WIDTH}px`,
         top: 0,
         height: '100%',
         display: 'flex',
@@ -51,10 +48,19 @@ function FreeSlot({ startPx, endPx, room, startDate, onCellClick }) {
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => onCellClick(room, startDate)}
+      onClick={() => onCellClick(room, date)}
     >
       {hovered && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#b45309', fontSize: 13, fontWeight: 500, pointerEvents: 'none' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          color: '#b45309',
+          fontSize: 13,
+          fontWeight: 500,
+          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+        }}>
           <Plus size={14} />
           <span>Book</span>
         </div>
@@ -156,6 +162,8 @@ export default function GanttChart({
   isLoading,
   onCellClick,
   onBookingEdit,
+  onBookingMove,
+  onBookingResize,
   onRoomEdit,
   sites = [],
   isPublicView = false
@@ -186,9 +194,9 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
-  // Returns pixel position for a booking bar.
-  // A booking bar starts at the middle of the checkin column and ends at the middle of the checkout column.
-  // If it starts before the view, it starts at pixel 0. If it ends after the view, it ends at the last pixel.
+  // Returns pixel start/end for a booking bar.
+  // Bar starts at midpoint of checkin column, ends at midpoint of checkout column.
+  // If checkin is before view: starts at 0. If checkout is after view: ends at totalWidth.
   const calculateBookingPosition = (reservation) => {
     if (!reservation.date_checkin || !reservation.date_checkout) return null;
 
@@ -201,7 +209,6 @@ export default function GanttChart({
 
     if (checkin >= viewEnd || checkout <= viewStart) return null;
 
-    // startPixel: middle of checkin day column, or 0 if before view
     let startPixel;
     if (checkin <= viewStart) {
       startPixel = 0;
@@ -213,14 +220,12 @@ export default function GanttChart({
       startPixel = idx * COL_WIDTH + COL_WIDTH / 2;
     }
 
-    // endPixel: middle of checkout day column, or full width if after view
     let endPixel;
     const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
     const endIdx = normalizedCols.findIndex(d => d.getTime() === checkoutDateOnly.getTime());
     if (endIdx !== -1) {
       endPixel = endIdx * COL_WIDTH + COL_WIDTH / 2;
     } else {
-      // checkout is after the view
       endPixel = normalizedCols.length * COL_WIDTH;
     }
 
@@ -301,33 +306,17 @@ export default function GanttChart({
               .sort((a, b) => a.startPixel - b.startPixel);
             const siteInfo = getSiteInfo(room.site_id);
 
-            // Compute free slots between bookings for the hover interaction
-            // Each free slot is [freeStart, freeEnd) in pixels, with the date to use when clicking
-            const freeSlots = [];
-            if (onCellClick) {
-              // Build sorted list of occupied [start, end] ranges
-              const occupied = bookingPositions.map(p => ({ start: p.startPixel, end: p.endPixel }));
-              // Start of view = pixel 0, end = totalWidth
-              let cursor = 0;
-              for (const seg of occupied) {
-                if (seg.start > cursor) {
-                  // Free segment from cursor to seg.start
-                  const freeStartPx = cursor;
-                  const freeEndPx = seg.start;
-                  // Find which date column corresponds to the midpoint of this free slot
-                  const midPx = (freeStartPx + freeEndPx) / 2;
-                  const colIdx = Math.min(Math.floor(midPx / COL_WIDTH), dateColumns.length - 1);
-                  freeSlots.push({ startPx: freeStartPx, endPx: freeEndPx, date: dateColumns[colIdx] });
-                }
-                cursor = Math.max(cursor, seg.end);
-              }
-              // Trailing free slot after last booking
-              if (cursor < totalWidth) {
-                const midPx = (cursor + totalWidth) / 2;
-                const colIdx = Math.min(Math.floor(midPx / COL_WIDTH), dateColumns.length - 1);
-                freeSlots.push({ startPx: cursor, endPx: totalWidth, date: dateColumns[colIdx] });
-              }
-            }
+            // For each day column, determine if it is "free" (not covered by any booking bar).
+            // A column at index i spans pixels [i*COL_WIDTH, (i+1)*COL_WIDTH].
+            // A booking covers from startPixel to endPixel.
+            // A column is "covered" if the booking bar overlaps it — specifically if the
+            // booking start < column right AND booking end > column left.
+            // We use the midpoint of each column to determine which columns are covered.
+            const freeCells = onCellClick ? dateColumns.map((date, colIdx) => {
+              const colMid = colIdx * COL_WIDTH + COL_WIDTH / 2;
+              const isCovered = bookingPositions.some(p => p.startPixel < colMid && p.endPixel > colMid);
+              return isCovered ? null : { colIdx, date };
+            }).filter(Boolean) : [];
 
             return (
               <div
@@ -365,7 +354,7 @@ export default function GanttChart({
                   </div>
                 </div>
 
-                {/* Date grid + booking bars + free slots */}
+                {/* Date grid + booking bars + free hover cells */}
                 <div style={{ position: 'relative', flexShrink: 0, height: '100%', width: `${totalWidth}px` }}>
 
                   {/* Background grid lines */}
@@ -388,14 +377,13 @@ export default function GanttChart({
                     })}
                   </div>
 
-                  {/* Free slot hover areas */}
-                  {freeSlots.map((slot, i) => (
-                    <FreeSlot
-                      key={i}
-                      startPx={slot.startPx}
-                      endPx={slot.endPx}
+                  {/* Free hover cells — one per free day column */}
+                  {freeCells.map(({ colIdx, date }) => (
+                    <FreeCell
+                      key={colIdx}
+                      leftPx={colIdx * COL_WIDTH}
+                      date={date}
                       room={room}
-                      startDate={slot.date}
                       onCellClick={onCellClick}
                     />
                   ))}
