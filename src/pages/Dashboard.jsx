@@ -574,6 +574,26 @@ export default function Dashboard({
         </div>
       )}
 
+      <MultiSelectionPanel
+        selectedSlots={selectedSlots}
+        onRemoveSlot={handleRemoveRoomSlots}
+        onClearAll={() => setSelectedSlots([])}
+        onConfirm={handleConfirmMulti}
+        rooms={rooms}
+        sites={sites}
+      />
+
+      <MultiReservationModal
+        isOpen={showMultiModal}
+        onClose={() => setShowMultiModal(false)}
+        mergedRanges={multiModalRanges}
+        rooms={rooms}
+        clients={clients}
+        sites={sites}
+        allBedConfigs={allBedConfigs}
+        onSuccess={() => { setSelectedSlots([]); setShowMultiModal(false); loadData(); }}
+      />
+
       {showRoomForm && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
