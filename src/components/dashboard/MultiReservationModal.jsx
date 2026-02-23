@@ -305,10 +305,10 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
               <div key={dateKey} className="border border-slate-200 rounded-lg overflow-hidden">
                 <div className="bg-slate-50 px-4 py-2 border-b">
                   <span className="text-sm font-semibold text-slate-700">
-                    {format(group.checkin, 'd MMM yyyy', { locale: fr })} → {format(group.checkout, 'd MMM yyyy', { locale: fr })}
+                    {format(group.checkin, 'd MMM yyyy')} → {format(group.checkout, 'd MMM yyyy')}
                   </span>
                   <span className="text-xs text-slate-500 ml-2">
-                    ({group.ranges.length} chambre{group.ranges.length > 1 ? 's' : ''})
+                    ({group.ranges.length} room{group.ranges.length > 1 ? 's' : ''})
                   </span>
                 </div>
                 <div className="divide-y divide-slate-100">
