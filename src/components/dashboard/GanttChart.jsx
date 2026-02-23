@@ -27,15 +27,15 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-// One hover cell per day column in a free segment
-function FreeCell({ leftPx, date, room, onCellClick }) {
+// One hover cell per free day column — exactly COL_WIDTH wide, same as header columns
+function FreeCell({ colIdx, date, room, onCellClick }) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <div
       style={{
         position: 'absolute',
-        left: `${leftPx}px`,
+        left: `${colIdx * COL_WIDTH}px`,
         width: `${COL_WIDTH}px`,
         top: 0,
         height: '100%',
@@ -44,23 +44,14 @@ function FreeCell({ leftPx, date, room, onCellClick }) {
         justifyContent: 'center',
         cursor: 'pointer',
         backgroundColor: hovered ? '#eff6ff' : 'transparent',
-        zIndex: 1,
+        zIndex: 2,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => onCellClick(room, date)}
     >
       {hovered && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          color: '#b45309',
-          fontSize: 13,
-          fontWeight: 500,
-          pointerEvents: 'none',
-          whiteSpace: 'nowrap',
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#b45309', fontSize: 13, fontWeight: 500, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
           <Plus size={14} />
           <span>Book</span>
         </div>
@@ -71,20 +62,11 @@ function FreeCell({ leftPx, date, room, onCellClick }) {
 
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
-
   React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const currentUser = await User.me();
-        setUser(currentUser);
-      } catch (error) {}
-    };
-    loadUser();
+    User.me().then(setUser).catch(() => {});
   }, []);
-
   if (!room) return null;
   const isAdmin = user?.role === 'admin';
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -173,13 +155,7 @@ export default function GanttChart({
   const [currentUser, setCurrentUser] = useState(null);
 
   React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await User.me();
-        setCurrentUser(user);
-      } catch (error) {}
-    };
-    loadUser();
+    User.me().then(setCurrentUser).catch(() => {});
   }, []);
 
   const getReservationsForRoom = (roomId) => reservations.filter(r => r.room_id === roomId);
@@ -194,43 +170,49 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
-  // Returns pixel start/end for a booking bar.
-  // Bar starts at midpoint of checkin column, ends at midpoint of checkout column.
-  // If checkin is before view: starts at 0. If checkout is after view: ends at totalWidth.
-  const calculateBookingPosition = (reservation) => {
+  // Normalize a date to midnight local time for comparison
+  const norm = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  // Compute pixel positions for a booking bar.
+  // Convention: bar goes from mid-checkin-col to mid-checkout-col.
+  // If checkin is before view start → bar starts at pixel 0.
+  // If checkout is after view end → bar ends at totalWidth.
+  const getBookingPixels = (reservation) => {
     if (!reservation.date_checkin || !reservation.date_checkout) return null;
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
-    const normalizedCols = dateColumns.map(d => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-    const viewStart = normalizedCols[0];
-    const last = normalizedCols[normalizedCols.length - 1];
-    const viewEnd = new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1);
+    const checkin = norm(new Date(reservation.date_checkin + 'T00:00:00'));
+    const checkout = norm(new Date(reservation.date_checkout + 'T00:00:00'));
+    const cols = dateColumns.map(d => norm(d));
+    const viewStart = cols[0];
+    const viewEnd = new Date(cols[cols.length - 1].getTime() + 86400000);
 
     if (checkin >= viewEnd || checkout <= viewStart) return null;
 
+    // startPixel
     let startPixel;
     if (checkin <= viewStart) {
       startPixel = 0;
     } else {
-      const idx = normalizedCols.findIndex(d =>
-        d.getFullYear() === checkin.getFullYear() && d.getMonth() === checkin.getMonth() && d.getDate() === checkin.getDate()
-      );
+      const idx = cols.findIndex(d => d.getTime() === checkin.getTime());
       if (idx === -1) return null;
       startPixel = idx * COL_WIDTH + COL_WIDTH / 2;
     }
 
+    // endPixel
     let endPixel;
-    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-    const endIdx = normalizedCols.findIndex(d => d.getTime() === checkoutDateOnly.getTime());
+    const endIdx = cols.findIndex(d => d.getTime() === checkout.getTime());
     if (endIdx !== -1) {
       endPixel = endIdx * COL_WIDTH + COL_WIDTH / 2;
     } else {
-      endPixel = normalizedCols.length * COL_WIDTH;
+      endPixel = cols.length * COL_WIDTH;
     }
 
     return { startPixel, endPixel, reservation };
   };
+
+  // A column at index i is "covered" by a booking if the booking bar
+  // occupies the midpoint of that column: startPixel < colMid AND endPixel > colMid
+  const colMid = (i) => i * COL_WIDTH + COL_WIDTH / 2;
 
   const handleBookingClick = (reservation, event) => {
     event.stopPropagation();
@@ -273,22 +255,9 @@ export default function GanttChart({
                 const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
                 const isHighlighted = highlightDate && isSameDay(date, highlightDate);
                 return (
-                  <div
-                    key={date.toISOString()}
-                    style={{
-                      width: `${COL_WIDTH}px`,
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '12px 0',
-                      borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0',
-                      background: isHighlighted ? '#f1f5f9' : 'rgba(248,250,252,0.4)',
-                    }}>
+                  <div key={date.toISOString()} style={{ width: `${COL_WIDTH}px`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0', borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0', background: isHighlighted ? '#f1f5f9' : 'rgba(248,250,252,0.4)' }}>
                     <div className="text-sm font-bold text-slate-800 text-center">
-                      <span className="text-xs font-medium text-slate-600 uppercase tracking-wide mr-1">
-                        {format(date, 'EEE', { locale: enUS })}
-                      </span>
+                      <span className="text-xs font-medium text-slate-600 uppercase tracking-wide mr-1">{format(date, 'EEE', { locale: enUS })}</span>
                       <span>{format(date, 'd MMM', { locale: enUS })}</span>
                     </div>
                   </div>
@@ -299,45 +268,28 @@ export default function GanttChart({
 
           {/* Rows */}
           {rooms.map((room, roomIndex) => {
-            const roomReservations = getReservationsForRoom(room.id);
-            const bookingPositions = roomReservations
-              .map(r => calculateBookingPosition(r))
-              .filter(p => p !== null)
+            const bookingPixels = getReservationsForRoom(room.id)
+              .map(r => getBookingPixels(r))
+              .filter(Boolean)
               .sort((a, b) => a.startPixel - b.startPixel);
+
             const siteInfo = getSiteInfo(room.site_id);
 
-            // For each day column, determine if it is "free" (not covered by any booking bar).
-            // A column at index i spans pixels [i*COL_WIDTH, (i+1)*COL_WIDTH].
-            // A booking covers from startPixel to endPixel.
-            // A column is "covered" if the booking bar overlaps it — specifically if the
-            // booking start < column right AND booking end > column left.
-            // We use the midpoint of each column to determine which columns are covered.
-            const freeCells = onCellClick ? dateColumns.map((date, colIdx) => {
-              const colMid = colIdx * COL_WIDTH + COL_WIDTH / 2;
-              const isCovered = bookingPositions.some(p => p.startPixel < colMid && p.endPixel > colMid);
-              return isCovered ? null : { colIdx, date };
-            }).filter(Boolean) : [];
+            // Free columns: those whose midpoint is NOT covered by any booking bar
+            const freeCols = onCellClick
+              ? dateColumns.map((date, i) => {
+                  const mid = colMid(i);
+                  const covered = bookingPixels.some(p => p.startPixel < mid && p.endPixel > mid);
+                  return covered ? null : { colIdx: i, date };
+                }).filter(Boolean)
+              : [];
 
             return (
-              <div
-                key={`${room.id}-${roomIndex}`}
-                style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', height: '50px' }}>
+              <div key={`${room.id}-${roomIndex}`} style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', height: '50px' }}>
 
                 {/* Room label */}
                 <div
-                  style={{
-                    width: `${ROOM_COL_WIDTH}px`,
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 12px',
-                    background: 'white',
-                    borderRight: '1px solid #e2e8f0',
-                    position: 'sticky',
-                    left: 0,
-                    zIndex: 40,
-                    cursor: !isPublicView ? 'pointer' : 'default',
-                  }}
+                  style={{ width: `${ROOM_COL_WIDTH}px`, flexShrink: 0, display: 'flex', alignItems: 'center', padding: '0 12px', background: 'white', borderRight: '1px solid #e2e8f0', position: 'sticky', left: 0, zIndex: 40, cursor: !isPublicView ? 'pointer' : 'default' }}
                   onClick={!isPublicView ? () => { setSelectedRoom(room); setIsRoomModalOpen(true); } : undefined}
                   onMouseEnter={e => { if (!isPublicView) e.currentTarget.style.background = '#eff6ff'; }}
                   onMouseLeave={e => { if (!isPublicView) e.currentTarget.style.background = 'white'; }}
@@ -348,49 +300,32 @@ export default function GanttChart({
                         {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 truncate">
-                      {room.type_label} – {room.capacity_max}
-                    </p>
+                    <p className="text-xs text-slate-500 truncate">{room.type_label} – {room.capacity_max}</p>
                   </div>
                 </div>
 
-                {/* Date grid + booking bars + free hover cells */}
+                {/* Grid area */}
                 <div style={{ position: 'relative', flexShrink: 0, height: '100%', width: `${totalWidth}px` }}>
 
-                  {/* Background grid lines */}
-                  <div style={{ display: 'flex', height: '100%', position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                  {/* Background grid lines (non-interactive) */}
+                  <div style={{ display: 'flex', height: '100%', position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
                     {dateColumns.map((date, i) => {
                       const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
                       const isHighlighted = highlightDate && isSameDay(date, highlightDate);
                       return (
-                        <div
-                          key={i}
-                          style={{
-                            width: `${COL_WIDTH}px`,
-                            flexShrink: 0,
-                            height: '100%',
-                            borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0',
-                            background: isHighlighted ? 'rgba(241,245,249,0.5)' : 'transparent',
-                          }}
-                        />
+                        <div key={i} style={{ width: `${COL_WIDTH}px`, flexShrink: 0, height: '100%', borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0', background: isHighlighted ? 'rgba(241,245,249,0.5)' : 'transparent' }} />
                       );
                     })}
                   </div>
 
-                  {/* Free hover cells — one per free day column */}
-                  {freeCells.map(({ colIdx, date }) => (
-                    <FreeCell
-                      key={colIdx}
-                      leftPx={colIdx * COL_WIDTH}
-                      date={date}
-                      room={room}
-                      onCellClick={onCellClick}
-                    />
+                  {/* Free hover cells — one per free day, exactly COL_WIDTH wide, zIndex 2 */}
+                  {freeCols.map(({ colIdx, date }) => (
+                    <FreeCell key={colIdx} colIdx={colIdx} date={date} room={room} onCellClick={onCellClick} />
                   ))}
 
-                  {/* Booking bars */}
-                  <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-                    {bookingPositions.map(position => {
+                  {/* Booking bars — zIndex 3, pointer-events-auto */}
+                  <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3 }}>
+                    {bookingPixels.map(position => {
                       const client = getClientForReservation(position.reservation);
                       const isOwnAgency = canSeeClientName(position.reservation);
                       const widthPixel = Math.max(position.endPixel - position.startPixel, COL_WIDTH / 2);
@@ -404,35 +339,24 @@ export default function GanttChart({
                         infants > 0 ? `${infants}I` : null
                       ].filter(Boolean).join(' ');
 
-                      const reservationStatus = position.reservation.status;
-                      const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
-                      const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
-                      const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
+                      const StatusIcon = statusIcons[position.reservation.status]?.icon || Clock;
+                      const statusColor = statusIcons[position.reservation.status]?.color || 'text-gray-500';
+                      const backgroundColor = statusBackgrounds[position.reservation.status] || '#f8fafc';
 
                       return (
                         <div
                           key={position.reservation.id}
                           className={isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: `${position.startPixel}px`,
-                            width: `${widthPixel}px`,
-                            height: '100%',
-                            pointerEvents: 'auto',
-                          }}
-                          onClick={(e) => handleBookingClick(position.reservation, e)}>
+                          style={{ position: 'absolute', top: 0, left: `${position.startPixel}px`, width: `${widthPixel}px`, height: '100%', pointerEvents: 'auto' }}
+                          onClick={(e) => handleBookingClick(position.reservation, e)}
+                        >
                           <div
                             className="absolute inset-y-1 inset-x-0 flex flex-col justify-center rounded px-2 py-1"
-                            style={{
-                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                            }}>
+                            style={{ backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1', borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}` }}
+                          >
                             <div className="flex items-center gap-2">
                               <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
-                              <div className="text-sm font-semibold text-slate-800 truncate">
-                                {isOwnAgency ? client?.name || 'Client' : '•••'}
-                              </div>
+                              <div className="text-sm font-semibold text-slate-800 truncate">{isOwnAgency ? client?.name || 'Client' : '•••'}</div>
                             </div>
                             {isOwnAgency && (occupancyDisplay || position.reservation.bed_configuration) && (
                               <div className="text-xs text-slate-600 truncate">
@@ -462,7 +386,8 @@ export default function GanttChart({
         room={selectedRoom}
         isOpen={isRoomModalOpen}
         onClose={() => setIsRoomModalOpen(false)}
-        onEdit={(room) => { setIsRoomModalOpen(false); if (onRoomEdit) onRoomEdit(room); }} />
+        onEdit={(room) => { setIsRoomModalOpen(false); if (onRoomEdit) onRoomEdit(room); }}
+      />
     </>
   );
 }
