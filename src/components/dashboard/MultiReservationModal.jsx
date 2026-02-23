@@ -149,7 +149,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-bold text-slate-800">Nouvelle réservation groupée</h2>
+          <h2 className="text-lg font-bold text-slate-800">New Group Reservation</h2>
           <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
             <X className="h-4 w-4" />
           </Button>
