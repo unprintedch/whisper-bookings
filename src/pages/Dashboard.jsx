@@ -590,6 +590,7 @@ export default function Dashboard({
         rooms={rooms}
         clients={clients}
         sites={sites}
+        agencies={agencies}
         allBedConfigs={allBedConfigs}
         onSuccess={() => { setSelectedSlots([]); setShowMultiModal(false); loadData(); }}
       />
