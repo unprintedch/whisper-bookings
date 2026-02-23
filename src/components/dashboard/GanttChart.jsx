@@ -375,28 +375,45 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                      {dateColumns.map((date, dateIndex) => {
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        // Check if this cell is covered by a booking
+                        const isCovered = bookingPositions.some((position) => {
+                          let startPixel = position.startsBefore
+                            ? position.startIndex * COL_WIDTH
+                            : position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          let endPixel = position.endsAfter
+                            ? position.endIndex * COL_WIDTH
+                            : position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          const cellStart = dateIndex * COL_WIDTH;
+                          const cellEnd = cellStart + COL_WIDTH;
+                          return startPixel < cellEnd && endPixel > cellStart;
+                        });
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
-                            </div>
-                        }
-                        </div>
-                      )}
+                        return (
+                        <div
+                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                          !isPublicView && !isCovered ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                          }
+                          style={{
+                            width: '120px',
+                            height: '100%'
+                          }}
+                          onClick={!isPublicView && !isCovered && onCellClick ? () => onCellClick(room, date) : undefined}>
+
+                            {!isPublicView && !isCovered &&
+                          <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none">
+                                <Plus className="w-4 h-4" />
+                                <span>Book</span>
+                              </div>
+                          }
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
@@ -449,7 +466,7 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-0 flex flex-col justify-center rounded px-2 py-1 opacity-40"
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
 
 
 
