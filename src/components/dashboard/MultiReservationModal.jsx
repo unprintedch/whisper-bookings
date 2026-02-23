@@ -188,23 +188,104 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           {/* Client selection */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-slate-700">Client <span className="text-red-500">*</span></Label>
-            <Input
-              placeholder="Rechercher un client..."
-              value={clientSearch}
-              onChange={e => setClientSearch(e.target.value)}
-              className="mb-1"
-            />
-            <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un client" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredClients.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-[60%_40%] gap-3">
+              <div>
+                <Input
+                  placeholder="Rechercher un client..."
+                  value={clientSearch}
+                  onChange={e => setClientSearch(e.target.value)}
+                  className="mb-1"
+                />
+                <Select value={clientId} onValueChange={handleSelectClient}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un client" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredClients.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedClient && (
+                <div className="flex items-end gap-2 pb-0.5">
+                  <Input
+                    value={editingClientNumber}
+                    onChange={e => setEditingClientNumber(e.target.value)}
+                    placeholder="Client #"
+                    className="flex-1 h-10"
+                    readOnly={!isEditingClientNumber}
+                  />
+                  {!isEditingClientNumber ? (
+                    <Button type="button" variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => setIsEditingClientNumber(true)}>
+                      <Lock className="w-4 h-4" />
+                    </Button>
+                  ) : (
+                    <>
+                      <Button type="button" variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => { setEditingClientNumber(selectedClient?.client_number || ""); setIsEditingClientNumber(false); }}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                      <Button type="button" size="icon" className="h-10 w-10 flex-shrink-0 bg-yellow-700 hover:bg-yellow-800" onClick={handleSaveClientNumber}>
+                        <Check className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Agency + Client Contact block (like BookingForm) */}
+          {selectedClient && (
+            <div className="space-y-4 p-4 border rounded-lg bg-slate-50/70 text-sm">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium text-slate-800">Agency</h4>
+                    <Button type="button" variant="outline" size="sm" className="h-8 shadow-sm" onClick={() => setIsAgencyEditOpen(true)}>
+                      <Edit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                  </div>
+                  {agencyForSelectedClient ? (
+                    <div className="space-y-1 text-slate-700">
+                      <p className="font-semibold">{agencyForSelectedClient.name}</p>
+                      {agencyContactDisplay?.email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-4 h-4 text-slate-500" />
+                          <a href={`mailto:${agencyContactDisplay.email}`} className="text-yellow-700 hover:underline">{agencyContactDisplay.email}</a>
+                        </div>
+                      )}
+                      {agencyContactDisplay?.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-slate-500" />
+                          <span>{agencyContactDisplay.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 italic">No agency associated.</p>
+                  )}
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium text-slate-800">Client Contact</h4>
+                    <Button type="button" variant="outline" size="sm" className="h-8 shadow-sm" onClick={() => setIsClientEditOpen(true)}>
+                      <Edit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                  </div>
+                  {selectedClient.contact_name || selectedClient.contact_email || selectedClient.contact_phone ? (
+                    <div className="space-y-1 text-slate-700">
+                      {selectedClient.contact_name && <div className="flex items-center gap-2"><User className="w-4 h-4 text-slate-500" /><span>{selectedClient.contact_name}</span></div>}
+                      {selectedClient.contact_email && <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-slate-500" /><a href={`mailto:${selectedClient.contact_email}`} className="text-yellow-700 hover:underline">{selectedClient.contact_email}</a></div>}
+                      {selectedClient.contact_phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-slate-500" /><span>{selectedClient.contact_phone}</span></div>}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 italic">No direct contact provided.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Status + Group Pax */}
           <div className="grid grid-cols-2 gap-4">
