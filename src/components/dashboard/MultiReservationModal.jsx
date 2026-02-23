@@ -93,11 +93,51 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setExpandedRows(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const updateRoomDetail = (key, field, value) => {
-    setPerRoomDetails(prev => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: value }
-    }));
+  const updateRoomDetail = (key, field, value, bedConfigs) => {
+    setPerRoomDetails(prev => {
+      const current = prev[key] || {};
+      let newDetail = { ...current, [field]: value };
+
+      // Apply occupancy cap if a bed config is selected
+      if (['adults_count', 'children_count', 'infants_count'].includes(field)) {
+        const selectedBedConfig = bedConfigs?.find(bc => bc.name === current.bed_configuration);
+        const maxOccupancy = selectedBedConfig?.max_occupancy;
+
+        if (maxOccupancy) {
+          const newValue = parseInt(value, 10) || 0;
+          let adults = field === 'adults_count' ? newValue : (parseInt(current.adults_count, 10) || 0);
+          let children = field === 'children_count' ? newValue : (parseInt(current.children_count, 10) || 0);
+          let infants = field === 'infants_count' ? newValue : (parseInt(current.infants_count, 10) || 0);
+          const total = adults + children + infants;
+
+          if (total > maxOccupancy) {
+            const excess = total - maxOccupancy;
+            if (field === 'adults_count') {
+              if (children >= excess) { children -= excess; }
+              else { infants = Math.max(0, infants - (excess - children)); children = 0; }
+            } else if (field === 'children_count') {
+              if (adults >= excess) { adults -= excess; }
+              else { infants = Math.max(0, infants - (excess - adults)); adults = 0; }
+            } else {
+              if (adults >= excess) { adults -= excess; }
+              else { children = Math.max(0, children - (excess - adults)); adults = 0; }
+            }
+          }
+
+          newDetail = { ...current, adults_count: adults, children_count: children, infants_count: infants };
+        }
+      }
+
+      // Reset occupancy when bed config changes
+      if (field === 'bed_configuration') {
+        const selectedBedConfig = bedConfigs?.find(bc => bc.name === value);
+        if (selectedBedConfig) {
+          newDetail = { ...current, bed_configuration: value, adults_count: selectedBedConfig.max_occupancy, children_count: 0, infants_count: 0 };
+        }
+      }
+
+      return { ...prev, [key]: newDetail };
+    });
   };
 
   // Group ranges by date range string for visual grouping
