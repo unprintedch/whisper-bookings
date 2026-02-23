@@ -375,70 +375,31 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const cellDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                        const hasReservation = bookingPositions.some(position => {
-                          const checkin = new Date(position.reservation.date_checkin + 'T00:00:00');
-                          const checkout = new Date(position.reservation.date_checkout + 'T00:00:00');
-                          return cellDate >= checkin && cellDate < checkout;
-                        });
+                      {dateColumns.map((date, dateIndex) =>
+                      <div
+                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                        }
+                        style={{
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
-                        const isLastColumn = dateIndex === dateColumns.length - 1;
-                        const hoverWidth = isLastColumn ? '60px' : '120px';
-
-                        return (
-                        <div
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 relative group/cell flex-shrink-0 ${
-                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                          }
-                          style={{
-                            width: '120px',
-                            height: '100%'
-                          }}>
-
-                            {!isPublicView && onCellClick && !hasReservation && (
-                              <div 
-                                className="absolute cursor-pointer hover:bg-blue-50 transition-colors flex items-center justify-center z-30"
-                                style={{
-                                  left: '60px',
-                                  width: hoverWidth,
-                                  top: 0,
-                                  bottom: 0
-                                }}
-                                onClick={() => onCellClick(room, date)}
-                              >
-                                <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                  <Plus className="w-4 h-4" />
-                                  <span>Book</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {isPublicView && onCellClick && !hasReservation && (
-                              <div 
-                                className="absolute cursor-pointer hover:bg-blue-100 transition-colors flex items-center justify-center z-30"
-                                style={{
-                                  left: '60px',
-                                  width: hoverWidth,
-                                  top: 0,
-                                  bottom: 0
-                                }}
-                                onClick={() => onCellClick(room, date)}
-                              >
-                                <div className="flex items-center gap-1 text-yellow-700 text-xs font-medium opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                  <Plus className="w-4 h-4" />
-                                  <span>Book</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                              <Plus className="w-4 h-4" />
+                              <span>Book</span>
+                            </div>
+                        }
+                        </div>
+                      )}
                     </div>
 
-                    <div className="absolute inset-0 pointer-events-none z-20">
+                    <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
