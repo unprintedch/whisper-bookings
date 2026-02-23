@@ -336,16 +336,16 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                         </div>
 
                         {isExpanded && (
-                          <div className="px-4 pb-3 pt-1 bg-slate-50/50 grid grid-cols-2 gap-3">
+                          <div className="px-4 pb-3 pt-1 bg-slate-50/50 space-y-2">
                             {bedConfigs.length > 0 && (
-                              <div className="col-span-2 space-y-1">
-                                <Label className="text-xs text-slate-600">Config. lit</Label>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-slate-600">Bed config.</Label>
                                 <Select
                                   value={details.bed_configuration || ""}
                                   onValueChange={v => updateRoomDetail(rowKey, 'bed_configuration', v)}
                                 >
                                   <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Choisir..." />
+                                    <SelectValue placeholder="Choose..." />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {bedConfigs.map(bc => (
@@ -355,17 +355,19 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                                 </Select>
                               </div>
                             )}
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-600">Adultes</Label>
-                              <Input className="h-8 text-xs" type="number" min="0" value={details.adults_count || ""} onChange={e => updateRoomDetail(rowKey, 'adults_count', e.target.value)} />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-600">Enfants</Label>
-                              <Input className="h-8 text-xs" type="number" min="0" value={details.children_count || ""} onChange={e => updateRoomDetail(rowKey, 'children_count', e.target.value)} />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-slate-600">Nourrissons</Label>
-                              <Input className="h-8 text-xs" type="number" min="0" value={details.infants_count || ""} onChange={e => updateRoomDetail(rowKey, 'infants_count', e.target.value)} />
+                            <div className="flex gap-2">
+                              <div className="space-y-1 flex-1">
+                                <Label className="text-xs text-slate-600">Adults</Label>
+                                <Input className="h-7 text-xs" type="number" min="0" value={details.adults_count || ""} onChange={e => updateRoomDetail(rowKey, 'adults_count', e.target.value)} />
+                              </div>
+                              <div className="space-y-1 flex-1">
+                                <Label className="text-xs text-slate-600">Kids</Label>
+                                <Input className="h-7 text-xs" type="number" min="0" value={details.children_count || ""} onChange={e => updateRoomDetail(rowKey, 'children_count', e.target.value)} />
+                              </div>
+                              <div className="space-y-1 flex-1">
+                                <Label className="text-xs text-slate-600">Baby</Label>
+                                <Input className="h-7 text-xs" type="number" min="0" value={details.infants_count || ""} onChange={e => updateRoomDetail(rowKey, 'infants_count', e.target.value)} />
+                              </div>
                             </div>
                           </div>
                         )}
