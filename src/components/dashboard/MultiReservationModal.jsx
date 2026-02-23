@@ -407,6 +407,22 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           </Button>
         </div>
       </div>
+
+      {/* Edit Client Modal */}
+      <Dialog open={isClientEditOpen} onOpenChange={setIsClientEditOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Client</DialogTitle>
+            <DialogDescription>Update the details for "{selectedClient?.name}".</DialogDescription>
+          </DialogHeader>
+          <ClientForm
+            client={selectedClient}
+            agencies={agencies}
+            onSave={handleSaveClientInModal}
+            onCancel={() => setIsClientEditOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
