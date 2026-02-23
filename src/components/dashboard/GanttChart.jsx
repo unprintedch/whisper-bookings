@@ -379,7 +379,7 @@ export default function GanttChart({
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        !isPublicView ? 'cursor-pointer' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
