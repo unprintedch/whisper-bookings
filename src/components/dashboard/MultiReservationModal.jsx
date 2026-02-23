@@ -266,9 +266,10 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           </div>
 
           {/* Agency + Client Contact block (like BookingForm) */}
-          {selectedClient && (
-            <div className="space-y-4 p-4 border rounded-lg bg-slate-50/70 text-sm">
-              <div className="grid grid-cols-2 gap-6">
+          {selectedClient && !isNewClient && (
+            <div className="space-y-4 p-4 px-6 border rounded-lg bg-slate-50/70 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Agency Details - Now First */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-medium text-slate-800">Agency</h4>
@@ -277,25 +278,40 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                     </Button>
                   </div>
                   {agencyForSelectedClient ? (
-                    <div className="space-y-1 text-slate-700">
+                    <div className="space-y-2 text-slate-700">
                       <p className="font-semibold">{agencyForSelectedClient.name}</p>
-                      {agencyContactDisplay?.email && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-slate-500" />
-                          <a href={`mailto:${agencyContactDisplay.email}`} className="text-yellow-700 hover:underline">{agencyContactDisplay.email}</a>
-                        </div>
-                      )}
-                      {agencyContactDisplay?.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-slate-500" />
-                          <span>{agencyContactDisplay.phone}</span>
+                      {agencyContactDisplay && (
+                        <div className="space-y-1 pt-1">
+                          {agencyContactDisplay.type === 'Specific Contact' && agencyContactDisplay.name && (
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-slate-500" />
+                              <span>{agencyContactDisplay.name}</span>
+                            </div>
+                          )}
+                          {agencyContactDisplay.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4 text-slate-500" />
+                              <a href={`mailto:${agencyContactDisplay.email}`} className="text-yellow-700 hover:underline">{agencyContactDisplay.email}</a>
+                            </div>
+                          )}
+                          {agencyContactDisplay.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-4 h-4 text-slate-500" />
+                              <span>{agencyContactDisplay.phone}</span>
+                            </div>
+                          )}
+                          {!agencyContactDisplay.name && !agencyContactDisplay.email && !agencyContactDisplay.phone && (
+                            <p className="text-slate-500 italic text-xs">No contact info for this agency.</p>
+                          )}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <p className="text-slate-500 italic">No agency associated.</p>
+                    <p className="text-slate-500 italic mt-2">No agency associated.</p>
                   )}
                 </div>
+
+                {/* Client Contact Details - Now Second with Edit Button */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-medium text-slate-800">Client Contact</h4>
@@ -304,13 +320,28 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                     </Button>
                   </div>
                   {selectedClient.contact_name || selectedClient.contact_email || selectedClient.contact_phone ? (
-                    <div className="space-y-1 text-slate-700">
-                      {selectedClient.contact_name && <div className="flex items-center gap-2"><User className="w-4 h-4 text-slate-500" /><span>{selectedClient.contact_name}</span></div>}
-                      {selectedClient.contact_email && <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-slate-500" /><a href={`mailto:${selectedClient.contact_email}`} className="text-yellow-700 hover:underline">{selectedClient.contact_email}</a></div>}
-                      {selectedClient.contact_phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-slate-500" /><span>{selectedClient.contact_phone}</span></div>}
+                    <div className="space-y-2 text-slate-700">
+                      {selectedClient.contact_name && (
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-slate-500" />
+                          <span>{selectedClient.contact_name}</span>
+                        </div>
+                      )}
+                      {selectedClient.contact_email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-4 h-4 text-slate-500" />
+                          <a href={`mailto:${selectedClient.contact_email}`} className="text-yellow-700 hover:underline">{selectedClient.contact_email}</a>
+                        </div>
+                      )}
+                      {selectedClient.contact_phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-slate-500" />
+                          <span>{selectedClient.contact_phone}</span>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <p className="text-slate-500 italic">No direct contact provided.</p>
+                    <p className="text-slate-500 italic mt-2">No direct contact provided.</p>
                   )}
                 </div>
               </div>
