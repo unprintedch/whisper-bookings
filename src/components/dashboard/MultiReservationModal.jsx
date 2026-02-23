@@ -154,37 +154,6 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
         </div>
 
         <div className="p-4 space-y-5">
-          {/* Agency + Contact selection */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className="text-sm font-semibold text-slate-700">Agence</Label>
-              <Select value={agencyId} onValueChange={v => { setAgencyId(v); setAgencyContactIdx(""); setClientId(""); }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Toutes les agences" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>Toutes les agences</SelectItem>
-                  {agencies.map(a => (
-                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-sm font-semibold text-slate-700">Contact agence</Label>
-              <Select value={agencyContactIdx} onValueChange={setAgencyContactIdx} disabled={!agencyContacts.length}>
-                <SelectTrigger>
-                  <SelectValue placeholder={agencyContacts.length ? "Sélectionner..." : "Aucun contact"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {agencyContacts.map((c, i) => (
-                    <SelectItem key={i} value={String(i)}>{c.name}{c.email ? ` – ${c.email}` : ''}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           {/* Client selection */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-slate-700">Client <span className="text-red-500">*</span></Label>
