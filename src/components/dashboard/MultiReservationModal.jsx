@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { X, ChevronDown, ChevronUp, Users, Edit, Mail, Phone, User, Lock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
