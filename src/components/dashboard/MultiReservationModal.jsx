@@ -381,33 +381,47 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                                 <Label className="text-xs text-slate-600">Bed config.</Label>
                                 <Select
                                   value={details.bed_configuration || ""}
-                                  onValueChange={v => updateRoomDetail(rowKey, 'bed_configuration', v)}
+                                  onValueChange={v => updateRoomDetail(rowKey, 'bed_configuration', v, bedConfigs)}
                                 >
                                   <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Choose..." />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {bedConfigs.map(bc => (
-                                      <SelectItem key={bc.id} value={bc.name}>{bc.name}</SelectItem>
+                                      <SelectItem key={bc.id} value={bc.name}>{bc.name} ({bc.max_occupancy} max)</SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
                               </div>
                             )}
-                            <div className="flex gap-2">
-                              <div className="space-y-1 flex-1">
-                                <Label className="text-xs text-slate-600">Adults</Label>
-                                <Input className="h-7 text-xs" type="number" min="0" value={details.adults_count || ""} onChange={e => updateRoomDetail(rowKey, 'adults_count', e.target.value)} />
-                              </div>
-                              <div className="space-y-1 flex-1">
-                                <Label className="text-xs text-slate-600">Kids</Label>
-                                <Input className="h-7 text-xs" type="number" min="0" value={details.children_count || ""} onChange={e => updateRoomDetail(rowKey, 'children_count', e.target.value)} />
-                              </div>
-                              <div className="space-y-1 flex-1">
-                                <Label className="text-xs text-slate-600">Baby</Label>
-                                <Input className="h-7 text-xs" type="number" min="0" value={details.infants_count || ""} onChange={e => updateRoomDetail(rowKey, 'infants_count', e.target.value)} />
-                              </div>
-                            </div>
+                            {(() => {
+                              const selectedBedConfig = bedConfigs.find(bc => bc.name === details.bed_configuration);
+                              const maxOcc = selectedBedConfig?.max_occupancy;
+                              const currentOcc = (parseInt(details.adults_count, 10) || 0) + (parseInt(details.children_count, 10) || 0) + (parseInt(details.infants_count, 10) || 0);
+                              return (
+                                <div className="flex gap-2 items-end">
+                                  <div className="space-y-1 flex-1">
+                                    <Label className="text-xs text-slate-600">Adults</Label>
+                                    <Input className="h-7 text-xs" type="number" min="0" max={maxOcc || undefined} value={details.adults_count ?? ""} onChange={e => updateRoomDetail(rowKey, 'adults_count', e.target.value, bedConfigs)} />
+                                  </div>
+                                  <div className="space-y-1 flex-1">
+                                    <Label className="text-xs text-slate-600">Kids</Label>
+                                    <Input className="h-7 text-xs" type="number" min="0" max={maxOcc || undefined} value={details.children_count ?? ""} onChange={e => updateRoomDetail(rowKey, 'children_count', e.target.value, bedConfigs)} />
+                                  </div>
+                                  <div className="space-y-1 flex-1">
+                                    <Label className="text-xs text-slate-600">Baby</Label>
+                                    <Input className="h-7 text-xs" type="number" min="0" max={maxOcc || undefined} value={details.infants_count ?? ""} onChange={e => updateRoomDetail(rowKey, 'infants_count', e.target.value, bedConfigs)} />
+                                  </div>
+                                  {maxOcc && (
+                                    <div className="flex-shrink-0">
+                                      <span className={`text-xs px-2 py-1 rounded font-medium ${currentOcc > maxOcc ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
+                                        {currentOcc}/{maxOcc}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
