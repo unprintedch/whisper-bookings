@@ -341,7 +341,7 @@ export default function GanttChart({
               return (
                 <div
                   key={`${room.id}-${roomIndex}`}
-                  className="flex border-b border-slate-200 group relative"
+                  className="flex border-b border-slate-200 group/row relative"
                   style={{ height: '50px' }}>
 
                   <div
