@@ -32,6 +32,28 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
+function HoverCell({ date, room, canClick, highlightDate, onCellClick }) {
+  const [hovered, setHovered] = React.useState(false);
+  const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
+  const isHighlighted = highlightDate && isSameDay(date, highlightDate);
+  return (
+    <div
+      style={{ width: '120px', height: '100%', flexShrink: 0, position: 'relative' }}
+      className={`border-r flex items-center justify-center ${isSunday ? 'border-r-2 border-r-slate-300' : 'border-slate-200'} ${isHighlighted ? 'bg-slate-100/50' : ''} ${canClick ? 'cursor-pointer' : ''}`}
+      onMouseEnter={() => canClick && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={canClick ? () => onCellClick(room, date) : undefined}
+    >
+      {canClick && hovered && (
+        <div style={{ pointerEvents: 'none', background: '#eff6ff', borderRadius: 6, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4, color: '#b45309', fontSize: 13, fontWeight: 500 }}>
+          <Plus size={14} />
+          <span>Book</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
 
