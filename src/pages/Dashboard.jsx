@@ -485,11 +485,11 @@ export default function Dashboard({
           <CardContent className="p-0">
             <GanttChart
               rooms={filteredRooms}
-              reservations={reservations} // Pass ALL reservations so calendar shows all bookings
+              reservations={reservations}
               groups={groups}
-              clients={clients} // Add clients prop
+              clients={clients}
               dateColumns={getDateColumns()}
-              highlightDate={currentDate} // Pass the date to highlight
+              highlightDate={currentDate}
               isLoading={isLoading}
               onCellClick={handleCalendarCellClick}
               onBookingEdit={handleEditBooking}
@@ -497,6 +497,8 @@ export default function Dashboard({
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
+              selectedSlots={selectedSlots}
+              onSlotToggle={handleSlotToggle}
             />
           </CardContent>
         </Card>
