@@ -77,6 +77,13 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setIsClientEditOpen(false);
   };
 
+  const handleSaveAgencyInModal = async (clientWithNewAgency) => {
+    if (!selectedClient) return;
+    const updated = await base44.entities.Client.update(selectedClient.id, clientWithNewAgency);
+    setLocalClients(prev => prev.map(c => c.id === updated.id ? updated : c));
+    setIsAgencyEditOpen(false);
+  };
+
   const getRoomName = (roomId) => {
     const room = rooms.find(r => r.id === roomId);
     if (!room) return roomId;
