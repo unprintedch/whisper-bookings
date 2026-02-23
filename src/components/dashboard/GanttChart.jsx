@@ -390,7 +390,7 @@ export default function GanttChart({
                         onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                           {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
@@ -449,7 +449,7 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-y-0 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
 
 
 
