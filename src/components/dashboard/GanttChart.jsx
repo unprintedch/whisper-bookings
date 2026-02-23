@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
 
 const COL_WIDTH = 120;
-const ROOM_COLUMN_WIDTH = 230;
+const ROOM_COL_WIDTH = 230;
 
 const statusIcons = {
   OPTION: { icon: Clock, color: "text-amber-600" },
@@ -27,34 +27,33 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-// Dedicated cell component with proper React hover state
-function HoverCell({ room, date, highlightDate, canClick, onCellClick }) {
+// A single "free slot" between two bookings (or start/end of view)
+// startPx and endPx are the pixel boundaries of this free segment
+function FreeSlot({ startPx, endPx, room, startDate, onCellClick }) {
   const [hovered, setHovered] = useState(false);
-  const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
-  const isHighlighted = highlightDate && isSameDay(date, highlightDate);
-
-  let bg = isHighlighted ? '#f1f5f9' : 'transparent';
-  if (canClick && hovered) bg = '#eff6ff';
+  const width = endPx - startPx;
+  if (width <= 0 || !onCellClick) return null;
 
   return (
     <div
       style={{
-        width: `${COL_WIDTH}px`,
+        position: 'absolute',
+        left: `${startPx}px`,
+        width: `${width}px`,
+        top: 0,
         height: '100%',
-        flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0',
-        backgroundColor: bg,
-        cursor: canClick ? 'pointer' : 'default',
-        boxSizing: 'border-box',
+        cursor: 'pointer',
+        backgroundColor: hovered ? '#eff6ff' : 'transparent',
+        zIndex: 1,
       }}
-      onMouseEnter={() => canClick && setHovered(true)}
+      onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={canClick ? () => onCellClick(room, date) : undefined}
+      onClick={() => onCellClick(room, startDate)}
     >
-      {canClick && hovered && (
+      {hovered && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#b45309', fontSize: 13, fontWeight: 500, pointerEvents: 'none' }}>
           <Plus size={14} />
           <span>Book</span>
@@ -177,7 +176,19 @@ export default function GanttChart({
 
   const getReservationsForRoom = (roomId) => reservations.filter(r => r.room_id === roomId);
   const getClientForReservation = (reservation) => clients.find(c => c.id === reservation?.client_id);
+  const getSiteInfo = (siteId) => sites.find(s => s.id === siteId);
 
+  const canSeeClientName = (reservation) => {
+    if (isPublicView) return false;
+    if (!currentUser) return true;
+    if (currentUser.custom_role !== 'agency') return true;
+    const client = clients.find(c => c.id === reservation.client_id);
+    return client?.agency_id === currentUser.agency_id;
+  };
+
+  // Returns pixel position for a booking bar.
+  // A booking bar starts at the middle of the checkin column and ends at the middle of the checkout column.
+  // If it starts before the view, it starts at pixel 0. If it ends after the view, it ends at the last pixel.
   const calculateBookingPosition = (reservation) => {
     if (!reservation.date_checkin || !reservation.date_checkout) return null;
 
@@ -190,27 +201,30 @@ export default function GanttChart({
 
     if (checkin >= viewEnd || checkout <= viewStart) return null;
 
-    let startIndex, startsBefore = false;
-    if (checkin < viewStart) {
-      startIndex = 0; startsBefore = true;
+    // startPixel: middle of checkin day column, or 0 if before view
+    let startPixel;
+    if (checkin <= viewStart) {
+      startPixel = 0;
     } else {
-      startIndex = normalizedCols.findIndex(d =>
+      const idx = normalizedCols.findIndex(d =>
         d.getFullYear() === checkin.getFullYear() && d.getMonth() === checkin.getMonth() && d.getDate() === checkin.getDate()
       );
+      if (idx === -1) return null;
+      startPixel = idx * COL_WIDTH + COL_WIDTH / 2;
     }
-    if (startIndex === -1) return null;
 
-    let endIndex, endsAfter = false;
+    // endPixel: middle of checkout day column, or full width if after view
+    let endPixel;
     const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-    const foundEndIndex = normalizedCols.findIndex(d => d.getTime() === checkoutDateOnly.getTime());
-    if (foundEndIndex !== -1) {
-      endIndex = foundEndIndex;
+    const endIdx = normalizedCols.findIndex(d => d.getTime() === checkoutDateOnly.getTime());
+    if (endIdx !== -1) {
+      endPixel = endIdx * COL_WIDTH + COL_WIDTH / 2;
     } else {
-      endIndex = normalizedCols.length;
-      if (checkout > viewEnd) endsAfter = true;
+      // checkout is after the view
+      endPixel = normalizedCols.length * COL_WIDTH;
     }
 
-    return { startIndex, endIndex, reservation, startsBefore, endsAfter };
+    return { startPixel, endPixel, reservation };
   };
 
   const handleBookingClick = (reservation, event) => {
@@ -221,16 +235,6 @@ export default function GanttChart({
     }
     if (onBookingEdit) onBookingEdit(reservation);
   };
-
-  const canSeeClientName = (reservation) => {
-    if (isPublicView) return false;
-    if (!currentUser) return true;
-    if (currentUser.custom_role !== 'agency') return true;
-    const client = clients.find(c => c.id === reservation.client_id);
-    return client?.agency_id === currentUser.agency_id;
-  };
-
-  const getSiteInfo = (siteId) => sites.find(s => s.id === siteId);
 
   if (isLoading) {
     return (
@@ -247,14 +251,16 @@ export default function GanttChart({
     );
   }
 
+  const totalWidth = dateColumns.length * COL_WIDTH;
+
   return (
     <>
       <div className="w-full overflow-x-auto">
-        <div style={{ minWidth: `${ROOM_COLUMN_WIDTH + dateColumns.length * COL_WIDTH}px` }}>
+        <div style={{ minWidth: `${ROOM_COL_WIDTH + totalWidth}px` }}>
 
           {/* Header */}
           <div style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 50, background: 'white', borderBottom: '1px solid #e2e8f0' }}>
-            <div style={{ width: `${ROOM_COLUMN_WIDTH}px`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRight: '1px solid #e2e8f0', position: 'sticky', left: 0, zIndex: 50 }}>
+            <div style={{ width: `${ROOM_COL_WIDTH}px`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRight: '1px solid #e2e8f0', position: 'sticky', left: 0, zIndex: 51 }}>
               <span className="text-lg font-semibold text-slate-700">Rooms</span>
             </div>
             <div style={{ display: 'flex', flexShrink: 0 }}>
@@ -291,8 +297,37 @@ export default function GanttChart({
             const roomReservations = getReservationsForRoom(room.id);
             const bookingPositions = roomReservations
               .map(r => calculateBookingPosition(r))
-              .filter(p => p !== null);
+              .filter(p => p !== null)
+              .sort((a, b) => a.startPixel - b.startPixel);
             const siteInfo = getSiteInfo(room.site_id);
+
+            // Compute free slots between bookings for the hover interaction
+            // Each free slot is [freeStart, freeEnd) in pixels, with the date to use when clicking
+            const freeSlots = [];
+            if (onCellClick) {
+              // Build sorted list of occupied [start, end] ranges
+              const occupied = bookingPositions.map(p => ({ start: p.startPixel, end: p.endPixel }));
+              // Start of view = pixel 0, end = totalWidth
+              let cursor = 0;
+              for (const seg of occupied) {
+                if (seg.start > cursor) {
+                  // Free segment from cursor to seg.start
+                  const freeStartPx = cursor;
+                  const freeEndPx = seg.start;
+                  // Find which date column corresponds to the midpoint of this free slot
+                  const midPx = (freeStartPx + freeEndPx) / 2;
+                  const colIdx = Math.min(Math.floor(midPx / COL_WIDTH), dateColumns.length - 1);
+                  freeSlots.push({ startPx: freeStartPx, endPx: freeEndPx, date: dateColumns[colIdx] });
+                }
+                cursor = Math.max(cursor, seg.end);
+              }
+              // Trailing free slot after last booking
+              if (cursor < totalWidth) {
+                const midPx = (cursor + totalWidth) / 2;
+                const colIdx = Math.min(Math.floor(midPx / COL_WIDTH), dateColumns.length - 1);
+                freeSlots.push({ startPx: cursor, endPx: totalWidth, date: dateColumns[colIdx] });
+              }
+            }
 
             return (
               <div
@@ -302,7 +337,7 @@ export default function GanttChart({
                 {/* Room label */}
                 <div
                   style={{
-                    width: `${ROOM_COLUMN_WIDTH}px`,
+                    width: `${ROOM_COL_WIDTH}px`,
                     flexShrink: 0,
                     display: 'flex',
                     alignItems: 'center',
@@ -319,54 +354,58 @@ export default function GanttChart({
                   onMouseLeave={e => { if (!isPublicView) e.currentTarget.style.background = 'white'; }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="flex items-center gap-1">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <span className="font-semibold text-slate-800 text-sm truncate">
                         {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 truncate">
-                      {room.type_label} – <Users className="inline w-3 h-3" /> {room.capacity_max}
+                      {room.type_label} – {room.capacity_max}
                     </p>
                   </div>
                 </div>
 
-                {/* Date cells + booking bars */}
-                <div style={{ position: 'relative', flexShrink: 0, height: '100%', width: `${dateColumns.length * COL_WIDTH}px` }}>
+                {/* Date grid + booking bars + free slots */}
+                <div style={{ position: 'relative', flexShrink: 0, height: '100%', width: `${totalWidth}px` }}>
 
-                  {/* Empty cells */}
-                  <div style={{ display: 'flex', height: '100%', position: 'absolute', inset: 0 }}>
-                    {dateColumns.map((date, dateIndex) => {
-                      const isCovered = bookingPositions.some(pos => {
-                        const sp = pos.startsBefore ? pos.startIndex * COL_WIDTH : pos.startIndex * COL_WIDTH + COL_WIDTH / 2;
-                        const ep = pos.endsAfter ? pos.endIndex * COL_WIDTH : pos.endIndex * COL_WIDTH + COL_WIDTH / 2;
-                        return sp < (dateIndex + 1) * COL_WIDTH && ep > dateIndex * COL_WIDTH;
-                      });
+                  {/* Background grid lines */}
+                  <div style={{ display: 'flex', height: '100%', position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                    {dateColumns.map((date, i) => {
+                      const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
+                      const isHighlighted = highlightDate && isSameDay(date, highlightDate);
                       return (
-                        <HoverCell
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          room={room}
-                          date={date}
-                          highlightDate={highlightDate}
-                          canClick={!isCovered && !!onCellClick}
-                          onCellClick={onCellClick}
+                        <div
+                          key={i}
+                          style={{
+                            width: `${COL_WIDTH}px`,
+                            flexShrink: 0,
+                            height: '100%',
+                            borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0',
+                            background: isHighlighted ? 'rgba(241,245,249,0.5)' : 'transparent',
+                          }}
                         />
                       );
                     })}
                   </div>
+
+                  {/* Free slot hover areas */}
+                  {freeSlots.map((slot, i) => (
+                    <FreeSlot
+                      key={i}
+                      startPx={slot.startPx}
+                      endPx={slot.endPx}
+                      room={room}
+                      startDate={slot.date}
+                      onCellClick={onCellClick}
+                    />
+                  ))}
 
                   {/* Booking bars */}
                   <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
                     {bookingPositions.map(position => {
                       const client = getClientForReservation(position.reservation);
                       const isOwnAgency = canSeeClientName(position.reservation);
-
-                      const startPixel = position.startsBefore
-                        ? position.startIndex * COL_WIDTH
-                        : position.startIndex * COL_WIDTH + COL_WIDTH / 2;
-                      const endPixel = position.endsAfter
-                        ? position.endIndex * COL_WIDTH
-                        : position.endIndex * COL_WIDTH + COL_WIDTH / 2;
-                      const widthPixel = Math.max(endPixel - startPixel, COL_WIDTH / 2);
+                      const widthPixel = Math.max(position.endPixel - position.startPixel, COL_WIDTH / 2);
 
                       const adults = position.reservation.adults_count || 0;
                       const children = position.reservation.children_count || 0;
@@ -385,8 +424,15 @@ export default function GanttChart({
                       return (
                         <div
                           key={position.reservation.id}
-                          className={`absolute top-0 pointer-events-auto ${isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`}
-                          style={{ left: `${startPixel}px`, width: `${widthPixel}px`, height: '100%' }}
+                          className={isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: `${position.startPixel}px`,
+                            width: `${widthPixel}px`,
+                            height: '100%',
+                            pointerEvents: 'auto',
+                          }}
                           onClick={(e) => handleBookingClick(position.reservation, e)}>
                           <div
                             className="absolute inset-y-1 inset-x-0 flex flex-col justify-center rounded px-2 py-1"
