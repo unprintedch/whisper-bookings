@@ -83,6 +83,8 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div
