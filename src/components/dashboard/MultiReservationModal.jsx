@@ -20,6 +20,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClientEditOpen, setIsClientEditOpen] = useState(false);
+  const [isAgencyEditOpen, setIsAgencyEditOpen] = useState(false);
   const [editingClientNumber, setEditingClientNumber] = useState("");
   const [isEditingClientNumber, setIsEditingClientNumber] = useState(false);
   const [localClients, setLocalClients] = useState(clients);
