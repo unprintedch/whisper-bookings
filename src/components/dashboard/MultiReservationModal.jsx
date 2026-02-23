@@ -44,16 +44,22 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     }
   }
 
-  const filteredClients = clients.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(clientSearch.toLowerCase());
-    const matchesAgency = !agencyId || c.agency_id === agencyId;
-    return matchesSearch && matchesAgency;
-  });
+  const filteredClients = clientSearch.trim()
+    ? clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()))
+    : [];
 
-  const handleSelectClient = (id) => {
-    setClientId(id);
-    const c = clients.find(cl => cl.id === id);
+  const handleSelectClient = (c) => {
+    setClientId(c.id);
+    setClientSearch(c.name);
     setEditingClientNumber(c?.client_number || "");
+    setIsEditingClientNumber(false);
+    setShowSuggestions(false);
+  };
+
+  const handleClearClient = () => {
+    setClientId("");
+    setClientSearch("");
+    setEditingClientNumber("");
     setIsEditingClientNumber(false);
   };
 
