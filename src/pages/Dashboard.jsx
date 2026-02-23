@@ -130,6 +130,11 @@ export default function Dashboard({
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
 
+  // Multi-selection state
+  const [selectedSlots, setSelectedSlots] = useState([]);
+  const [showMultiModal, setShowMultiModal] = useState(false);
+  const [multiModalRanges, setMultiModalRanges] = useState([]);
+
   const startDate = startOfDay(currentDate);
   const endDate = endOfDay(addDays(currentDate, dateRange - 1));
 
