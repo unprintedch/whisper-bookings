@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { format, isSameDay } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,9 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-// One hover cell per free day column — exactly COL_WIDTH wide, same as header columns
+// Single free column hover cell
 function FreeCell({ colIdx, date, room, onCellClick }) {
   const [hovered, setHovered] = useState(false);
-
   return (
     <div
       style={{
@@ -52,8 +51,7 @@ function FreeCell({ colIdx, date, room, onCellClick }) {
     >
       {hovered && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#b45309', fontSize: 13, fontWeight: 500, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-          <Plus size={14} />
-          <span>Book</span>
+          <Plus size={14} /><span>Book</span>
         </div>
       )}
     </div>
@@ -62,18 +60,14 @@ function FreeCell({ colIdx, date, room, onCellClick }) {
 
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
-  React.useEffect(() => {
-    User.me().then(setUser).catch(() => {});
-  }, []);
+  React.useEffect(() => { User.me().then(setUser).catch(() => {}); }, []);
   if (!room) return null;
-  const isAdmin = user?.role === 'admin';
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <Building2 className="w-5 h-5 text-yellow-700" />
-            {room.name}
+            <Building2 className="w-5 h-5 text-yellow-700" />{room.name}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
@@ -122,7 +116,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
           )}
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>Close</Button>
-            {isAdmin && (
+            {user?.role === 'admin' && (
               <Button onClick={() => onEdit(room)} className="bg-yellow-700 hover:bg-yellow-800">
                 <Edit className="w-4 h-4 mr-2" />Edit Room
               </Button>
@@ -144,8 +138,6 @@ export default function GanttChart({
   isLoading,
   onCellClick,
   onBookingEdit,
-  onBookingMove,
-  onBookingResize,
   onRoomEdit,
   sites = [],
   isPublicView = false
@@ -154,12 +146,12 @@ export default function GanttChart({
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  React.useEffect(() => {
-    User.me().then(setCurrentUser).catch(() => {});
-  }, []);
+  React.useEffect(() => { User.me().then(setCurrentUser).catch(() => {}); }, []);
+
+  const norm = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
   const getReservationsForRoom = (roomId) => reservations.filter(r => r.room_id === roomId);
-  const getClientForReservation = (reservation) => clients.find(c => c.id === reservation?.client_id);
+  const getClientForReservation = (r) => clients.find(c => c.id === r?.client_id);
   const getSiteInfo = (siteId) => sites.find(s => s.id === siteId);
 
   const canSeeClientName = (reservation) => {
@@ -170,16 +162,12 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
-  // Normalize a date to midnight local time for comparison
-  const norm = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-  // Compute pixel positions for a booking bar.
-  // Convention: bar goes from mid-checkin-col to mid-checkout-col.
-  // If checkin is before view start → bar starts at pixel 0.
-  // If checkout is after view end → bar ends at totalWidth.
+  // Returns {startPixel, endPixel} for a booking bar.
+  // Bar spans from mid-checkin-column to mid-checkout-column (half-column offset).
+  // If booking starts before view: startPixel = 0.
+  // If booking ends after view: endPixel = totalWidth.
   const getBookingPixels = (reservation) => {
     if (!reservation.date_checkin || !reservation.date_checkout) return null;
-
     const checkin = norm(new Date(reservation.date_checkin + 'T00:00:00'));
     const checkout = norm(new Date(reservation.date_checkout + 'T00:00:00'));
     const cols = dateColumns.map(d => norm(d));
@@ -188,7 +176,6 @@ export default function GanttChart({
 
     if (checkin >= viewEnd || checkout <= viewStart) return null;
 
-    // startPixel
     let startPixel;
     if (checkin <= viewStart) {
       startPixel = 0;
@@ -198,7 +185,6 @@ export default function GanttChart({
       startPixel = idx * COL_WIDTH + COL_WIDTH / 2;
     }
 
-    // endPixel
     let endPixel;
     const endIdx = cols.findIndex(d => d.getTime() === checkout.getTime());
     if (endIdx !== -1) {
@@ -210,12 +196,8 @@ export default function GanttChart({
     return { startPixel, endPixel, reservation };
   };
 
-  // A column at index i is "covered" by a booking if the booking bar
-  // occupies the midpoint of that column: startPixel < colMid AND endPixel > colMid
-  const colMid = (i) => i * COL_WIDTH + COL_WIDTH / 2;
-
-  const handleBookingClick = (reservation, event) => {
-    event.stopPropagation();
+  const handleBookingClick = (reservation, e) => {
+    e.stopPropagation();
     if (currentUser?.custom_role === 'agency') {
       const client = clients.find(c => c.id === reservation.client_id);
       if (client?.agency_id !== currentUser.agency_id) return;
@@ -270,16 +252,18 @@ export default function GanttChart({
           {rooms.map((room, roomIndex) => {
             const bookingPixels = getReservationsForRoom(room.id)
               .map(r => getBookingPixels(r))
-              .filter(Boolean)
-              .sort((a, b) => a.startPixel - b.startPixel);
+              .filter(Boolean);
 
             const siteInfo = getSiteInfo(room.site_id);
 
-            // Free columns: those whose midpoint is NOT covered by any booking bar
+            // A column is "covered" if ANY part of the column [colLeft, colRight] overlaps
+            // ANY booking bar [startPixel, endPixel].
+            // Column i: left = i*COL_WIDTH, right = (i+1)*COL_WIDTH
             const freeCols = onCellClick
               ? dateColumns.map((date, i) => {
-                  const mid = colMid(i);
-                  const covered = bookingPixels.some(p => p.startPixel < mid && p.endPixel > mid);
+                  const colLeft = i * COL_WIDTH;
+                  const colRight = (i + 1) * COL_WIDTH;
+                  const covered = bookingPixels.some(p => p.startPixel < colRight && p.endPixel > colLeft);
                   return covered ? null : { colIdx: i, date };
                 }).filter(Boolean)
               : [];
@@ -307,7 +291,7 @@ export default function GanttChart({
                 {/* Grid area */}
                 <div style={{ position: 'relative', flexShrink: 0, height: '100%', width: `${totalWidth}px` }}>
 
-                  {/* Background grid lines (non-interactive) */}
+                  {/* Background grid lines */}
                   <div style={{ display: 'flex', height: '100%', position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
                     {dateColumns.map((date, i) => {
                       const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
@@ -318,7 +302,7 @@ export default function GanttChart({
                     })}
                   </div>
 
-                  {/* Free hover cells — one per free day, exactly COL_WIDTH wide, zIndex 2 */}
+                  {/* Free hover cells — zIndex 2, one per free column */}
                   {freeCols.map(({ colIdx, date }) => (
                     <FreeCell key={colIdx} colIdx={colIdx} date={date} room={room} onCellClick={onCellClick} />
                   ))}
