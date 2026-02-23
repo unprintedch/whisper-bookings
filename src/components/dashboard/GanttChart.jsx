@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
 
 const COL_WIDTH = 120;
+const ROOM_COLUMN_WIDTH = 230;
 
 const statusIcons = {
   OPTION: { icon: Clock, color: "text-amber-600" },
@@ -26,22 +27,29 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-// Simple cell that shows hover "+ Book" using React state
+// Dedicated cell component with proper React hover state
 function HoverCell({ room, date, highlightDate, canClick, onCellClick }) {
   const [hovered, setHovered] = useState(false);
   const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
   const isHighlighted = highlightDate && isSameDay(date, highlightDate);
 
+  let bg = isHighlighted ? '#f1f5f9' : 'transparent';
+  if (canClick && hovered) bg = '#eff6ff';
+
   return (
     <div
-      style={{ width: `${COL_WIDTH}px`, height: '100%', flexShrink: 0, position: 'relative', boxSizing: 'border-box' }}
-      className={[
-        'border-r flex items-center justify-center',
-        isSunday ? 'border-r-2 border-r-slate-300' : 'border-slate-200',
-        isHighlighted ? 'bg-slate-100/50' : '',
-        canClick && hovered ? 'bg-blue-50' : '',
-        canClick ? 'cursor-pointer' : '',
-      ].join(' ')}
+      style={{
+        width: `${COL_WIDTH}px`,
+        height: '100%',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0',
+        backgroundColor: bg,
+        cursor: canClick ? 'pointer' : 'default',
+        boxSizing: 'border-box',
+      }}
       onMouseEnter={() => canClick && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={canClick ? () => onCellClick(room, date) : undefined}
@@ -64,15 +72,12 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
       try {
         const currentUser = await User.me();
         setUser(currentUser);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
+      } catch (error) {}
     };
     loadUser();
   }, []);
 
   if (!room) return null;
-
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -84,7 +89,6 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
             {room.name}
           </DialogTitle>
         </DialogHeader>
-
         <div className="space-y-6">
           {room.photo_url ? (
             <div className="aspect-video w-full overflow-hidden">
@@ -95,22 +99,15 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
               <Building2 className="w-12 h-12 text-slate-400" />
             </div>
           )}
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h4 className="font-medium text-slate-600 mb-2">Basic Information</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Type:</span>
-                  <span className="font-medium">{room.type_label}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Max Capacity:</span>
-                  <span className="font-medium">{room.capacity_max} people</span>
-                </div>
+                <div className="flex justify-between"><span className="text-slate-500">Type:</span><span className="font-medium">{room.type_label}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Max Capacity:</span><span className="font-medium">{room.capacity_max} people</span></div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Status:</span>
-                  <Badge variant={room.is_active ? "default" : "secondary"} className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}>
+                  <Badge className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}>
                     {room.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
@@ -130,22 +127,17 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
               </div>
             </div>
           </div>
-
           {room.notes && (
             <div>
               <h4 className="font-medium text-slate-600 mb-2">Notes</h4>
-              <div className="bg-slate-50 p-3">
-                <p className="text-sm text-slate-700">{room.notes}</p>
-              </div>
+              <div className="bg-slate-50 p-3"><p className="text-sm text-slate-700">{room.notes}</p></div>
             </div>
           )}
-
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>Close</Button>
             {isAdmin && (
               <Button onClick={() => onEdit(room)} className="bg-yellow-700 hover:bg-yellow-800">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Room
+                <Edit className="w-4 h-4 mr-2" />Edit Room
               </Button>
             )}
           </div>
@@ -178,15 +170,12 @@ export default function GanttChart({
       try {
         const user = await User.me();
         setCurrentUser(user);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
+      } catch (error) {}
     };
     loadUser();
   }, []);
 
   const getReservationsForRoom = (roomId) => reservations.filter(r => r.room_id === roomId);
-
   const getClientForReservation = (reservation) => clients.find(c => c.id === reservation?.client_id);
 
   const calculateBookingPosition = (reservation) => {
@@ -205,7 +194,9 @@ export default function GanttChart({
     if (checkin < viewStart) {
       startIndex = 0; startsBefore = true;
     } else {
-      startIndex = normalizedCols.findIndex(d => d.getFullYear() === checkin.getFullYear() && d.getMonth() === checkin.getMonth() && d.getDate() === checkin.getDate());
+      startIndex = normalizedCols.findIndex(d =>
+        d.getFullYear() === checkin.getFullYear() && d.getMonth() === checkin.getMonth() && d.getDate() === checkin.getDate()
+      );
     }
     if (startIndex === -1) return null;
 
@@ -231,18 +222,6 @@ export default function GanttChart({
     if (onBookingEdit) onBookingEdit(reservation);
   };
 
-  const handleRoomClick = (room) => {
-    setSelectedRoom(room);
-    setIsRoomModalOpen(true);
-  };
-
-  const handleRoomEdit = (room) => {
-    setIsRoomModalOpen(false);
-    if (onRoomEdit) onRoomEdit(room);
-  };
-
-  const getSiteInfo = (siteId) => sites.find(s => s.id === siteId);
-
   const canSeeClientName = (reservation) => {
     if (isPublicView) return false;
     if (!currentUser) return true;
@@ -250,6 +229,8 @@ export default function GanttChart({
     const client = clients.find(c => c.id === reservation.client_id);
     return client?.agency_id === currentUser.agency_id;
   };
+
+  const getSiteInfo = (siteId) => sites.find(s => s.id === siteId);
 
   if (isLoading) {
     return (
@@ -266,179 +247,180 @@ export default function GanttChart({
     );
   }
 
-  const ROOM_COLUMN_WIDTH = 230;
-
   return (
     <>
       <div className="w-full overflow-x-auto">
-        <div className="relative" style={{ minWidth: `${ROOM_COLUMN_WIDTH + dateColumns.length * COL_WIDTH}px` }}>
+        <div style={{ minWidth: `${ROOM_COLUMN_WIDTH + dateColumns.length * COL_WIDTH}px` }}>
 
-          {/* Header row */}
-          <div className="flex sticky top-0 z-50 bg-white border-b border-slate-200">
-            <div
-              className="bg-slate-50 font-semibold text-slate-700 border-r border-slate-200 flex items-center justify-center flex-shrink-0 sticky left-0 z-50"
-              style={{ width: `${ROOM_COLUMN_WIDTH}px` }}>
-              <span className="text-lg">Rooms</span>
+          {/* Header */}
+          <div style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 50, background: 'white', borderBottom: '1px solid #e2e8f0' }}>
+            <div style={{ width: `${ROOM_COLUMN_WIDTH}px`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRight: '1px solid #e2e8f0', position: 'sticky', left: 0, zIndex: 50 }}>
+              <span className="text-lg font-semibold text-slate-700">Rooms</span>
             </div>
-            <div className="flex flex-shrink-0">
-              {dateColumns.map(date => (
-                <div
-                  key={date.toISOString()}
-                  className={[
-                    'border-r border-slate-200 flex items-center justify-center py-3 flex-shrink-0',
-                    highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100' : 'bg-slate-50/40',
-                    format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''
-                  ].join(' ')}
-                  style={{ width: `${COL_WIDTH}px` }}>
-                  <div className="text-sm font-bold text-slate-800 text-center">
-                    <span className="text-xs font-medium text-slate-600 uppercase tracking-wide mr-1">
-                      {format(date, 'EEE', { locale: enUS })}
-                    </span>
-                    <span>{format(date, 'd MMM', { locale: enUS })}</span>
+            <div style={{ display: 'flex', flexShrink: 0 }}>
+              {dateColumns.map(date => {
+                const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
+                const isHighlighted = highlightDate && isSameDay(date, highlightDate);
+                return (
+                  <div
+                    key={date.toISOString()}
+                    style={{
+                      width: `${COL_WIDTH}px`,
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '12px 0',
+                      borderRight: isSunday ? '2px solid #cbd5e1' : '1px solid #e2e8f0',
+                      background: isHighlighted ? '#f1f5f9' : 'rgba(248,250,252,0.4)',
+                    }}>
+                    <div className="text-sm font-bold text-slate-800 text-center">
+                      <span className="text-xs font-medium text-slate-600 uppercase tracking-wide mr-1">
+                        {format(date, 'EEE', { locale: enUS })}
+                      </span>
+                      <span>{format(date, 'd MMM', { locale: enUS })}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           {/* Rows */}
-          <div className="relative">
-            {rooms.map((room, roomIndex) => {
-              const roomReservations = getReservationsForRoom(room.id);
-              const bookingPositions = roomReservations
-                .map(r => calculateBookingPosition(r))
-                .filter(p => p !== null);
-              const siteInfo = getSiteInfo(room.site_id);
+          {rooms.map((room, roomIndex) => {
+            const roomReservations = getReservationsForRoom(room.id);
+            const bookingPositions = roomReservations
+              .map(r => calculateBookingPosition(r))
+              .filter(p => p !== null);
+            const siteInfo = getSiteInfo(room.site_id);
 
-              return (
+            return (
+              <div
+                key={`${room.id}-${roomIndex}`}
+                style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', height: '50px' }}>
+
+                {/* Room label */}
                 <div
-                  key={`${room.id}-${roomIndex}`}
-                  className="flex border-b border-slate-200 group"
-                  style={{ height: '50px' }}>
-
-                  {/* Room label */}
-                  <div
-                    className={`bg-white border-r border-slate-200 p-3 flex-shrink-0 sticky left-0 z-40 h-full ${!isPublicView ? 'cursor-pointer hover:bg-blue-50/50' : ''}`}
-                    style={{ width: `${ROOM_COLUMN_WIDTH}px` }}
-                    onClick={!isPublicView ? () => handleRoomClick(room) : undefined}>
-                    <div className="flex items-center gap-2 h-full">
-                      <div className="flex flex-col justify-center flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-slate-800 text-sm truncate">
-                            {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
-                          </h4>
-                          {!isPublicView && <Eye className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />}
-                        </div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
-                          <span className="truncate">{room.type_label}</span>
-                          <span className="text-slate-400">–</span>
-                          <span className="flex items-center gap-1 flex-shrink-0">
-                            <Users className="w-3 h-3" />
-                            <span>{room.capacity_max}</span>
-                          </span>
-                        </p>
-                      </div>
+                  style={{
+                    width: `${ROOM_COLUMN_WIDTH}px`,
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0 12px',
+                    background: 'white',
+                    borderRight: '1px solid #e2e8f0',
+                    position: 'sticky',
+                    left: 0,
+                    zIndex: 40,
+                    cursor: !isPublicView ? 'pointer' : 'default',
+                  }}
+                  onClick={!isPublicView ? () => { setSelectedRoom(room); setIsRoomModalOpen(true); } : undefined}
+                  onMouseEnter={e => { if (!isPublicView) e.currentTarget.style.background = '#eff6ff'; }}
+                  onMouseLeave={e => { if (!isPublicView) e.currentTarget.style.background = 'white'; }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold text-slate-800 text-sm truncate">
+                        {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
+                      </span>
                     </div>
-                  </div>
-
-                  {/* Date cells + booking bars */}
-                  <div className="relative flex-shrink-0 h-full" style={{ width: `${dateColumns.length * COL_WIDTH}px` }}>
-                    
-                    {/* Empty cells layer (behind bookings) */}
-                    <div className="flex h-full absolute inset-0">
-                      {dateColumns.map((date, dateIndex) => {
-                        // Check if this cell is fully covered by a booking
-                        const isCovered = bookingPositions.some(pos => {
-                          const sp = pos.startsBefore ? pos.startIndex * COL_WIDTH : pos.startIndex * COL_WIDTH + COL_WIDTH / 2;
-                          const ep = pos.endsAfter ? pos.endIndex * COL_WIDTH : pos.endIndex * COL_WIDTH + COL_WIDTH / 2;
-                          const cellStart = dateIndex * COL_WIDTH;
-                          const cellEnd = (dateIndex + 1) * COL_WIDTH;
-                          return sp < cellEnd && ep > cellStart;
-                        });
-                        return (
-                          <HoverCell
-                            key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                            room={room}
-                            date={date}
-                            highlightDate={highlightDate}
-                            canClick={!isPublicView && !isCovered && !!onCellClick}
-                            onCellClick={onCellClick}
-                          />
-                        );
-                      })}
-                    </div>
-
-                    {/* Booking bars layer (on top, pointer-events-none container) */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position) => {
-                        const client = getClientForReservation(position.reservation);
-                        const isOwnAgency = canSeeClientName(position.reservation);
-
-                        const startPixel = position.startsBefore
-                          ? position.startIndex * COL_WIDTH
-                          : position.startIndex * COL_WIDTH + COL_WIDTH / 2;
-
-                        const endPixel = position.endsAfter
-                          ? position.endIndex * COL_WIDTH
-                          : position.endIndex * COL_WIDTH + COL_WIDTH / 2;
-
-                        const widthPixel = Math.max(endPixel - startPixel, COL_WIDTH / 2);
-
-                        const adults = position.reservation.adults_count || 0;
-                        const children = position.reservation.children_count || 0;
-                        const infants = position.reservation.infants_count || 0;
-                        const occupancyDisplay = [
-                          adults > 0 ? `${adults}A` : null,
-                          children > 0 ? `${children}C` : null,
-                          infants > 0 ? `${infants}I` : null
-                        ].filter(Boolean).join(' ');
-
-                        const reservationStatus = position.reservation.status;
-                        const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
-                        const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
-                        const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
-
-                        return (
-                          <div
-                            key={position.reservation.id}
-                            className={`absolute top-0 pointer-events-auto ${isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`}
-                            style={{ left: `${startPixel}px`, width: `${widthPixel}px`, height: '100%' }}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}>
-
-                            <div
-                              className="absolute inset-y-1 inset-x-0 flex flex-col justify-center rounded px-2 py-1"
-                              style={{
-                                backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                                borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                              }}>
-                              <div className="flex items-center gap-2">
-                                <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
-                                <div className="text-sm font-semibold text-slate-800 truncate">
-                                  {isOwnAgency ? client?.name || 'Client' : '•••'}
-                                </div>
-                              </div>
-                              {isOwnAgency && (occupancyDisplay || position.reservation.bed_configuration) && (
-                                <div className="text-xs text-slate-600 truncate">
-                                  {occupancyDisplay && position.reservation.bed_configuration
-                                    ? `${occupancyDisplay} - ${position.reservation.bed_configuration}`
-                                    : occupancyDisplay || position.reservation.bed_configuration}
-                                </div>
-                              )}
-                              {isOwnAgency && (
-                                <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
-                                  <Edit className="w-3 h-3 text-slate-500" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <p className="text-xs text-slate-500 truncate">
+                      {room.type_label} – <Users className="inline w-3 h-3" /> {room.capacity_max}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Date cells + booking bars */}
+                <div style={{ position: 'relative', flexShrink: 0, height: '100%', width: `${dateColumns.length * COL_WIDTH}px` }}>
+
+                  {/* Empty cells */}
+                  <div style={{ display: 'flex', height: '100%', position: 'absolute', inset: 0 }}>
+                    {dateColumns.map((date, dateIndex) => {
+                      const isCovered = bookingPositions.some(pos => {
+                        const sp = pos.startsBefore ? pos.startIndex * COL_WIDTH : pos.startIndex * COL_WIDTH + COL_WIDTH / 2;
+                        const ep = pos.endsAfter ? pos.endIndex * COL_WIDTH : pos.endIndex * COL_WIDTH + COL_WIDTH / 2;
+                        return sp < (dateIndex + 1) * COL_WIDTH && ep > dateIndex * COL_WIDTH;
+                      });
+                      return (
+                        <HoverCell
+                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                          room={room}
+                          date={date}
+                          highlightDate={highlightDate}
+                          canClick={!isCovered && !!onCellClick}
+                          onCellClick={onCellClick}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Booking bars */}
+                  <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                    {bookingPositions.map(position => {
+                      const client = getClientForReservation(position.reservation);
+                      const isOwnAgency = canSeeClientName(position.reservation);
+
+                      const startPixel = position.startsBefore
+                        ? position.startIndex * COL_WIDTH
+                        : position.startIndex * COL_WIDTH + COL_WIDTH / 2;
+                      const endPixel = position.endsAfter
+                        ? position.endIndex * COL_WIDTH
+                        : position.endIndex * COL_WIDTH + COL_WIDTH / 2;
+                      const widthPixel = Math.max(endPixel - startPixel, COL_WIDTH / 2);
+
+                      const adults = position.reservation.adults_count || 0;
+                      const children = position.reservation.children_count || 0;
+                      const infants = position.reservation.infants_count || 0;
+                      const occupancyDisplay = [
+                        adults > 0 ? `${adults}A` : null,
+                        children > 0 ? `${children}C` : null,
+                        infants > 0 ? `${infants}I` : null
+                      ].filter(Boolean).join(' ');
+
+                      const reservationStatus = position.reservation.status;
+                      const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
+                      const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
+                      const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
+
+                      return (
+                        <div
+                          key={position.reservation.id}
+                          className={`absolute top-0 pointer-events-auto ${isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`}
+                          style={{ left: `${startPixel}px`, width: `${widthPixel}px`, height: '100%' }}
+                          onClick={(e) => handleBookingClick(position.reservation, e)}>
+                          <div
+                            className="absolute inset-y-1 inset-x-0 flex flex-col justify-center rounded px-2 py-1"
+                            style={{
+                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
+                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
+                            }}>
+                            <div className="flex items-center gap-2">
+                              <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
+                              <div className="text-sm font-semibold text-slate-800 truncate">
+                                {isOwnAgency ? client?.name || 'Client' : '•••'}
+                              </div>
+                            </div>
+                            {isOwnAgency && (occupancyDisplay || position.reservation.bed_configuration) && (
+                              <div className="text-xs text-slate-600 truncate">
+                                {occupancyDisplay && position.reservation.bed_configuration
+                                  ? `${occupancyDisplay} - ${position.reservation.bed_configuration}`
+                                  : occupancyDisplay || position.reservation.bed_configuration}
+                              </div>
+                            )}
+                            {isOwnAgency && (
+                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
+                                <Edit className="w-3 h-3 text-slate-500" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -446,7 +428,7 @@ export default function GanttChart({
         room={selectedRoom}
         isOpen={isRoomModalOpen}
         onClose={() => setIsRoomModalOpen(false)}
-        onEdit={handleRoomEdit} />
+        onEdit={(room) => { setIsRoomModalOpen(false); if (onRoomEdit) onRoomEdit(room); }} />
     </>
   );
 }
