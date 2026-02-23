@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,8 @@ import { createPageUrl } from "@/utils"; // Import createPageUrl
 import GanttChart from "../components/dashboard/GanttChart";
 import AvailableRooms from "../components/dashboard/AvailableRooms";
 import BookingForm from "../components/bookings/BookingForm";
+import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
+import MultiReservationModal from "../components/dashboard/MultiReservationModal";
 
 // Helper component for Room Form (can be moved to its own file later)
 const RoomForm = ({ onSave, onCancel, initialRoom, sites }) => {
