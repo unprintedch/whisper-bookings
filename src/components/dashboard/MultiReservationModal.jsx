@@ -382,13 +382,13 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 border-t sticky bottom-0 bg-white">
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
             className="bg-yellow-700 hover:bg-yellow-800"
             onClick={handleSubmit}
             disabled={!clientId || isSubmitting}
           >
-            {isSubmitting ? 'Création...' : `Créer ${mergedRanges.length} réservation${mergedRanges.length > 1 ? 's' : ''}`}
+            {isSubmitting ? 'Creating...' : `Create ${mergedRanges.length} reservation${mergedRanges.length > 1 ? 's' : ''}`}
           </Button>
         </div>
       </div>
