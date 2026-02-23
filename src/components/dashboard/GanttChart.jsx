@@ -376,18 +376,16 @@ export default function GanttChart({
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
                       {dateColumns.map((date, dateIndex) => {
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-                        // Check if this cell is covered by a booking
+                        const COL_WIDTH_CHECK = 120;
                         const isCovered = bookingPositions.some((position) => {
-                          let startPixel = position.startsBefore
-                            ? position.startIndex * COL_WIDTH
-                            : position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          let endPixel = position.endsAfter
-                            ? position.endIndex * COL_WIDTH
-                            : position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          const cellStart = dateIndex * COL_WIDTH;
-                          const cellEnd = cellStart + COL_WIDTH;
+                          const startPixel = position.startsBefore
+                            ? position.startIndex * COL_WIDTH_CHECK
+                            : position.startIndex * COL_WIDTH_CHECK + COL_WIDTH_CHECK / 2;
+                          const endPixel = position.endsAfter
+                            ? position.endIndex * COL_WIDTH_CHECK
+                            : position.endIndex * COL_WIDTH_CHECK + COL_WIDTH_CHECK / 2;
+                          const cellStart = dateIndex * COL_WIDTH_CHECK;
+                          const cellEnd = cellStart + COL_WIDTH_CHECK;
                           return startPixel < cellEnd && endPixel > cellStart;
                         });
 
@@ -399,18 +397,15 @@ export default function GanttChart({
                           highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                           format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                           }
-                          style={{
-                            width: '120px',
-                            height: '100%'
-                          }}
+                          style={{ width: '120px', height: '100%' }}
                           onClick={!isPublicView && !isCovered && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                             {!isPublicView && !isCovered &&
-                          <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none">
+                            <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none">
                                 <Plus className="w-4 h-4" />
                                 <span>Book</span>
                               </div>
-                          }
+                            }
                           </div>
                         );
                       })}
