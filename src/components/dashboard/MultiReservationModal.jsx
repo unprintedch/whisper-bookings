@@ -21,15 +21,59 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   const [expandedRows, setExpandedRows] = useState({});
   const [clientSearch, setClientSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isClientEditOpen, setIsClientEditOpen] = useState(false);
+  const [isAgencyEditOpen, setIsAgencyEditOpen] = useState(false);
+  const [editingClientNumber, setEditingClientNumber] = useState("");
+  const [isEditingClientNumber, setIsEditingClientNumber] = useState(false);
+  const [localClients, setLocalClients] = useState(clients);
 
   const selectedAgency = agencies.find(a => a.id === agencyId);
   const agencyContacts = selectedAgency?.contacts || [];
+
+  const selectedClient = localClients.find(c => c.id === clientId) || clients.find(c => c.id === clientId);
+  const agencyForSelectedClient = selectedClient?.agency_id ? agencies.find(a => a.id === selectedClient.agency_id) : null;
+
+  let agencyContactDisplay = null;
+  if (agencyForSelectedClient && selectedClient) {
+    const contactId = selectedClient.agency_contact_id;
+    if (contactId && agencyForSelectedClient.contacts?.[parseInt(contactId, 10)]) {
+      const contact = agencyForSelectedClient.contacts[parseInt(contactId, 10)];
+      agencyContactDisplay = { ...contact, type: 'Specific Contact' };
+    } else {
+      agencyContactDisplay = {
+        email: agencyForSelectedClient.email,
+        phone: agencyForSelectedClient.phone,
+        type: 'General Contact'
+      };
+    }
+  }
 
   const filteredClients = clients.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(clientSearch.toLowerCase());
     const matchesAgency = !agencyId || c.agency_id === agencyId;
     return matchesSearch && matchesAgency;
   });
+
+  const handleSelectClient = (id) => {
+    setClientId(id);
+    const c = clients.find(cl => cl.id === id);
+    setEditingClientNumber(c?.client_number || "");
+    setIsEditingClientNumber(false);
+  };
+
+  const handleSaveClientNumber = async () => {
+    if (!selectedClient) return;
+    const updated = await base44.entities.Client.update(selectedClient.id, { client_number: editingClientNumber });
+    setLocalClients(prev => prev.map(c => c.id === updated.id ? updated : c));
+    setIsEditingClientNumber(false);
+  };
+
+  const handleSaveClientInModal = async (clientData) => {
+    if (!selectedClient) return;
+    const updated = await base44.entities.Client.update(selectedClient.id, clientData);
+    setLocalClients(prev => prev.map(c => c.id === updated.id ? updated : c));
+    setIsClientEditOpen(false);
+  };
 
   const getRoomName = (roomId) => {
     const room = rooms.find(r => r.id === roomId);
