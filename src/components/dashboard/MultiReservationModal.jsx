@@ -129,7 +129,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
         adults_count: details.adults_count ? parseInt(details.adults_count) : 0,
         children_count: details.children_count ? parseInt(details.children_count) : 0,
         infants_count: details.infants_count ? parseInt(details.infants_count) : 0,
-        comment: groupPax ? `Groupe: ${groupPax} pax` : undefined,
+        comment: groupPax ? `Group: ${groupPax} pax` : undefined,
       };
     });
 
