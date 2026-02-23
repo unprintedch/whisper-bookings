@@ -342,6 +342,23 @@ export default function Dashboard({
     setShowBookingForm(true);
   };
 
+  const handleSlotToggle = (roomId, dateStr) => {
+    setSelectedSlots(prev => {
+      const exists = prev.some(s => s.roomId === roomId && s.date === dateStr);
+      if (exists) return prev.filter(s => !(s.roomId === roomId && s.date === dateStr));
+      return [...prev, { roomId, date: dateStr }];
+    });
+  };
+
+  const handleRemoveRoomSlots = (roomId) => {
+    setSelectedSlots(prev => prev.filter(s => s.roomId !== roomId));
+  };
+
+  const handleConfirmMulti = (mergedRanges) => {
+    setMultiModalRanges(mergedRanges);
+    setShowMultiModal(true);
+  };
+
   const handleBookingMove = async (bookingId, newRoomId, newStartDate) => {
     try {
       const booking = reservations.find((r) => r.id === bookingId);
