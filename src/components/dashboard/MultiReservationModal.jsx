@@ -159,44 +159,56 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           {/* Client selection */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-slate-700">Client <span className="text-red-500">*</span></Label>
-            <div className="grid grid-cols-[60%_40%] gap-3">
-              <div>
+            <div className="flex gap-3 items-start">
+              {/* Autocomplete input */}
+              <div className="flex-1 relative" ref={searchRef}>
                 <Input
-                  placeholder="Rechercher un client..."
+                  placeholder="Rechercher ou créer un client..."
                   value={clientSearch}
-                  onChange={e => setClientSearch(e.target.value)}
-                  className="mb-1"
+                  onChange={e => {
+                    setClientSearch(e.target.value);
+                    setClientId("");
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  className="h-10"
                 />
-                <Select value={clientId} onValueChange={handleSelectClient}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un client" />
-                  </SelectTrigger>
-                  <SelectContent>
+                {showSuggestions && filteredClients.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {filteredClients.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      <div
+                        key={c.id}
+                        className="px-3 py-2 text-sm cursor-pointer hover:bg-yellow-50 flex items-center justify-between"
+                        onMouseDown={() => handleSelectClient(c)}
+                      >
+                        <span className="font-medium text-slate-800">{c.name}</span>
+                        {c.client_number && <span className="text-xs text-slate-400">{c.client_number}</span>}
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
               </div>
+              {/* Client number field - only when a client is selected */}
               {selectedClient && (
-                <div className="flex items-end gap-2 pb-0.5">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                   <Input
                     value={editingClientNumber}
                     onChange={e => setEditingClientNumber(e.target.value)}
                     placeholder="Client #"
-                    className="flex-1 h-10"
+                    className="w-32 h-10"
                     readOnly={!isEditingClientNumber}
                   />
                   {!isEditingClientNumber ? (
-                    <Button type="button" variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => setIsEditingClientNumber(true)}>
+                    <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => setIsEditingClientNumber(true)}>
                       <Lock className="w-4 h-4" />
                     </Button>
                   ) : (
                     <>
-                      <Button type="button" variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => { setEditingClientNumber(selectedClient?.client_number || ""); setIsEditingClientNumber(false); }}>
+                      <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => { setEditingClientNumber(selectedClient?.client_number || ""); setIsEditingClientNumber(false); }}>
                         <X className="w-4 h-4" />
                       </Button>
-                      <Button type="button" size="icon" className="h-10 w-10 flex-shrink-0 bg-yellow-700 hover:bg-yellow-800" onClick={handleSaveClientNumber}>
+                      <Button type="button" size="icon" className="h-10 w-10 bg-yellow-700 hover:bg-yellow-800" onClick={handleSaveClientNumber}>
                         <Check className="w-4 h-4" />
                       </Button>
                     </>
