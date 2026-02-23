@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { format, isSameDay } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
 
 const COL_WIDTH = 120;
+const HALF = COL_WIDTH / 2;
 const ROOM_COL_WIDTH = 230;
 
 const statusIcons = {
@@ -27,14 +28,16 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-// Single free column hover cell
+// Hover cell: spans from mid of colIdx to mid of colIdx+1 (same geometry as booking bars)
 function FreeCell({ colIdx, date, room, onCellClick }) {
   const [hovered, setHovered] = useState(false);
+  // left = mid of column colIdx, width = COL_WIDTH (reaches mid of next column)
+  const leftPx = colIdx * COL_WIDTH + HALF;
   return (
     <div
       style={{
         position: 'absolute',
-        left: `${colIdx * COL_WIDTH}px`,
+        left: `${leftPx}px`,
         width: `${COL_WIDTH}px`,
         top: 0,
         height: '100%',
@@ -138,6 +141,8 @@ export default function GanttChart({
   isLoading,
   onCellClick,
   onBookingEdit,
+  onBookingMove,
+  onBookingResize,
   onRoomEdit,
   sites = [],
   isPublicView = false
@@ -162,10 +167,10 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
-  // Returns {startPixel, endPixel} for a booking bar.
-  // Bar spans from mid-checkin-column to mid-checkout-column (half-column offset).
-  // If booking starts before view: startPixel = 0.
-  // If booking ends after view: endPixel = totalWidth.
+  // Returns pixel start/end for a booking bar.
+  // Bar: from mid of checkin column to mid of checkout column.
+  // checkin before view → startPixel = 0
+  // checkout after view → endPixel = totalWidth
   const getBookingPixels = (reservation) => {
     if (!reservation.date_checkin || !reservation.date_checkout) return null;
     const checkin = norm(new Date(reservation.date_checkin + 'T00:00:00'));
@@ -182,18 +187,26 @@ export default function GanttChart({
     } else {
       const idx = cols.findIndex(d => d.getTime() === checkin.getTime());
       if (idx === -1) return null;
-      startPixel = idx * COL_WIDTH + COL_WIDTH / 2;
+      startPixel = idx * COL_WIDTH + HALF;
     }
 
     let endPixel;
     const endIdx = cols.findIndex(d => d.getTime() === checkout.getTime());
     if (endIdx !== -1) {
-      endPixel = endIdx * COL_WIDTH + COL_WIDTH / 2;
+      endPixel = endIdx * COL_WIDTH + HALF;
     } else {
       endPixel = cols.length * COL_WIDTH;
     }
 
     return { startPixel, endPixel, reservation };
+  };
+
+  // A "night slot" for column i spans from mid(i) to mid(i+1), i.e. [i*COL_WIDTH+HALF, (i+1)*COL_WIDTH+HALF].
+  // It is occupied if any booking bar [startPixel, endPixel] overlaps this interval.
+  const isNightOccupied = (bookingPixels, i) => {
+    const nightLeft = i * COL_WIDTH + HALF;
+    const nightRight = (i + 1) * COL_WIDTH + HALF;
+    return bookingPixels.some(p => p.startPixel < nightRight && p.endPixel > nightLeft);
   };
 
   const handleBookingClick = (reservation, e) => {
@@ -256,16 +269,9 @@ export default function GanttChart({
 
             const siteInfo = getSiteInfo(room.site_id);
 
-            // A column is "covered" if ANY part of the column [colLeft, colRight] overlaps
-            // ANY booking bar [startPixel, endPixel].
-            // Column i: left = i*COL_WIDTH, right = (i+1)*COL_WIDTH
+            // Free night slots: column i is free if the night [mid(i), mid(i+1)] is not occupied
             const freeCols = onCellClick
-              ? dateColumns.map((date, i) => {
-                  const colLeft = i * COL_WIDTH;
-                  const colRight = (i + 1) * COL_WIDTH;
-                  const covered = bookingPixels.some(p => p.startPixel < colRight && p.endPixel > colLeft);
-                  return covered ? null : { colIdx: i, date };
-                }).filter(Boolean)
+              ? dateColumns.map((date, i) => isNightOccupied(bookingPixels, i) ? null : { colIdx: i, date }).filter(Boolean)
               : [];
 
             return (
@@ -302,17 +308,17 @@ export default function GanttChart({
                     })}
                   </div>
 
-                  {/* Free hover cells — zIndex 2, one per free column */}
+                  {/* Free hover cells — mid-to-mid geometry, zIndex 2 */}
                   {freeCols.map(({ colIdx, date }) => (
                     <FreeCell key={colIdx} colIdx={colIdx} date={date} room={room} onCellClick={onCellClick} />
                   ))}
 
-                  {/* Booking bars — zIndex 3, pointer-events-auto */}
+                  {/* Booking bars — zIndex 3 */}
                   <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3 }}>
                     {bookingPixels.map(position => {
                       const client = getClientForReservation(position.reservation);
                       const isOwnAgency = canSeeClientName(position.reservation);
-                      const widthPixel = Math.max(position.endPixel - position.startPixel, COL_WIDTH / 2);
+                      const widthPixel = Math.max(position.endPixel - position.startPixel, HALF);
 
                       const adults = position.reservation.adults_count || 0;
                       const children = position.reservation.children_count || 0;
