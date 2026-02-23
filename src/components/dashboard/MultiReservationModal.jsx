@@ -10,6 +10,69 @@ import { Client } from "@/entities/all";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ClientForm from "@/components/clients/ClientForm";
 
+// Agency edit form component (copied from BookingForm)
+const EditClientAgencyForm = ({ client, agencies, onSave, onCancel }) => {
+    const [agencyId, setAgencyId] = useState(client?.agency_id || null);
+    const [agencyContactId, setAgencyContactId] = useState(client?.agency_contact_id || null);
+
+    const selectedAgency = agencies.find(a => a.id === agencyId);
+
+    useEffect(() => {
+        if (agencyId === null) {
+            if (agencyContactId !== null) setAgencyContactId(null);
+        } else if (selectedAgency) {
+            const currentContactIndex = agencyContactId ? parseInt(agencyContactId, 10) : -1;
+            const contactIsValid = currentContactIndex >= 0 && currentContactIndex < (selectedAgency.contacts?.length || 0);
+            if (!contactIsValid && agencyContactId !== null) {
+                setAgencyContactId(null);
+            }
+        }
+    }, [agencyId, selectedAgency, agencyContactId]);
+
+    const handleSave = () => {
+        onSave({ ...client, agency_id: agencyId, agency_contact_id: agencyContactId });
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="edit-agency-id">Agency</Label>
+                <Select value={agencyId || ""} onValueChange={(v) => setAgencyId(v === "null-string" ? null : v)}>
+                    <SelectTrigger id="edit-agency-id">
+                        <SelectValue placeholder="Select agency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value={"null-string"}>No Agency</SelectItem>
+                        {agencies.map(agency => (
+                            <SelectItem key={agency.id} value={agency.id}>{agency.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            {selectedAgency && (
+                <div className="space-y-2">
+                    <Label htmlFor="edit-agency-contact-id">Agency Contact</Label>
+                    <Select value={agencyContactId || ""} onValueChange={(v) => setAgencyContactId(v === "null-string" ? null : v)}>
+                        <SelectTrigger id="edit-agency-contact-id">
+                            <SelectValue placeholder="General Contact / Choose specific" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={"null-string"}>General Contact ({selectedAgency.email || 'N/A'})</SelectItem>
+                            {selectedAgency.contacts && selectedAgency.contacts.map((contact, index) => (
+                                <SelectItem key={index} value={String(index)}>{contact.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+            <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={onCancel}>Cancel</Button>
+                <Button onClick={handleSave}>Save Changes</Button>
+            </div>
+        </div>
+    );
+};
+
 export default function MultiReservationModal({ isOpen, onClose, mergedRanges, rooms, clients, sites, allBedConfigs, agencies = [], onSuccess }) {
   const [clientId, setClientId] = useState("");
   const [status, setStatus] = useState("REQUEST");
