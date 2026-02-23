@@ -374,73 +374,43 @@ export default function GanttChart({
                   </div>
 
                   <div className="relative flex-shrink-0 h-full">
-                    {/* Background cells layer */}
-                    <div className="flex h-full">
+                    {/* Cell layer */}
+                    <div className="absolute inset-0 flex">
                       {dateColumns.map((date, dateIndex) => {
                         const COL_WIDTH = 120;
-                        const isCovered = bookingPositions.some((position) => {
-                          const startPixel = position.startsBefore
-                            ? position.startIndex * COL_WIDTH
-                            : position.startIndex * COL_WIDTH + COL_WIDTH / 2;
-                          const endPixel = position.endsAfter
-                            ? position.endIndex * COL_WIDTH
-                            : position.endIndex * COL_WIDTH + COL_WIDTH / 2;
-                          const cellStart = dateIndex * COL_WIDTH;
-                          const cellEnd = cellStart + COL_WIDTH;
-                          return startPixel < cellEnd && endPixel > cellStart;
+                        const isCovered = bookingPositions.some((pos) => {
+                          const sp = pos.startsBefore ? pos.startIndex * COL_WIDTH : pos.startIndex * COL_WIDTH + COL_WIDTH / 2;
+                          const ep = pos.endsAfter ? pos.endIndex * COL_WIDTH : pos.endIndex * COL_WIDTH + COL_WIDTH / 2;
+                          return sp < (dateIndex + 1) * COL_WIDTH && ep > dateIndex * COL_WIDTH;
                         });
 
                         return (
-                          <div
+                          <EmptyCell
                             key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                            className={`border-r border-slate-200 flex items-center justify-center flex-shrink-0 group/cell ${
-                              isCovered ? '' : (!isPublicView ? 'cursor-pointer hover:bg-blue-50' : '')
-                            } ${
-                              highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''
-                            } ${
-                              format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''
-                            }`}
-                            style={{ width: '120px', height: '100%' }}
-                            onClick={!isPublicView && !isCovered && onCellClick ? () => onCellClick(room, date) : undefined}
-                          >
-                            {!isPublicView && !isCovered && (
-                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none z-10">
-                                <Plus className="w-4 h-4" />
-                                <span>Book</span>
-                              </div>
-                            )}
-                          </div>
+                            date={date}
+                            isCovered={isCovered}
+                            isPublicView={isPublicView}
+                            highlightDate={highlightDate}
+                            onCellClick={onCellClick}
+                            room={room}
+                          />
                         );
                       })}
                     </div>
 
-                    {/* Booking bars layer — sits on top but doesn't block empty cells */}
+                    {/* Booking bars layer */}
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
-
                         const COL_WIDTH = 120;
-
-                        const startPixel = position.startsBefore
-                          ? position.startIndex * COL_WIDTH
-                          : position.startIndex * COL_WIDTH + COL_WIDTH / 2;
-
-                        const endPixel = position.endsAfter
-                          ? position.endIndex * COL_WIDTH
-                          : position.endIndex * COL_WIDTH + COL_WIDTH / 2;
-
-                        const widthPixel = endPixel - startPixel;
-
+                        const startPixel = position.startsBefore ? position.startIndex * COL_WIDTH : position.startIndex * COL_WIDTH + COL_WIDTH / 2;
+                        const endPixelVal = position.endsAfter ? position.endIndex * COL_WIDTH : position.endIndex * COL_WIDTH + COL_WIDTH / 2;
+                        const widthPixel = endPixelVal - startPixel;
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
                         const infants = position.reservation.infants_count || 0;
-                        const occupancyDisplay = [
-                          adults > 0 ? `${adults}A` : null,
-                          children > 0 ? `${children}C` : null,
-                          infants > 0 ? `${infants}I` : null
-                        ].filter(Boolean).join(' ');
-
+                        const occupancyDisplay = [adults > 0 ? `${adults}A` : null, children > 0 ? `${children}C` : null, infants > 0 ? `${infants}I` : null].filter(Boolean).join(' ');
                         const reservationStatus = position.reservation.status;
                         const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
                         const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
@@ -449,13 +419,8 @@ export default function GanttChart({
                         return (
                           <div
                             key={position.reservation.id}
-                            className={`absolute inset-y-0 pointer-events-auto transition-all duration-200 ${
-                              isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'
-                            }`}
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                            }}
+                            className={`absolute inset-y-0 pointer-events-auto ${isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`}
+                            style={{ left: `${startPixel}px`, width: `${Math.max(widthPixel, COL_WIDTH / 2)}px` }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}
                           >
                             <div
@@ -471,15 +436,11 @@ export default function GanttChart({
                                   {isOwnAgency ? client?.name || 'Client' : '•••'}
                                 </div>
                               </div>
-
                               {isOwnAgency && (occupancyDisplay || position.reservation.bed_configuration) && (
                                 <div className="text-xs text-slate-600 truncate">
-                                  {occupancyDisplay && position.reservation.bed_configuration
-                                    ? `${occupancyDisplay} - ${position.reservation.bed_configuration}`
-                                    : occupancyDisplay || position.reservation.bed_configuration}
+                                  {occupancyDisplay && position.reservation.bed_configuration ? `${occupancyDisplay} - ${position.reservation.bed_configuration}` : occupancyDisplay || position.reservation.bed_configuration}
                                 </div>
                               )}
-
                               {isOwnAgency && (
                                 <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
                                   <Edit className="w-3 h-3 text-slate-500" />
