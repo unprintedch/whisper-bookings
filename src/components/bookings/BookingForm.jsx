@@ -1254,8 +1254,8 @@ export default function BookingForm({
           </div>
         </div>
 
-        {/* Contact info display for existing bookings */}
-        {existingBooking && selectedClient && (
+        {/* Contact info display for existing client (new or existing booking) */}
+        {selectedClient && !isNewClient && (
           <div className="space-y-4 p-4 px-6 border rounded-lg bg-slate-50/70 text-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Agency Details - Now First */}
