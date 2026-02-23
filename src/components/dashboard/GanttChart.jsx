@@ -32,6 +32,33 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
+function EmptyCell({ date, isCovered, isPublicView, highlightDate, onCellClick, room }) {
+  const [hovered, setHovered] = useState(false);
+  const isHighlighted = highlightDate && isSameDay(date, highlightDate);
+  const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
+  const canClick = !isPublicView && !isCovered && onCellClick;
+
+  return (
+    <div
+      style={{ width: '120px', height: '100%', flexShrink: 0 }}
+      className={`border-r flex items-center justify-center relative ${isSunday ? 'border-r-slate-300 border-r-2' : 'border-slate-200'} ${isHighlighted ? 'bg-slate-100/50' : ''} ${canClick ? 'cursor-pointer' : ''}`}
+      onMouseEnter={() => canClick && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={canClick ? () => onCellClick(room, date) : undefined}
+    >
+      {canClick && hovered && (
+        <div className="flex items-center gap-1 text-yellow-700 text-sm font-medium bg-blue-50 rounded px-2 py-1 pointer-events-none">
+          <Plus className="w-4 h-4" />
+          <span>Book</span>
+        </div>
+      )}
+      {!canClick && !isCovered && !isPublicView && (
+        <div style={{ background: 'rgba(239,246,255,0.5)' }} className="absolute inset-0" />
+      )}
+    </div>
+  );
+}
+
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
 
