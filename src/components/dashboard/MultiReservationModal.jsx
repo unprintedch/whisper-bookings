@@ -273,7 +273,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           {/* Status + Group Pax */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label className="text-sm font-semibold text-slate-700">Statut</Label>
+              <Label className="text-sm font-semibold text-slate-700">Status</Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue />
