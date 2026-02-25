@@ -32,12 +32,6 @@ export default function Dashboard({
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Editing booking state (for edit via Gantt)
-  const [editingBooking, setEditingBooking] = useState(null);
-  const [showBookingForm, setShowBookingForm] = useState(false);
-  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
-  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
-
   // Multi-selection state
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [showMultiModal, setShowMultiModal] = useState(false);
