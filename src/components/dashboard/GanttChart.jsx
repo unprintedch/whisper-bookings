@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -387,7 +388,7 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, format(date, 'yyyy-MM-dd')) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -400,45 +401,7 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {/* Selected slots - using same positioning logic as reservations */}
-                      {(() => {
-                        const roomSelectedSlots = selectedSlots.filter(s => s.roomId === room.id);
-                        const mergedRanges = roomSelectedSlots.reduce((acc, slot) => {
-                          const lastRange = acc.length > 0 ? acc[acc.length - 1] : null;
-                          if (lastRange && lastRange.endDate === slot.date) {
-                            lastRange.endDate = slot.date;
-                          } else {
-                            acc.push({ startDate: slot.date, endDate: slot.date });
-                          }
-                          return acc;
-                        }, []);
-
-                        return mergedRanges.map((range, idx) => {
-                          const startDate = new Date(range.startDate + 'T00:00:00');
-                          const endDate = new Date(range.endDate + 'T23:59:59');
-                          const COL_WIDTH = 120;
-                          const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-                          const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-                          const startIdx = normalizedDateColumns.findIndex((d) => d.getFullYear() === startDate.getFullYear() && d.getMonth() === startDate.getMonth() && d.getDate() === startDate.getDate());
-                          const endIdx = normalizedDateColumns.findIndex((d) => d.getFullYear() === endDate.getFullYear() && d.getMonth() === endDate.getMonth() && d.getDate() === endDate.getDate());
-
-                          if (startIdx === -1 || endIdx === -1) return null;
-
-                          const startPixel = startIdx * COL_WIDTH + HALF_COL_WIDTH;
-                          const endPixel = (endIdx + 1) * COL_WIDTH + HALF_COL_WIDTH;
-                          const widthPixel = endPixel - startPixel;
-
-                          return (
-                            <div key={`selected-${idx}`} className="absolute top-0 pointer-events-auto" style={{ left: `${startPixel}px`, width: `${widthPixel}px`, height: '100%' }}>
-                              <div className="absolute inset-y-1 w-full rounded px-2 py-1 flex items-center justify-center bg-yellow-300 ring-2 ring-yellow-500">
-                                <span className="text-xs font-semibold text-yellow-800">Sélectionné</span>
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                       {bookingPositions.map((position, posIndex) => {
+                      {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
 
