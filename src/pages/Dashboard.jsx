@@ -407,7 +407,13 @@ export default function Dashboard({
     }
     
     return room.is_active;
-  }).sort((a, b) => {
+  });
+
+  console.log('Rooms data:', rooms);
+  console.log('Filtered rooms:', filteredRooms);
+  console.log('Date columns:', getDateColumns());
+
+  const sortedRooms = filteredRooms.sort((a, b) => {
     const siteA = sites.find(s => s.id === a.site_id)?.name || '';
     const siteB = sites.find(s => s.id === b.site_id)?.name || '';
 
