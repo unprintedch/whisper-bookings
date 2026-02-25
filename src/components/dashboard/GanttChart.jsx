@@ -427,8 +427,33 @@ export default function GanttChart({
                       )}
                     </div>
 
-                    <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
+                    <div className="absolute inset-0">
+                      {/* Available slots */}
+                      {calculateAvailableSlots(room.id, dateColumns).map((slot, slotIndex) => {
+                        const COL_WIDTH = 120;
+                        const startPixel = slot.startIndex * COL_WIDTH;
+                        const endPixel = slot.endIndex * COL_WIDTH;
+                        const widthPixel = endPixel - startPixel;
+
+                        return (
+                          <div
+                            key={`slot-${room.id}-${slotIndex}`}
+                            className="absolute top-0 pointer-events-auto cursor-pointer group/slot hover:z-10"
+                            style={{
+                              left: `${startPixel}px`,
+                              width: `${widthPixel}px`,
+                              height: '100%'
+                            }}
+                            onClick={() => onCellClick && onCellClick(room, dateColumns[slot.startIndex])}>
+                            <div className="absolute inset-y-1 w-full flex items-center justify-center rounded px-2 py-1 h-full bg-emerald-50/40 border border-dashed border-emerald-200 group-hover/slot:bg-emerald-100/60 group-hover/slot:border-emerald-300 transition-colors">
+                              <span className="text-xs text-emerald-600 font-medium opacity-0 group-hover/slot:opacity-100 transition-opacity">Available</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <div className="pointer-events-none">
+                        {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
 
