@@ -130,9 +130,8 @@ export default function Dashboard({
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
 
-  // Multi-selection state - now using night ranges
-  const [selectedNights, setSelectedNights] = useState(new Map()); // Map<roomId, {startDate, endDate}>
-  const [currentSelectionRoom, setCurrentSelectionRoom] = useState(null);
+  // Multi-selection state
+  const [selectedSlots, setSelectedSlots] = useState([]);
   const [showMultiModal, setShowMultiModal] = useState(false);
   const [multiModalRanges, setMultiModalRanges] = useState([]);
 
@@ -337,56 +336,22 @@ export default function Dashboard({
   };
 
   const handleCalendarCellClick = (room, date) => {
-    const roomId = room.id;
-    const currentSelection = selectedNights.get(roomId);
-    
-    // Normalize clicked date to midnight
-    const clickedDate = new Date(date);
-    clickedDate.setHours(0, 0, 0, 0);
-    
-    // Night starts at clicked date, ends at next day midnight
-    const nightStart = new Date(clickedDate);
-    const nightEnd = new Date(clickedDate);
-    nightEnd.setDate(nightEnd.getDate() + 1);
+    setSelectedRoomForBooking(room);
+    setSelectedDateForBooking(date);
+    setEditingBooking(null);
+    setShowBookingForm(true);
+  };
 
-    if (currentSelection) {
-      const selStart = new Date(currentSelection.startDate);
-      const selEnd = new Date(currentSelection.endDate);
-
-      // Check if clicked date is inside current selection
-      if (clickedDate >= selStart && clickedDate < selEnd) {
-        // Deselect
-        setSelectedNights(prev => {
-          const newMap = new Map(prev);
-          newMap.delete(roomId);
-          return newMap;
-        });
-      } else if (clickedDate.getTime() === selEnd.getTime()) {
-        // Extend forward - next day
-        const newEnd = new Date(selEnd);
-        newEnd.setDate(newEnd.getDate() + 1);
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: selStart, endDate: newEnd }));
-      } else if (clickedDate.getTime() === selStart.getTime() - 86400000) {
-        // Extend backward - previous day
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate: selEnd }));
-      } else {
-        // Non-adjacent - new selection
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: nightStart, endDate: nightEnd }));
-      }
-    } else {
-      // New selection
-      setSelectedNights(prev => new Map(prev).set(roomId, { startDate: nightStart, endDate: nightEnd }));
-    }
-
-    setCurrentSelectionRoom(room);
+  const handleSlotToggle = (roomId, dateStr) => {
+    setSelectedSlots(prev => {
+      const exists = prev.some(s => s.roomId === roomId && s.date === dateStr);
+      if (exists) return prev.filter(s => !(s.roomId === roomId && s.date === dateStr));
+      return [...prev, { roomId, date: dateStr }];
+    });
   };
 
   const handleRemoveRoomSlots = (roomId) => {
-    setSelectedNights(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(roomId);
-      return newMap;
-    });
+    setSelectedSlots(prev => prev.filter(s => s.roomId !== roomId));
   };
 
   const handleConfirmMulti = (mergedRanges) => {
@@ -532,8 +497,8 @@ export default function Dashboard({
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
-              selectedNights={selectedNights}
-              currentSelectionRoom={currentSelectionRoom}
+              selectedSlots={selectedSlots}
+              onSlotToggle={handleSlotToggle}
             />
           </CardContent>
         </Card>
@@ -609,30 +574,14 @@ export default function Dashboard({
         </div>
       )}
 
-      {selectedNights.size > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-blue-900">Sélections actives</h3>
-              <p className="text-sm text-blue-700 mt-1">
-                {Array.from(selectedNights.entries()).map(([roomId, selection]) => {
-                  const room = rooms.find(r => r.id === roomId);
-                  const nights = Math.ceil((new Date(selection.endDate) - new Date(selection.startDate)) / (24 * 60 * 60 * 1000));
-                  return `${room?.name || 'Unknown'}: ${nights} nuit${nights > 1 ? 's' : ''}`;
-                }).join(' • ')}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedNights(new Map())}
-              className="text-blue-700 border-blue-200 hover:bg-blue-100"
-            >
-              Effacer tout
-            </Button>
-          </div>
-        </div>
-      )}
+      <MultiSelectionPanel
+        selectedSlots={selectedSlots}
+        onRemoveSlot={handleRemoveRoomSlots}
+        onClearAll={() => setSelectedSlots([])}
+        onConfirm={handleConfirmMulti}
+        rooms={rooms}
+        sites={sites}
+      />
 
       <MultiReservationModal
         isOpen={showMultiModal}

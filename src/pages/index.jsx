@@ -37,8 +37,6 @@ export default function HomePage() {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
   const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
-  const [selectedNights, setSelectedNights] = useState(new Map()); // Map<roomId, {startDate, endDate}>
-  const [currentSelectionRoom, setCurrentSelectionRoom] = useState(null);
 
 
   useEffect(() => {
@@ -150,46 +148,14 @@ export default function HomePage() {
   };
 
   const handleCellClick = (room, date) => {
-    const roomId = room.id;
-    const currentSelection = selectedNights.get(roomId);
-    const nextDay = new Date(date);
-    nextDay.setDate(nextDay.getDate() + 1);
-
-    if (currentSelection) {
-      const startDate = new Date(currentSelection.startDate);
-      const endDate = new Date(currentSelection.endDate);
-      const clickedDate = new Date(date);
-
-      // Check if clicked date is adjacent or overlaps with current selection
-      if (clickedDate >= startDate && clickedDate < endDate) {
-        // Clicked inside selection - remove
-        setSelectedNights(prev => {
-          const newMap = new Map(prev);
-          newMap.delete(roomId);
-          return newMap;
-        });
-      } else if (clickedDate.getTime() === endDate.getTime()) {
-        // Extend forward
-        const newEnd = new Date(nextDay);
-        newEnd.setDate(newEnd.getDate() + 1);
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate, endDate: newEnd }));
-      } else if (clickedDate.getTime() === startDate.getTime() - 86400000) {
-        // Extend backward
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate }));
-      } else {
-        // Non-adjacent - new selection
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate: nextDay }));
-      }
-    } else {
-      // New selection
-      setSelectedNights(prev => new Map(prev).set(roomId, { startDate: date, endDate: nextDay }));
-    }
-
-    setCurrentSelectionRoom(room);
+    setSelectedRoomForBooking(room);
+    setSelectedDateForBooking(date);
+    setShowBookingForm(true);
   };
 
   const handleBookingSubmit = async (formData) => {
     try {
+      // Create a new client record for the public booking request
       const clientData = {
         name: formData.contact_name,
         contact_email: formData.contact_email,
@@ -204,6 +170,7 @@ export default function HomePage() {
 
       const newClient = await dbClient.entities.Client.create(clientData);
 
+      // Create the reservation
       const reservationData = {
         client_id: newClient.id,
         room_id: formData.room_id,
@@ -220,13 +187,8 @@ export default function HomePage() {
       await dbClient.entities.Reservation.create(reservationData);
 
       setShowBookingForm(false);
-      setSelectedNights(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(formData.room_id);
-        return newMap;
-      });
       alert('Booking request submitted successfully! We will contact you shortly.');
-      loadData();
+      loadData(); // Reload data to show the new booking
     } catch (error) {
       console.error('Error submitting booking:', error);
       alert('Error submitting booking request. Please try again.');
@@ -474,33 +436,21 @@ export default function HomePage() {
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
-              selectedNights={selectedNights}
-              currentSelectionRoom={currentSelectionRoom}
             />
           </CardContent>
         </Card>
       </div>
 
-      <Dialog open={showBookingForm} onOpenChange={(open) => {
-        setShowBookingForm(open);
-        if (!open) {
-          setSelectedRoomForBooking(null);
-          setSelectedDateForBooking(null);
-        }
-      }}>
+      <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Request a Booking
-              {currentSelectionRoom && selectedNights.get(currentSelectionRoom.id) && (() => {
-                const selection = selectedNights.get(currentSelectionRoom.id);
-                const nights = Math.ceil((new Date(selection.endDate) - new Date(selection.startDate)) / (24 * 60 * 60 * 1000));
-                return (
-                  <span className="text-sm font-normal text-slate-600 ml-2">
-                    – {currentSelectionRoom.name}, {nights} night{nights > 1 ? 's' : ''} from {format(new Date(selection.startDate), 'dd MMM yyyy')}
-                  </span>
-                );
-              })()}
+              {selectedRoomForBooking && selectedDateForBooking && (
+                <span className="text-sm font-normal text-slate-600 ml-2">
+                  – {selectedRoomForBooking.name} from {format(selectedDateForBooking, 'dd MMM yyyy')}
+                </span>
+              )}
             </DialogTitle>
           </DialogHeader>
           <PublicBookingForm
@@ -510,9 +460,8 @@ export default function HomePage() {
             reservations={reservations}
             agencies={agencies}
             onSubmit={handleBookingSubmit}
-            initialRoom={currentSelectionRoom}
-            initialDate={selectedNights.get(currentSelectionRoom?.id)?.startDate}
-            selectedNights={selectedNights.get(currentSelectionRoom?.id)}
+            initialRoom={selectedRoomForBooking}
+            initialDate={selectedDateForBooking}
           />
         </DialogContent>
       </Dialog>

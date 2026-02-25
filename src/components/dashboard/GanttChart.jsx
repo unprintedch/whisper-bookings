@@ -155,7 +155,9 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = [],
+  onSlotToggle
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -374,45 +376,67 @@ export default function GanttChart({
                   </div>
 
                   <div className="relative flex-shrink-0 h-full">
-                    <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const isSelected = selectedNights?.has(room.id) && 
-                          new Date(selectedNights.get(room.id).startDate) <= date && 
-                          date < new Date(selectedNights.get(room.id).endDate);
-                        const isCellEmpty = !bookingPositions.some(pos => {
-                          const COL_WIDTH = 120;
-                          const posStart = pos.startIndex * COL_WIDTH;
-                          const posEnd = (pos.endIndex + 1) * COL_WIDTH;
-                          const cellStart = dateIndex * COL_WIDTH;
-                          const cellEnd = (dateIndex + 1) * COL_WIDTH;
-                          return !(posEnd <= cellStart || posStart >= cellEnd);
-                        });
-
-                        return (
+                    {/* Background grid — visual borders only, no interaction */}
+                    <div className="flex h-full" style={{ pointerEvents: 'none' }}>
+                      {dateColumns.map((date, dateIndex) =>
                         <div
                           key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                          !isPublicView && isCellEmpty ? 'cursor-pointer' : ''} ${
-                          isSelected ? 'bg-green-200 hover:bg-green-300' : (!isPublicView && isCellEmpty ? 'hover:bg-yellow-100' : '')} ${
-                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                          }
-                          style={{
-                            width: '120px',
-                            height: '100%'
-                          }}
-                          onClick={!isPublicView && isCellEmpty && onCellClick ? () => onCellClick(room, date) : undefined}>
-
-                            {!isPublicView && isCellEmpty &&
-                          <div className={`flex items-center gap-1 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity ${isSelected ? 'text-green-700 font-semibold' : 'text-yellow-700'}`}>
-                                <Plus className="w-4 h-4" />
-                                <span>{isSelected ? 'Booked' : 'Book'}</span>
-                              </div>
-                          }
-                          </div>
-                        );
-                      })}
+                          className={`border-r border-slate-200 flex-shrink-0 ${
+                            highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                            format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
+                          style={{ width: '120px', height: '100%' }}
+                        />
+                      )}
                     </div>
+
+                    {/* Interactive hover zones: each zone is centered on its date column (mid to mid) */}
+                    {!isPublicView && (
+                      <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+                        {dateColumns.map((date, dateIndex) => {
+                          const COL_WIDTH = 120;
+                          const HALF = COL_WIDTH / 2;
+                          const dateStr = format(date, 'yyyy-MM-dd');
+                          const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+
+                          // Zone: starts at mid of this column, width = full column (ends at mid of next column)
+                          const zoneLeft = dateIndex * COL_WIDTH + HALF;
+
+                          // Check if this zone is occupied by a booking bar
+                          const hasBooking = bookingPositions.some(pos => {
+                            const barStart = pos.startsBefore
+                              ? pos.startIndex * COL_WIDTH
+                              : pos.startIndex * COL_WIDTH + HALF;
+                            const barEnd = pos.endsAfter
+                              ? pos.endIndex * COL_WIDTH
+                              : pos.endIndex * COL_WIDTH + HALF;
+                            return barStart < zoneLeft + COL_WIDTH && barEnd > zoneLeft;
+                          });
+
+                          if (hasBooking) return null;
+
+                          return (
+                            <div
+                              key={`${room.id}-zone-${dateStr}`}
+                              className={`absolute top-0 h-full group/zone cursor-pointer flex items-center justify-center ${
+                                isSelected ? 'bg-yellow-100' : 'hover:bg-blue-50'}`}
+                              style={{ left: `${zoneLeft}px`, width: `${COL_WIDTH}px`, pointerEvents: 'auto' }}
+                              onClick={() => onSlotToggle ? onSlotToggle(room.id, dateStr) : onCellClick && onCellClick(room, date)}
+                            >
+                              {isSelected ? (
+                                <div className="flex items-center gap-1 text-yellow-700 text-sm">
+                                  <Plus className="w-4 h-4 rotate-45" />
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/zone:opacity-100 transition-opacity">
+                                  <Plus className="w-4 h-4" />
+                                  <span>Book</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
