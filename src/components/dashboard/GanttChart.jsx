@@ -375,56 +375,28 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const COL_WIDTH = 120;
-                        const HALF_COL = COL_WIDTH / 2;
-                        
-                        return (
-                          <div
-                            key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                            className={`border-r border-slate-200 relative flex-shrink-0 ${
-                            highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                            format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                            }
-                            style={{
-                              width: `${COL_WIDTH}px`,
-                              height: '100%'
-                            }}>
+                      {dateColumns.map((date, dateIndex) =>
+                      <div
+                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                        }
+                        style={{
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
-                            {!isPublicView && (
-                              <>
-                                {/* Droite: arrivée (moitié droite) */}
-                                <div
-                                  className="absolute top-0 right-0 flex items-center justify-center group/cell cursor-pointer hover:bg-blue-50 transition-colors"
-                                  style={{
-                                    width: `${HALF_COL}px`,
-                                    height: '100%'
-                                  }}
-                                  onClick={onCellClick ? () => onCellClick(room, date) : undefined}>
-                                  <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                    <Plus className="w-4 h-4" />
-                                    <span>Book</span>
-                                  </div>
-                                </div>
-
-                                {/* Gauche: départ (moitié gauche) */}
-                                <div
-                                  className="absolute top-0 left-0 flex items-center justify-center group/cell cursor-pointer hover:bg-blue-50 transition-colors"
-                                  style={{
-                                    width: `${HALF_COL}px`,
-                                    height: '100%'
-                                  }}
-                                  onClick={onCellClick ? () => onCellClick(room, date) : undefined}>
-                                  <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                    <Plus className="w-4 h-4" />
-                                    <span>Book</span>
-                                  </div>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        );
-                      })}
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                              <Plus className="w-4 h-4" />
+                              <span>Book</span>
+                            </div>
+                        }
+                        </div>
+                      )}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
@@ -477,7 +449,7 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 h-full"
 
 
 
