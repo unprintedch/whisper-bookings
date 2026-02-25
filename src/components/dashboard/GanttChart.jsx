@@ -430,9 +430,9 @@ export default function GanttChart({
                             isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
                             }
                             style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
+                               left: `${startPixel}px`,
+                               width: `${widthPixel}px`,
+                               height: '100%'
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
