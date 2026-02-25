@@ -292,7 +292,12 @@ export default function GanttChart({
   const ROOM_COLUMN_WIDTH = 230;
 
   const canSeeClientName = (reservation) => {
-    return !isPublicView;
+    if (isPublicView) return false;
+    if (!currentUser) return true;
+    if (currentUser.custom_role !== 'agency') return true;
+
+    const client = clients.find((c) => c.id === reservation.client_id);
+    return client?.agency_id === currentUser.agency_id;
   };
 
   return (
@@ -380,7 +385,8 @@ export default function GanttChart({
                         }
                         style={{
                           width: '120px',
-                          height: '100%'
+                          height: '100%',
+                          backgroundColor: selectedSlots?.some(s => s.roomId === room.id && s.date === format(date, 'yyyy-MM-dd')) ? 'rgba(59, 130, 246, 0.1)' : undefined
                         }}
                         onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
