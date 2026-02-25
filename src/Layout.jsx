@@ -133,7 +133,11 @@ export default function Layout({ children }) {
 
   // Client Management specific state is now moved to ClientsPage.js
 
-
+  // State for the booking form modal
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
+  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
+  const [editingBooking, setEditingBooking] = useState(null);
 
   // Load current user on mount
   useEffect(() => {
@@ -192,7 +196,12 @@ export default function Layout({ children }) {
     }
   };
 
-
+  const handleOpenNewBooking = () => {
+    setSelectedRoomForBooking(null);
+    setSelectedDateForBooking(null);
+    setEditingBooking(null);
+    setShowBookingForm(true);
+  };
 
   // Helper to check if user can access a page
   const canAccessPage = (pageName) => {
@@ -233,6 +242,10 @@ export default function Layout({ children }) {
     isDatePopoverOpen, setIsDatePopoverOpen,
     filters, setFilters,
     navigateDate,
+    showBookingForm, setShowBookingForm,
+    selectedRoomForBooking, setSelectedRoomForBooking,
+    selectedDateForBooking, setSelectedDateForBooking,
+    editingBooking, setEditingBooking,
   };
 
   // No specific props for Client Management page in this layout anymore.
@@ -452,6 +465,10 @@ export default function Layout({ children }) {
                     <Users className="w-4 h-4 mr-2" />
                     All bookings
                   </Link>
+                </Button>
+                <Button onClick={handleOpenNewBooking} className="!bg-yellow-700 hover:!bg-yellow-800">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Booking
                 </Button>
               </>
             )}
