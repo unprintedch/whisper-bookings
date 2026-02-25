@@ -1,12 +1,20 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { format, addDays, startOfDay } from "date-fns";
+import React, { useState, useEffect } from "react";
+import { format, addDays, startOfDay, endOfDay } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import { base44 } from "@/api/base44Client";
+import { Room } from "@/entities/Room";
+import { Reservation } from "@/entities/Reservation";
+import { Group } from "@/entities/Group";
+import { Site } from "@/entities/Site";
+import { Agency } from "@/entities/Agency";
+import { Client } from "@/entities/Client";
+import { BedConfiguration } from "@/entities/BedConfiguration";
+import { User } from "@/entities/User";
 import { createPageUrl } from "@/utils";
 
-import GanttChart from "@/components/dashboard/GanttChart.jsx";
+import GanttChart from "../components/dashboard/GanttChart";
 import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
 import MultiReservationModal from "../components/dashboard/MultiReservationModal";
+
 
 export default function Dashboard({
   selectedSiteName = "all",
@@ -30,15 +38,16 @@ export default function Dashboard({
   const [multiModalRanges, setMultiModalRanges] = useState([]);
 
   const startDate = startOfDay(currentDate);
+  const endDate = endOfDay(addDays(currentDate, dateRange - 1));
 
   useEffect(() => {
     loadData();
     loadCurrentUser();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount, which is correct for fetching all static data.
 
   const loadCurrentUser = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await User.me();
       setCurrentUser(user);
     } catch (error) {
       console.error('Error loading user:', error);
@@ -49,22 +58,22 @@ export default function Dashboard({
     setIsLoading(true);
     try {
       const [roomsData, reservationsData, groupsData, sitesData, agenciesData, clientsData, bedConfigsData] = await Promise.all([
-        base44.entities.Room.list(),
-        base44.entities.Reservation.list('-created_date'),
-        base44.entities.Group.list('-created_date'),
-        base44.entities.Site.list(),
-        base44.entities.Agency.list(),
-        base44.entities.Client.list(),
-        base44.entities.BedConfiguration.list('sort_order'),
+        Room.list('-name'), // Changed from Room.list() to Room.list('-name')
+        Reservation.list('-created_date'),
+        Group.list('-created_date'),
+        Site.list(),
+        Agency.list(), // Fetch agencies data
+        Client.list(), // Fetch clients data
+        BedConfiguration.list('sort_order'), // Fetch bed configurations sorted by sort_order
       ]);
 
       setRooms(roomsData);
       setReservations(reservationsData);
-      setGroups(groupsData);
+      setGroups(groupsData); // Setting groups
       setSites(sitesData);
-      setAgencies(agenciesData);
-      setClients(clientsData);
-      setAllBedConfigs(bedConfigsData);
+      setAgencies(agenciesData); // Set agencies data
+      setClients(clientsData); // Set clients data
+      setAllBedConfigs(bedConfigsData); // Set bed configs data
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -72,7 +81,14 @@ export default function Dashboard({
   };
 
   const handleEditBooking = (booking) => {
+    // Redirect to Clients page with booking ID in URL
     window.location.href = createPageUrl('Clients') + '?bookingId=' + booking.id;
+  };
+
+  const handleCalendarCellClick = (room, date) => {
+    // Store selection and open multi-select with one slot
+    const dateStr = format(date, 'yyyy-MM-dd');
+    setSelectedSlots([{ roomId: room.id, date: dateStr }]);
   };
 
   const handleSlotToggle = (roomId, dateStr) => {
@@ -93,29 +109,41 @@ export default function Dashboard({
   };
 
   const handleBookingMove = async (bookingId, newRoomId, newStartDate) => {
-    const booking = reservations.find((r) => r.id === bookingId);
-    if (booking) {
-      const checkin = new Date(booking.date_checkin);
-      const checkout = new Date(booking.date_checkout);
-      const duration = checkout.getTime() - checkin.getTime();
-      const newCheckinDate = new Date(newStartDate);
-      const newCheckoutDate = new Date(newCheckinDate.getTime() + duration);
-      await base44.entities.Reservation.update(bookingId, {
-        room_id: newRoomId,
-        date_checkin: format(newCheckinDate, 'yyyy-MM-dd'),
-        date_checkout: format(newCheckoutDate, 'yyyy-MM-dd')
-      });
-      loadData();
+    try {
+      const booking = reservations.find((r) => r.id === bookingId);
+      if (booking) {
+        const checkin = new Date(booking.date_checkin);
+        const checkout = new Date(booking.date_checkout);
+        const duration = checkout.getTime() - checkin.getTime();
+
+        const newCheckinDate = new Date(newStartDate);
+        const newCheckoutDate = new Date(newCheckinDate.getTime() + duration);
+
+        await Reservation.update(bookingId, {
+          room_id: newRoomId,
+          date_checkin: format(newCheckinDate, 'yyyy-MM-dd'),
+          date_checkout: format(newCheckoutDate, 'yyyy-MM-dd')
+        });
+        loadData();
+      }
+    } catch (error) {
+      console.error('Error moving booking:', error);
     }
   };
 
   const handleBookingResize = async (bookingId, newStartDate, newEndDate) => {
-    await base44.entities.Reservation.update(bookingId, {
-      date_checkin: format(new Date(newStartDate), 'yyyy-MM-dd'),
-      date_checkout: format(new Date(newEndDate), 'yyyy-MM-dd')
-    });
-    loadData();
+    try {
+      await Reservation.update(bookingId, {
+        date_checkin: format(new Date(newStartDate), 'yyyy-MM-dd'),
+        date_checkout: format(new Date(newEndDate), 'yyyy-MM-dd')
+      });
+      loadData();
+    } catch (error) {
+      console.error('Error resizing booking:', error);
+    }
   };
+
+  // navigateDate function removed as it's handled by parent component
 
   const getDateColumns = () => {
     const columns = [];
@@ -125,56 +153,80 @@ export default function Dashboard({
     return columns;
   };
 
-  const filteredRooms = useMemo(() => {
-    return rooms.filter((room) => {
-      if (selectedSiteName !== "all") {
-        const roomSite = sites.find((s) => s.id === room.site_id);
-        if (!roomSite || roomSite.name !== selectedSiteName) return false;
+  const filteredRooms = rooms.filter((room) => {
+    if (selectedSiteName !== "all") {
+      const roomSite = sites.find((s) => s.id === room.site_id);
+      if (!roomSite || roomSite.name !== selectedSiteName) return false;
+    }
+    
+    // New filter: by bed configuration ID
+    if (filters.bedConfigId !== "all") {
+      if (!room.bed_configuration_ids || !room.bed_configuration_ids.includes(filters.bedConfigId)) {
+        return false;
       }
-      if (filters.bedConfigId !== "all") {
-        if (!room.bed_configuration_ids || !room.bed_configuration_ids.includes(filters.bedConfigId)) {
-          return false;
-        }
-      }
-      return room.is_active;
-    }).sort((a, b) => {
-      const siteA = sites.find(s => s.id === a.site_id)?.name || '';
-      const siteB = sites.find(s => s.id === b.site_id)?.name || '';
-      if (siteA !== siteB) return siteA.localeCompare(siteB);
-      return (a.number || '').localeCompare(b.number || '', undefined, { numeric: true });
-    });
-  }, [rooms, sites, selectedSiteName, filters]);
+    }
+    
+    return room.is_active;
+  }).sort((a, b) => {
+    const siteA = sites.find(s => s.id === a.site_id)?.name || '';
+    const siteB = sites.find(s => s.id === b.site_id)?.name || '';
 
-  const filteredReservations = useMemo(() => {
-    if (!currentUser || currentUser.custom_role !== 'agency') return reservations;
+    // Primary sort: by Site Name
+    if (siteA !== siteB) {
+        return siteA.localeCompare(siteB);
+    }
+
+    // Secondary sort: by Room Number, using natural sort for alphanumeric strings
+    // This handles cases like "S-1", "S-10", "T-2" correctly.
+    return a.number.localeCompare(b.number, undefined, { numeric: true });
+  });
+
+  // Filter reservations based on user role
+  const filteredReservations = React.useMemo(() => {
+    if (!currentUser || currentUser.custom_role !== 'agency') {
+      return reservations;
+    }
+    
+    // For agency users, filter to only their agency's clients
     return reservations.filter(res => {
       const client = clients.find(c => c.id === res.client_id);
       return client?.agency_id === currentUser.agency_id;
     });
   }, [reservations, clients, currentUser]);
 
+  const handleRoomEdit = (room) => {
+    console.log('Edit room:', room);
+  };
+
   return (
     <div className="px-6 py-6">
       <div className="w-full space-y-6">
+
+        {/* The filter bar has been removed from here and is now in the main layout */}
+
         <Card className="border shadow-sm text-card-foreground bg-white backdrop-blur-sm">
+          {/* CardHeader has been removed as per new outline */}
           <CardContent className="p-0">
             <GanttChart
               rooms={filteredRooms}
-              reservations={filteredReservations}
+              reservations={reservations}
               groups={groups}
               clients={clients}
               dateColumns={getDateColumns()}
               highlightDate={currentDate}
               isLoading={isLoading}
+              onCellClick={handleCalendarCellClick}
               onBookingEdit={handleEditBooking}
               onBookingMove={handleBookingMove}
               onBookingResize={handleBookingResize}
+              onRoomEdit={handleRoomEdit}
               sites={sites}
               selectedSlots={selectedSlots}
               onSlotToggle={handleSlotToggle}
             />
           </CardContent>
         </Card>
+
       </div>
 
       <MultiSelectionPanel
@@ -197,6 +249,8 @@ export default function Dashboard({
         allBedConfigs={allBedConfigs}
         onSuccess={() => { setSelectedSlots([]); setShowMultiModal(false); loadData(); }}
       />
+
+
     </div>
   );
 }
