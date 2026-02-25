@@ -161,6 +161,37 @@ export default function GanttChart({
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
+  const COL_WIDTH = 120;
+  const HALF_COL_WIDTH = COL_WIDTH / 2;
+
+  const calculateAvailableSlots = (roomId, dateColumns) => {
+    const roomReservations = reservations.filter(r => r.room_id === roomId && r.status !== 'ANNULE');
+    const slots = [];
+
+    for (let i = 0; i < dateColumns.length - 1; i++) {
+      const dayStart = dateColumns[i];
+      const dayEnd = dateColumns[i + 1];
+      
+      // Check if there's a booking that overlaps with this date
+      const hasBooking = roomReservations.some(res => {
+        const checkin = new Date(res.date_checkin + 'T00:00:00');
+        const checkout = new Date(res.date_checkout + 'T00:00:00');
+        return checkin < dayEnd && checkout > dayStart;
+      });
+
+      if (!hasBooking) {
+        // Available slot from mid-checkin to mid-checkout
+        slots.push({
+          startIndex: i,
+          endIndex: i + 1,
+          type: 'available'
+        });
+      }
+    }
+
+    return slots;
+  };
+
   React.useEffect(() => {
     const loadUser = async () => {
       try {
@@ -449,7 +480,7 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 h-full"
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
 
 
 
