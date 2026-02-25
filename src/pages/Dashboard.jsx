@@ -493,76 +493,7 @@ export default function Dashboard({
           </CardContent>
         </Card>
 
-        <AvailableRooms
-          rooms={filteredRooms}
-          reservations={filteredReservations} // Use filtered for available rooms
-          dateRange={{ startDate, endDate }}
-          onRoomSelect={handleRoomSelect}
-          sites={sites}
-        />
       </div>
-
-      {showBookingForm && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-          onClick={() => {
-            setShowBookingForm(false);
-            setSelectedRoomForBooking(null);
-            setSelectedDateForBooking(null);
-            setEditingBooking(null);
-          }}
-        >
-          <div
-            className="bg-white rounded-xl border border-slate-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-bold text-slate-800">
-                {editingBooking ? 'Edit Booking' : 'Create New Booking'}
-              </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setShowBookingForm(false);
-                  setSelectedRoomForBooking(null);
-                  setSelectedDateForBooking(null);
-                  setEditingBooking(null);
-                }}
-                className="h-9 w-9"
-              >
-                <X className="h-5 w-5 text-slate-500" />
-              </Button>
-            </div>
-            <div className="p-4">
-              <BookingForm
-                onSave={editingBooking ? handleUpdateBooking : handleCreateBooking}
-                onDelete={editingBooking ? handleDeleteBooking : undefined}
-                onCancel={() => {
-                  setShowBookingForm(false);
-                  setSelectedRoomForBooking(null);
-                  setSelectedDateForBooking(null);
-                  setEditingBooking(null);
-                }}
-                initialRoom={selectedRoomForBooking}
-                initialDates={selectedDateForBooking ? {
-                  checkin: format(selectedDateForBooking, 'yyyy-MM-dd'),
-                  checkout: format(addDays(selectedDateForBooking, 1), 'yyyy-MM-dd')
-                } : null}
-                existingBooking={editingBooking}
-                rooms={rooms}
-                clients={clients}
-                groups={groups}
-                sites={sites}
-                agencies={agencies}
-                reservations={reservations}
-                allBedConfigs={allBedConfigs}
-                selectedSiteName={selectedSiteName}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <MultiSelectionPanel
         selectedSlots={selectedSlots}
