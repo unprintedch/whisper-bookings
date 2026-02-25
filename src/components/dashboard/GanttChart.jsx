@@ -402,6 +402,46 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
+                      {/* Render selected nights */}
+                      {currentSelectionRoom?.id === room.id && selectedNights.get(room.id) && (() => {
+                        const selection = selectedNights.get(room.id);
+                        const startDate = new Date(selection.startDate);
+                        const endDate = new Date(selection.endDate);
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        
+                        const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+                        const startIdx = normalizedDateColumns.findIndex(d => 
+                          d.getFullYear() === startDate.getFullYear() &&
+                          d.getMonth() === startDate.getMonth() &&
+                          d.getDate() === startDate.getDate()
+                        );
+                        const endIdx = normalizedDateColumns.findIndex(d =>
+                          d.getFullYear() === endDate.getFullYear() &&
+                          d.getMonth() === endDate.getMonth() &&
+                          d.getDate() === endDate.getDate()
+                        );
+                        
+                        if (startIdx === -1) return null;
+                        
+                        const startPixel = startIdx * COL_WIDTH + HALF_COL_WIDTH;
+                        const endPixel = (endIdx === -1 ? dateColumns.length : endIdx) * COL_WIDTH + HALF_COL_WIDTH;
+                        const widthPixel = endPixel - startPixel;
+                        
+                        return (
+                          <div
+                            key={`selection-${room.id}`}
+                            className="absolute top-0 pointer-events-none"
+                            style={{
+                              left: `${startPixel}px`,
+                              width: `${widthPixel}px`,
+                              height: '100%'
+                            }}>
+                            <div className="absolute inset-y-1 w-full bg-blue-300 opacity-30 rounded" />
+                          </div>
+                        );
+                      })()}
+                      
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
