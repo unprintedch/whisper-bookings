@@ -256,31 +256,7 @@ export default function Dashboard({
         onSuccess={() => { setSelectedSlots([]); setShowMultiModal(false); loadData(); }}
       />
 
-      {showRoomForm && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-          onClick={handleCloseRoomForm}
-        >
-          <div
-            className="bg-white rounded-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6 border-b">
-              <h2 className="text-2xl font-bold text-slate-800">
-                {editingRoom ? 'Edit Room' : 'Create New Room'}
-              </h2>
-            </div>
-            <div className="p-6">
-              <RoomForm
-                onSave={handleCreateUpdateRoom}
-                onCancel={handleCloseRoomForm}
-                initialRoom={editingRoom}
-                sites={sites}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
