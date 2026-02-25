@@ -140,17 +140,7 @@ export default function Dashboard({
 
   useEffect(() => {
     loadData();
-    loadCurrentUser();
-  }, []); // Empty dependency array means this runs once on mount, which is correct for fetching all static data.
-
-  const loadCurrentUser = async () => {
-    try {
-      const user = await User.me();
-      setCurrentUser(user);
-    } catch (error) {
-      console.error('Error loading user:', error);
-    }
-  };
+  }, []);
 
   const loadData = async () => {
     setIsLoading(true);
