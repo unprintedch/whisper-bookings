@@ -497,9 +497,6 @@ export default function Dashboard({
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
-              selectedSlots={selectedSlots}
-              onSlotToggle={handleSlotToggle}
-              multiSelectMode={selectedSlots.length > 0 || showMultiModal}
             />
           </CardContent>
         </Card>
