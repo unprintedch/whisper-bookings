@@ -357,7 +357,7 @@ export default function Dashboard({
 
   const handleBookingResize = async (bookingId, newStartDate, newEndDate) => {
     try {
-      await Reservation.update(bookingId, {
+      await base44.entities.Reservation.update(bookingId, {
         date_checkin: format(new Date(newStartDate), 'yyyy-MM-dd'),
         date_checkout: format(new Date(newEndDate), 'yyyy-MM-dd')
       });
