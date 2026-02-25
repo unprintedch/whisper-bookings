@@ -150,9 +150,42 @@ export default function HomePage() {
   };
 
   const handleCellClick = (room, date) => {
-    setSelectedRoomForBooking(room);
-    setSelectedDateForBooking(date);
-    setShowBookingForm(true);
+    const roomId = room.id;
+    const currentSelection = selectedNights.get(roomId);
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    if (currentSelection) {
+      const startDate = new Date(currentSelection.startDate);
+      const endDate = new Date(currentSelection.endDate);
+      const clickedDate = new Date(date);
+
+      // Check if clicked date is adjacent or overlaps with current selection
+      if (clickedDate >= startDate && clickedDate < endDate) {
+        // Clicked inside selection - remove
+        setSelectedNights(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(roomId);
+          return newMap;
+        });
+      } else if (clickedDate.getTime() === endDate.getTime()) {
+        // Extend forward
+        const newEnd = new Date(nextDay);
+        newEnd.setDate(newEnd.getDate() + 1);
+        setSelectedNights(prev => new Map(prev).set(roomId, { startDate, endDate: newEnd }));
+      } else if (clickedDate.getTime() === startDate.getTime() - 86400000) {
+        // Extend backward
+        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate }));
+      } else {
+        // Non-adjacent - new selection
+        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate: nextDay }));
+      }
+    } else {
+      // New selection
+      setSelectedNights(prev => new Map(prev).set(roomId, { startDate: date, endDate: nextDay }));
+    }
+
+    setCurrentSelectionRoom(room);
   };
 
   const handleBookingSubmit = async (formData) => {
