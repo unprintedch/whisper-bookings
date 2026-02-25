@@ -137,22 +137,22 @@ export default function Dashboard({
     setIsLoading(true);
     try {
       const [roomsData, reservationsData, groupsData, sitesData, agenciesData, clientsData, bedConfigsData] = await Promise.all([
-        Room.list('-name'), // Changed from Room.list() to Room.list('-name')
-        Reservation.list('-created_date'),
-        Group.list('-created_date'),
-        Site.list(),
-        Agency.list(), // Fetch agencies data
-        Client.list(), // Fetch clients data
-        BedConfiguration.list('sort_order'), // Fetch bed configurations sorted by sort_order
+        base44.entities.Room.list(),
+        base44.entities.Reservation.list(),
+        base44.entities.Group.list(),
+        base44.entities.Site.list(),
+        base44.entities.Agency.list(),
+        base44.entities.Client.list(),
+        base44.entities.BedConfiguration.list(),
       ]);
 
       setRooms(roomsData);
       setReservations(reservationsData);
-      setGroups(groupsData); // Setting groups
+      setGroups(groupsData);
       setSites(sitesData);
-      setAgencies(agenciesData); // Set agencies data
-      setClients(clientsData); // Set clients data
-      setAllBedConfigs(bedConfigsData); // Set bed configs data
+      setAgencies(agenciesData);
+      setClients(clientsData);
+      setAllBedConfigs(bedConfigsData);
     } catch (error) {
       console.error('Error loading data:', error);
     }
