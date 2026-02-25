@@ -487,6 +487,7 @@ export default function Dashboard({
               onRoomEdit={handleRoomEdit}
               sites={sites}
               currentUser={currentUser}
+              selectedSlots={selectedSlots}
             />
           </CardContent>
         </Card>
