@@ -272,6 +272,34 @@ export default function GanttChart({
     return sites.find((site) => site.id === siteId);
   };
 
+  const calculateAvailableSlots = (roomId, dateColumns) => {
+    const COL_WIDTH = 120;
+    const roomReservations = getReservationsForRoom(roomId);
+    const bookingPositions = roomReservations
+      .map((reservation) => calculateBookingPosition(reservation, dateColumns))
+      .filter((position) => position !== null)
+      .sort((a, b) => a.startIndex - b.startIndex);
+
+    const availableSlots = [];
+    const viewLength = dateColumns.length;
+
+    if (bookingPositions.length === 0) {
+      // No bookings, entire view is available
+      return [];
+    }
+
+    // Check gaps between bookings
+    for (let i = 0; i < bookingPositions.length - 1; i++) {
+      const currentEnd = bookingPositions[i].endIndex;
+      const nextStart = bookingPositions[i + 1].startIndex;
+      if (currentEnd < nextStart) {
+        availableSlots.push({ startIndex: currentEnd, endIndex: nextStart });
+      }
+    }
+
+    return availableSlots;
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
@@ -400,29 +428,6 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {/* Available slots */}
-                      {calculateAvailableSlots(room.id, dateColumns).map((slot, slotIndex) => {
-                        const startPixel = slot.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        const endPixel = slot.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        const widthPixel = endPixel - startPixel;
-
-                        return (
-                          <div
-                            key={`slot-${room.id}-${slotIndex}`}
-                            className="absolute top-0 pointer-events-auto cursor-pointer group/slot hover:z-10"
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
-                            }}
-                            onClick={() => onCellClick && onCellClick(room, dateColumns[slot.startIndex])}>
-                            <div className="absolute inset-y-1 w-full flex items-center justify-center rounded px-2 py-1 h-full bg-emerald-50/40 border border-dashed border-emerald-200 group-hover/slot:bg-emerald-100/60 group-hover/slot:border-emerald-300 transition-colors">
-                              <span className="text-xs text-emerald-600 font-medium opacity-0 group-hover/slot:opacity-100 transition-opacity">Available</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
