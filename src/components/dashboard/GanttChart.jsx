@@ -9,7 +9,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
 
+const statusColors = {
+  OPTION: "bg-amber-100 border-amber-300 text-amber-800",
+  RESERVE: "bg-blue-100 border-blue-300 text-blue-800",
+  CONFIRME: "bg-emerald-100 border-emerald-300 text-emerald-800",
+  PAYE: "bg-green-100 border-green-300 text-green-800",
+  ANNULE: "bg-gray-100 border-gray-300 text-gray-500"
+};
 
+const statusIcons = {
+  OPTION: { icon: Clock, color: "text-amber-600" },
+  RESERVE: { icon: Clock, color: "text-yellow-700" },
+  CONFIRME: { icon: CheckCircle2, color: "text-emerald-600" },
+  PAYE: { icon: DollarSign, color: "text-green-600" },
+  ANNULE: { icon: X, color: "text-gray-500" }
+};
+
+const statusBackgrounds = {
+  OPTION: '#fef3c7',
+  RESERVE: '#dbeafe',
+  CONFIRME: '#d1fae5',
+  PAYE: '#d1fae5',
+  ANNULE: '#f1f5f9'
+};
 
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
@@ -379,18 +401,91 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position) => {
+                      {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
+
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
+
+                        const adults = position.reservation.adults_count || 0;
+                        const children = position.reservation.children_count || 0;
+                        const infants = position.reservation.infants_count || 0;
+                        const occupancyDisplay = [
+                        adults > 0 ? `${adults}A` : null,
+                        children > 0 ? `${children}C` : null,
+                        infants > 0 ? `${infants}I` : null].
+                        filter(Boolean).join(' ');
+
+                        const reservationStatus = position.reservation.status;
+                        const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
+                        const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
+                        const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
+
                         return (
-                          <BookingCell
+                          <div
                             key={position.reservation.id}
-                            position={position}
-                            client={client}
-                            isOwnAgency={isOwnAgency}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}
-                          />
-                        );
+                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
+                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
+                            }
+                            style={{
+                              left: `${startPixel}px`,
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              height: '100%'
+                            }}
+                            onClick={(e) => handleBookingClick(position.reservation, e)}>
+
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
+
+
+
+                            style={{
+                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
+                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
+                            }}>
+
+                              <div className="flex items-center gap-2">
+                                <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
+                                <div className="text-sm font-semibold text-slate-800 truncate">
+                                  {isOwnAgency ? client?.name || 'Client' : '•••'}
+                                </div>
+                              </div>
+
+                              {isOwnAgency &&
+                              <div>
+                                  {(occupancyDisplay || position.reservation.bed_configuration) &&
+                                <div className="text-xs text-slate-600 truncate">
+                                      {occupancyDisplay && position.reservation.bed_configuration ?
+                                  `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
+                                  occupancyDisplay || position.reservation.bed_configuration}
+                                    </div>
+                                }
+                                </div>
+                              }
+
+                              {isOwnAgency &&
+                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
+                                  <Edit className="w-3 h-3 text-slate-500" />
+                                </div>
+                              }
+                            </div>
+                          </div>);
+
                       })}
                     </div>
                   </div>
