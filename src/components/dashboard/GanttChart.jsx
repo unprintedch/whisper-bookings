@@ -1,36 +1,15 @@
 import React, { useState } from "react";
-import { format, isSameDay } from "date-fns";
-import { enUS } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
+import { Building2, Edit, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
+import DateHeader from "./DateHeader";
+import RoomRow from "./RoomRow";
+import BookingCell from "./BookingCell";
 
-const statusColors = {
-  OPTION: "bg-amber-100 border-amber-300 text-amber-800",
-  RESERVE: "bg-blue-100 border-blue-300 text-blue-800",
-  CONFIRME: "bg-emerald-100 border-emerald-300 text-emerald-800",
-  PAYE: "bg-green-100 border-green-300 text-green-800",
-  ANNULE: "bg-gray-100 border-gray-300 text-gray-500"
-};
 
-const statusIcons = {
-  OPTION: { icon: Clock, color: "text-amber-600" },
-  RESERVE: { icon: Clock, color: "text-yellow-700" },
-  CONFIRME: { icon: CheckCircle2, color: "text-emerald-600" },
-  PAYE: { icon: DollarSign, color: "text-green-600" },
-  ANNULE: { icon: X, color: "text-gray-500" }
-};
-
-const statusBackgrounds = {
-  OPTION: '#fef3c7',
-  RESERVE: '#dbeafe',
-  CONFIRME: '#d1fae5',
-  PAYE: '#d1fae5',
-  ANNULE: '#f1f5f9'
-};
 
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
@@ -155,9 +134,7 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  selectedSlots = [],
-  onSlotToggle
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -311,224 +288,32 @@ export default function GanttChart({
             style={{ width: `${ROOM_COLUMN_WIDTH}px` }}>
               <span className="text-lg">Rooms</span>
             </div>
-            <div className="flex flex-shrink-0">
-              {dateColumns.map((date) =>
-              <div
-                key={date.toISOString()}
-                className={`border-r border-slate-200 flex items-center justify-center py-3 flex-shrink-0 ${
-                highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100' : 'bg-slate-50/40'} ${
-                format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
-                style={{ width: '120px' }}>
-                  <div className="text-sm font-bold text-slate-800 text-center">
-                    <span className="text-xs font-medium text-slate-600 uppercase tracking-wide mr-1">
-                      {format(date, 'EEE', { locale: enUS })}
-                    </span>
-                    <span>
-                      {format(date, 'd MMM', { locale: enUS })}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
+            <DateHeader dateColumns={dateColumns} highlightDate={highlightDate} />
           </div>
 
           <div className="relative">
             {rooms.map((room, roomIndex) => {
               const roomReservations = getReservationsForRoom(room.id);
-              const bookingPositions = roomReservations.
-              map((reservation) => calculateBookingPosition(reservation, dateColumns)).
-              filter((position) => position !== null);
+              const bookingPositions = roomReservations
+                .map((reservation) => calculateBookingPosition(reservation, dateColumns))
+                .filter((position) => position !== null);
               const siteInfo = getSiteInfo(room.site_id);
 
               return (
-                <div
+                <RoomRow
                   key={`${room.id}-${roomIndex}`}
-                  className="flex border-b border-slate-200 group relative"
-                  style={{ height: '50px' }}>
-
-                  <div
-                    className={`bg-white border-r border-slate-200 p-3 flex-shrink-0 sticky left-0 z-40 h-full ${
-                    !isPublicView ? 'cursor-pointer hover:bg-blue-50/50' : ''}`
-                    }
-                    style={{ width: `${ROOM_COLUMN_WIDTH}px` }}
-                    onClick={!isPublicView ? () => handleRoomClick(room) : undefined}>
-
-                    <div className="flex items-center gap-2 h-full">
-                      <div className="flex flex-col justify-center flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-slate-800 text-sm truncate">
-                            {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
-                          </h4>
-                          {!isPublicView &&
-                          <Eye className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                          }
-                        </div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
-                            <span className="truncate">{room.type_label}</span>
-                            <span className="text-slate-400">–</span>
-                            <span className="flex items-center gap-1 flex-shrink-0">
-                                <Users className="w-3 h-3" />
-                                <span>{room.capacity_max}</span>
-                            </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative flex-shrink-0 h-full">
-                    {/* Background grid — visual borders only, no interaction */}
-                    <div className="flex h-full" style={{ pointerEvents: 'none' }}>
-                      {dateColumns.map((date, dateIndex) =>
-                        <div
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 flex-shrink-0 ${
-                            highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                            format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
-                          style={{ width: '120px', height: '100%' }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Interactive hover zones: each zone is centered on its date column (mid to mid) */}
-                    {!isPublicView && (
-                      <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
-                        {dateColumns.map((date, dateIndex) => {
-                          const COL_WIDTH = 120;
-                          const HALF = COL_WIDTH / 2;
-                          const dateStr = format(date, 'yyyy-MM-dd');
-                          const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-
-                          // Zone: starts at mid of this column, width = full column (ends at mid of next column)
-                          const zoneLeft = dateIndex * COL_WIDTH + HALF;
-
-                          // Check if this zone is occupied by a booking bar
-                          const hasBooking = bookingPositions.some(pos => {
-                            const barStart = pos.startsBefore
-                              ? pos.startIndex * COL_WIDTH
-                              : pos.startIndex * COL_WIDTH + HALF;
-                            const barEnd = pos.endsAfter
-                              ? pos.endIndex * COL_WIDTH
-                              : pos.endIndex * COL_WIDTH + HALF;
-                            return barStart < zoneLeft + COL_WIDTH && barEnd > zoneLeft;
-                          });
-
-                          if (hasBooking) return null;
-
-                          return (
-                            <div
-                              key={`${room.id}-zone-${dateStr}`}
-                              className={`absolute top-0 h-full group/zone cursor-pointer flex items-center justify-center ${
-                                isSelected ? 'bg-yellow-100' : 'hover:bg-blue-50'}`}
-                              style={{ left: `${zoneLeft}px`, width: `${COL_WIDTH}px`, pointerEvents: 'auto' }}
-                              onClick={() => onSlotToggle ? onSlotToggle(room.id, dateStr) : onCellClick && onCellClick(room, date)}
-                            >
-                              {isSelected ? (
-                                <div className="flex items-center gap-1 text-yellow-700 text-sm">
-                                  <Plus className="w-4 h-4 rotate-45" />
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/zone:opacity-100 transition-opacity">
-                                  <Plus className="w-4 h-4" />
-                                  <span>Book</span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
-                        const client = getClientForReservation(position.reservation);
-                        const isOwnAgency = canSeeClientName(position.reservation);
-
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
-
-                        const adults = position.reservation.adults_count || 0;
-                        const children = position.reservation.children_count || 0;
-                        const infants = position.reservation.infants_count || 0;
-                        const occupancyDisplay = [
-                        adults > 0 ? `${adults}A` : null,
-                        children > 0 ? `${children}C` : null,
-                        infants > 0 ? `${infants}I` : null].
-                        filter(Boolean).join(' ');
-
-                        const reservationStatus = position.reservation.status;
-                        const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
-                        const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
-                        const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
-
-                        return (
-                          <div
-                            key={position.reservation.id}
-                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
-                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
-                            }
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
-                            }}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}>
-
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
-
-
-
-                            style={{
-                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                            }}>
-
-                              <div className="flex items-center gap-2">
-                                <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
-                                <div className="text-sm font-semibold text-slate-800 truncate">
-                                  {isOwnAgency ? client?.name || 'Client' : '•••'}
-                                </div>
-                              </div>
-
-                              {isOwnAgency &&
-                              <div>
-                                  {(occupancyDisplay || position.reservation.bed_configuration) &&
-                                <div className="text-xs text-slate-600 truncate">
-                                      {occupancyDisplay && position.reservation.bed_configuration ?
-                                  `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
-                                  occupancyDisplay || position.reservation.bed_configuration}
-                                    </div>
-                                }
-                                </div>
-                              }
-
-                              {isOwnAgency &&
-                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
-                                  <Edit className="w-3 h-3 text-slate-500" />
-                                </div>
-                              }
-                            </div>
-                          </div>);
-
-                      })}
-                    </div>
-                  </div>
-                </div>);
-
+                  room={room}
+                  siteInfo={siteInfo}
+                  dateColumns={dateColumns}
+                  bookingPositions={bookingPositions}
+                  highlightDate={highlightDate}
+                  isPublicView={isPublicView}
+                  onRoomClick={handleRoomClick}
+                  onBookingClick={handleBookingClick}
+                  getClientForReservation={getClientForReservation}
+                  canSeeClientName={canSeeClientName}
+                />
+              );
             })}
           </div>
         </div>
