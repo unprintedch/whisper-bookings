@@ -549,10 +549,7 @@ export default function Dashboard({
                   setEditingBooking(null);
                 }}
                 initialRoom={selectedRoomForBooking}
-                initialDates={selectedDateForBooking ? {
-                  checkin: format(selectedDateForBooking, 'yyyy-MM-dd'),
-                  checkout: format(addDays(selectedDateForBooking, 1), 'yyyy-MM-dd')
-                } : null}
+                initialDates={selectedDateForBooking}
                 existingBooking={editingBooking}
                 rooms={rooms}
                 clients={clients}
