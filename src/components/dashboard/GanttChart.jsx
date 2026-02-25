@@ -381,6 +381,7 @@ export default function GanttChart({
                       {dateColumns.map((date, dateIndex) => {
                         const dateStr = format(date, 'yyyy-MM-dd');
                         const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+
                         const isHovered = hoveredCell?.roomId === room.id && hoveredCell?.dateStr === dateStr;
                         const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
                         const isHighlighted = highlightDate && isSameDay(date, highlightDate);
