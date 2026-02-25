@@ -474,6 +474,8 @@ export default function HomePage() {
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
+              selectedNights={selectedNights}
+              currentSelectionRoom={currentSelectionRoom}
             />
           </CardContent>
         </Card>
