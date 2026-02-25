@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -272,16 +273,6 @@ export default function GanttChart({
     return sites.find((site) => site.id === siteId);
   };
 
-  const isDateOccupied = (roomId, date) => {
-    const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    return reservations.some((res) => {
-      if (res.room_id !== roomId) return false;
-      const checkin = new Date(res.date_checkin + 'T00:00:00');
-      const checkout = new Date(res.date_checkout + 'T00:00:00');
-      return normalizedDate >= checkin && normalizedDate < checkout;
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
@@ -385,14 +376,15 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const occupied = isDateOccupied(room.id, date);
-                        return (
-                        <div
+                       {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+
+                        return <div
                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                         !isPublicView && !occupied ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                         occupied ? 'bg-slate-200/30 cursor-not-allowed' : ''} ${
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
+                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                          }
@@ -400,18 +392,17 @@ export default function GanttChart({
                            width: '120px',
                            height: '100%'
                          }}
-                         onClick={!isPublicView && !occupied && onCellClick ? () => onCellClick(room, date) : undefined}>
+                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
 
-                          {!isPublicView && !occupied &&
-                          <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
-                          }
-                          </div>
-                          );
-                          })
-                    </div>
+                        }
+                        </div>
+                        })}
+                        </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
