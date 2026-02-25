@@ -388,7 +388,8 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                        data-slot={`${room.id}_${format(date, 'yyyy-MM-dd')}`}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
