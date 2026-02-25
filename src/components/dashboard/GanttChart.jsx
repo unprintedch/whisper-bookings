@@ -9,29 +9,7 @@ import DateHeader from "./DateHeader";
 import RoomRow from "./RoomRow";
 import BookingCell from "./BookingCell";
 
-const statusColors = {
-  OPTION: "bg-amber-100 border-amber-300 text-amber-800",
-  RESERVE: "bg-blue-100 border-blue-300 text-blue-800",
-  CONFIRME: "bg-emerald-100 border-emerald-300 text-emerald-800",
-  PAYE: "bg-green-100 border-green-300 text-green-800",
-  ANNULE: "bg-gray-100 border-gray-300 text-gray-500"
-};
 
-const statusIcons = {
-  OPTION: { icon: Clock, color: "text-amber-600" },
-  RESERVE: { icon: Clock, color: "text-yellow-700" },
-  CONFIRME: { icon: CheckCircle2, color: "text-emerald-600" },
-  PAYE: { icon: DollarSign, color: "text-green-600" },
-  ANNULE: { icon: X, color: "text-gray-500" }
-};
-
-const statusBackgrounds = {
-  OPTION: '#fef3c7',
-  RESERVE: '#dbeafe',
-  CONFIRME: '#d1fae5',
-  PAYE: '#d1fae5',
-  ANNULE: '#f1f5f9'
-};
 
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
