@@ -406,7 +406,7 @@ export default function GanttChart({
                   </div>
 
                   <div className="relative flex-shrink-0 h-full">
-                    <div className="flex h-full">
+                    <div className="flex h-full relative">
                       {dateColumns.map((date, dateIndex) =>
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
@@ -429,6 +429,36 @@ export default function GanttChart({
                         }
                         </div>
                       )}
+
+                      {/* Transparent bookable zones (noon-to-noon) */}
+                      {!isPublicView && calculateBookableSlots(room.id, dateColumns).map((slot) => {
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        const startPixel = slot.dateIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        const endPixel = (slot.dateIndex + 1) * COL_WIDTH + HALF_COL_WIDTH;
+                        const widthPixel = endPixel - startPixel;
+                        const isHovered = hoveredSlot === slot.slotId;
+
+                        return (
+                          <div
+                            key={slot.slotId}
+                            className={`absolute top-0 transition-all duration-150 ${
+                              isHovered ? 'bg-green-200/40' : ''
+                            }`}
+                            style={{
+                              left: `${startPixel}px`,
+                              width: `${widthPixel}px`,
+                              height: '100%'
+                            }}
+                            onMouseEnter={() => setHoveredSlot(slot.slotId)}
+                            onMouseLeave={() => setHoveredSlot(null)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onCellClick?.(room, slot.startDate, slot.endDate);
+                            }}
+                          />
+                        );
+                      })}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
