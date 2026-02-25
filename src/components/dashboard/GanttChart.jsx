@@ -389,7 +389,15 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={!isPublicView && onCellClick ? () => {
+                          // If in multi-select mode, toggle selection
+                          if (onSlotToggle) {
+                            const dateStr = format(date, 'yyyy-MM-dd');
+                            onSlotToggle(room.id, dateStr);
+                          } else {
+                            onCellClick(room, date);
+                          }
+                        } : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
