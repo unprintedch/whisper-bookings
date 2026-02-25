@@ -16,7 +16,6 @@ import { Client } from "@/entities/Client";
 import { BedConfiguration } from "@/entities/BedConfiguration"; // Import BedConfiguration
 import { NotificationSettings } from "@/entities/NotificationSettings"; // Import NotificationSettings
 import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
-import { User } from "@/entities/User"; // Import User entity
 import { createPageUrl } from "@/utils"; // Import createPageUrl
 
 import GanttChart from "../components/dashboard/GanttChart";
