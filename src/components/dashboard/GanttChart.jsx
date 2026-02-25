@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { base44 } from "@/api/base44Client";
+import { User } from "@/entities/User";
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -38,7 +38,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   React.useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await User.me();
         setUser(currentUser);
       } catch (error) {
         console.error('Error loading user:', error);
@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -164,7 +165,7 @@ export default function GanttChart({
   React.useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await base44.auth.me();
+        const user = await User.me();
         setCurrentUser(user);
       } catch (error) {
         console.error('Error loading user:', error);
@@ -302,7 +303,7 @@ export default function GanttChart({
 
   return (
     <>
-      <div className="w-full overflow-x-auto bg-white">
+      <div className="w-full overflow-x-auto">
         <div className="relative" style={{ minWidth: `${ROOM_COLUMN_WIDTH + dateColumns.length * 120}px` }}>
           <div className="flex sticky top-0 z-50 bg-white border-b border-slate-200">
             <div className="bg-slate-50 font-semibold text-slate-700 border-r border-slate-200 flex items-center justify-center flex-shrink-0 sticky left-0 z-50"
@@ -375,19 +376,23 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                       {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+
+                        return <div
+                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
+                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
+                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                         }
+                         style={{
+                           width: '120px',
+                           height: '100%'
+                         }}
+                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -396,8 +401,8 @@ export default function GanttChart({
                             </div>
                         }
                         </div>
-                      )}
-                    </div>
+                        })}
+                        </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
@@ -449,7 +454,10 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 h-full"
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  h-full"
+
+
+
                             style={{
                               backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
                               borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`

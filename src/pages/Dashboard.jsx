@@ -18,7 +18,7 @@ import { NotificationSettings } from "@/entities/NotificationSettings"; // Impor
 import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
 import { createPageUrl } from "@/utils"; // Import createPageUrl
 
-import GanttChart from "../components/dashboard/GanttChart.jsx";
+import GanttChart from "../components/dashboard/GanttChart";
 import AvailableRooms from "../components/dashboard/AvailableRooms";
 import BookingForm from "../components/bookings/BookingForm";
 import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
@@ -480,13 +480,14 @@ export default function Dashboard({
               dateColumns={getDateColumns()}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onCellClick={handleCalendarCellClick}
+              onSlotToggle={handleSlotToggle}
               onBookingEdit={handleEditBooking}
               onBookingMove={handleBookingMove}
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
-              isPublicView={false}
+              currentUser={currentUser}
+              selectedSlots={selectedSlots}
             />
           </CardContent>
         </Card>
