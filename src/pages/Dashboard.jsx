@@ -20,8 +20,6 @@ import { User } from "@/entities/User"; // Import User entity
 import { createPageUrl } from "@/utils"; // Import createPageUrl
 
 import GanttChart from "../components/dashboard/GanttChart";
-import AvailableRooms from "../components/dashboard/AvailableRooms";
-import BookingForm from "../components/bookings/BookingForm";
 import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
 import MultiReservationModal from "../components/dashboard/MultiReservationModal";
 
