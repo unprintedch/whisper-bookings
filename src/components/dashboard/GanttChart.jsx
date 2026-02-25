@@ -32,24 +32,10 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
-  const [user, setUser] = useState(null);
-
-  React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const currentUser = await User.me();
-        setUser(currentUser);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
-    };
-    loadUser();
-  }, []);
-
+function RoomDetailsModal({ room, isOpen, onClose, onEdit, currentUser = null }) {
   if (!room) return null;
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
