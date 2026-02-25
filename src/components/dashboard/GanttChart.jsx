@@ -33,9 +33,9 @@ const statusBackgrounds = {
 };
 
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
-  const [user, setUser] = useState(null);
+   const [user, setUser] = useState(null);
 
-  React.useEffect(() => {
+   useEffect(() => {
     const loadUser = async () => {
       try {
         const currentUser = await User.me();
