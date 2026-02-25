@@ -17,10 +17,10 @@ import MultiReservationModal from "../components/dashboard/MultiReservationModal
 
 
 export default function Dashboard({
-  selectedSiteName,
-  dateRange,
-  currentDate,
-  filters,
+  selectedSiteName = "all",
+  dateRange = 30,
+  currentDate = new Date(),
+  filters = { bedConfigId: "all" },
 }) {
   const [rooms, setRooms] = useState([]);
   const [reservations, setReservations] = useState([]);
