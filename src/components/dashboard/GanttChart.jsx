@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -375,19 +376,23 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                       {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+
+                        return <div
+                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
+                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
+                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                         }
+                         style={{
+                           width: '120px',
+                           height: '100%'
+                         }}
+                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -396,8 +401,8 @@ export default function GanttChart({
                             </div>
                         }
                         </div>
-                      )}
-                    </div>
+                        })}
+                        </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
@@ -485,45 +490,6 @@ export default function GanttChart({
                             </div>
                           </div>);
 
-                      })}
-                      
-                      {/* Zones réservables après les bookings pour être au-dessus */}
-                      {dateColumns.map((date, dateIndex) => {
-                        if (dateIndex === dateColumns.length - 1) return null;
-                        
-                        const nextDate = new Date(date);
-                        nextDate.setDate(nextDate.getDate() + 1);
-                        
-                        const hasBooking = bookingPositions.some(pos => {
-                          const checkin = new Date(pos.reservation.date_checkin + 'T00:00:00');
-                          const checkout = new Date(pos.reservation.date_checkout + 'T00:00:00');
-                          const nightStart = date;
-                          const nightEnd = nextDate;
-                          return !(checkout <= nightStart || checkin >= nightEnd);
-                        });
-                        
-                        if (hasBooking) return null;
-                        
-                        const COL_WIDTH = 120;
-                        const startPixel = dateIndex * COL_WIDTH + (COL_WIDTH / 2);
-                        const widthPixel = COL_WIDTH;
-                        
-                        return (
-                          <div
-                            key={`bookable-${room.id}-${date.toISOString()}`}
-                            className="absolute pointer-events-auto cursor-pointer hover:bg-green-100/40 transition-colors z-10"
-                            style={{
-                              left: `${startPixel + 4}px`,
-                              top: '4px',
-                              width: `${widthPixel - 8}px`,
-                              height: 'calc(100% - 8px)',
-                              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                              border: '2px dashed rgba(16, 185, 129, 0.5)',
-                              borderRadius: '4px'
-                            }}
-                            onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
-                            title="Cliquer pour ajouter cette nuit" />
-                        );
                       })}
                     </div>
                   </div>
