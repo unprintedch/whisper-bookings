@@ -469,13 +469,13 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
-
-
-
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 h-full"
                             style={{
                               backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
+                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`,
+                              borderTop: `2px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`,
+                              borderRight: `2px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`,
+                              borderBottom: `2px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
                             }}>
 
                               <div className="flex items-center gap-2">
