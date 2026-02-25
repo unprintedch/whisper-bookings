@@ -185,60 +185,60 @@ export default function GanttChart({
     return clients.find((client) => client.id === reservation?.client_id);
   };
 
+  /**
+   * MIDI-TO-MIDI NIGHT LOGIC
+   *
+   * Each column represents ONE NIGHT starting at noon on that day.
+   * A booking checkin=Jun1, checkout=Jun3 occupies the nights Jun1 and Jun2.
+   *
+   * Pixel layout (col width = 120px):
+   *   bar left  = checkinColIndex  * 120 + 60   (midpoint of checkin column)
+   *   bar right = checkoutColIndex * 120 + 60   (midpoint of checkout column)
+   *   bar width = (checkoutColIndex - checkinColIndex) * 120
+   *
+   * So a 1-night stay (checkin D, checkout D+1) = one full column wide.
+   */
   const calculateBookingPosition = (reservation, dateColumns) => {
-    if (!reservation.date_checkin || !reservation.date_checkout) {
-      console.warn("Skipping reservation with invalid dates:", reservation);
-      return null;
-    }
+    if (!reservation.date_checkin || !reservation.date_checkout) return null;
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
-
-    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-
-    const viewStart = normalizedDateColumns[0];
-    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
-
-    if (checkin >= viewEnd || checkout <= viewStart) {
-      return null;
-    }
-
-    let startIndex;
-    let startsBefore = false;
-    if (checkin < viewStart) {
-      startIndex = 0;
-      startsBefore = true;
-    } else {
-      startIndex = normalizedDateColumns.findIndex((date) =>
-      date.getFullYear() === checkin.getFullYear() &&
-      date.getMonth() === checkin.getMonth() &&
-      date.getDate() === checkin.getDate()
-      );
-    }
-
-    if (startIndex === -1) return null;
-
-    let endIndex;
-    let endsAfter = false;
-    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-    const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDateOnly.getTime());
-
-    if (foundEndIndex !== -1) {
-      endIndex = foundEndIndex;
-    } else {
-      endIndex = normalizedDateColumns.length;
-      if (checkout > viewEnd) {
-        endsAfter = true;
-      }
-    }
-
-    return {
-      startIndex,
-      endIndex,
-      reservation,
-      startsBefore: startsBefore,
-      endsAfter: endsAfter
+    // Parse without timezone shift by extracting y/m/d directly
+    const toNum = (str) => {
+      const [y, m, d] = str.split('-').map(Number);
+      return y * 10000 + m * 100 + d;
     };
+    const checkinNum  = toNum(reservation.date_checkin);
+    const checkoutNum = toNum(reservation.date_checkout);
+
+    const colNums = dateColumns.map(d =>
+      d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
+    );
+    const viewStartNum = colNums[0];
+    const lastNum = colNums[colNums.length - 1];
+
+    // Compute the number after last visible column
+    const lastDate = dateColumns[dateColumns.length - 1];
+    const nextDay = new Date(lastDate); nextDay.setDate(nextDay.getDate() + 1);
+    const viewEndNum = nextDay.getFullYear() * 10000 + (nextDay.getMonth() + 1) * 100 + nextDay.getDate();
+
+    if (checkoutNum <= viewStartNum || checkinNum >= viewEndNum) return null;
+
+    // checkin column index (clamped to 0 if starts before view)
+    let leftIdx = colNums.findIndex(n => n === checkinNum);
+    if (leftIdx === -1) {
+      if (checkinNum < viewStartNum) leftIdx = 0;
+      else return null;
+    }
+
+    // checkout column index (clamped to dateColumns.length if ends after view)
+    let rightIdx = colNums.findIndex(n => n === checkoutNum);
+    if (rightIdx === -1) {
+      if (checkoutNum > lastNum) rightIdx = dateColumns.length;
+      else return null;
+    }
+
+    if (rightIdx <= leftIdx) return null;
+
+    return { leftIdx, rightIdx, reservation };
   };
 
   const handleBookingClick = (reservation, event) => {
