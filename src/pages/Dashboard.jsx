@@ -32,6 +32,10 @@ export default function Dashboard({ currentDate }) {
         Client.list(),
       ]);
 
+      console.log('Rooms:', roomsData);
+      console.log('Reservations:', reservationsData);
+      console.log('Clients:', clientsData);
+
       setRooms(roomsData);
       setReservations(reservationsData);
       setGroups(groupsData);
