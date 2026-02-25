@@ -160,6 +160,7 @@ export default function GanttChart({
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -270,38 +271,6 @@ export default function GanttChart({
 
   const getSiteInfo = (siteId) => {
     return sites.find((site) => site.id === siteId);
-  };
-
-  const calculateAvailableSlots = (room, dateColumns) => {
-    const roomReservations = reservations.filter((r) => r.room_id === room.id);
-    const bookingPositions = roomReservations
-      .map((reservation) => calculateBookingPosition(reservation, dateColumns))
-      .filter((position) => position !== null);
-
-    const slots = [];
-    const COL_WIDTH = 120;
-    const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-    for (let dateIndex = 0; dateIndex < dateColumns.length; dateIndex++) {
-      // Check if there's a booking starting in this column
-      const bookingInColumn = bookingPositions.find(
-        (pos) => pos.startIndex === dateIndex && !pos.startsBefore
-      );
-
-      if (!bookingInColumn) {
-        const startPixel = dateIndex * COL_WIDTH + HALF_COL_WIDTH;
-        const endPixel = (dateIndex + 1) * COL_WIDTH + HALF_COL_WIDTH;
-        const widthPixel = endPixel - startPixel;
-
-        slots.push({
-          startPixel,
-          widthPixel,
-          dateIndex
-        });
-      }
-    }
-
-    return slots;
   };
 
   if (isLoading) {
@@ -432,19 +401,6 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {calculateAvailableSlots(room, dateColumns).map((slot, slotIndex) => (
-                        <div
-                          key={`available-${slotIndex}`}
-                          className="absolute top-0 pointer-events-auto cursor-pointer group/slot hover:z-10"
-                          style={{
-                            left: `${slot.startPixel}px`,
-                            width: `${slot.widthPixel}px`,
-                            height: '100%'
-                          }}
-                          onClick={!isPublicView && onCellClick ? () => onCellClick(room, dateColumns[slot.dateIndex]) : undefined}>
-                          <div className="absolute inset-y-1 w-full rounded border-2 border-dashed border-emerald-300 bg-emerald-50/30 opacity-60 group-hover/slot:opacity-100 transition-opacity" />
-                        </div>
-                      ))}
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
