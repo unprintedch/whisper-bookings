@@ -31,10 +31,24 @@ const statusBackgrounds = {
   ANNULE: '#f1f5f9'
 };
 
-function RoomDetailsModal({ room, isOpen, onClose, onEdit, currentUser = null }) {
+function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
+  const [user, setUser] = useState(null);
+
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const currentUser = await User.me();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    };
+    loadUser();
+  }, []);
+
   if (!room) return null;
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -140,11 +154,23 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  currentUser = null
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await User.me();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    };
+    loadUser();
+  }, []);
 
   const getReservationsForRoom = (roomId) => {
     return reservations.filter((reservation) => reservation.room_id === roomId);
@@ -472,8 +498,7 @@ export default function GanttChart({
         room={selectedRoom}
         isOpen={isRoomModalOpen}
         onClose={() => setIsRoomModalOpen(false)}
-        onEdit={handleRoomEdit}
-        currentUser={currentUser} />
+        onEdit={handleRoomEdit} />
 
     </>);
 
