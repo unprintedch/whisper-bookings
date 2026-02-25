@@ -149,14 +149,13 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onSlotToggle,
+  onCellClick,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  selectedSlots = []
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -192,8 +191,9 @@ export default function GanttChart({
       return null;
     }
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
+    // Treat dates as noon-to-noon for visual display
+    const checkin = new Date(reservation.date_checkin + 'T12:00:00');
+    const checkout = new Date(reservation.date_checkout + 'T12:00:00');
 
     const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
 
@@ -205,40 +205,44 @@ export default function GanttChart({
     }
 
     let startIndex;
-    let startsBefore = false;
+    let startOffset = 0; // 0 = midnight, 0.5 = noon
     if (checkin < viewStart) {
       startIndex = 0;
-      startsBefore = true;
+      startOffset = 0;
     } else {
+      const checkinDate = new Date(checkin.getFullYear(), checkin.getMonth(), checkin.getDate());
       startIndex = normalizedDateColumns.findIndex((date) =>
-      date.getFullYear() === checkin.getFullYear() &&
-      date.getMonth() === checkin.getMonth() &&
-      date.getDate() === checkin.getDate()
+      date.getFullYear() === checkinDate.getFullYear() &&
+      date.getMonth() === checkinDate.getMonth() &&
+      date.getDate() === checkinDate.getDate()
       );
+      startOffset = 0.5; // Starts at noon
     }
 
     if (startIndex === -1) return null;
 
     let endIndex;
-    let endsAfter = false;
-    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-    const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDateOnly.getTime());
+    let endOffset = 1; // Default to end of day
+    const checkoutDate = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
+    const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDate.getTime());
 
     if (foundEndIndex !== -1) {
       endIndex = foundEndIndex;
+      endOffset = 0.5; // Ends at noon
     } else {
       endIndex = normalizedDateColumns.length;
+      endOffset = 1;
       if (checkout > viewEnd) {
-        endsAfter = true;
+        endOffset = 1;
       }
     }
 
     return {
       startIndex,
       endIndex,
-      reservation,
-      startsBefore: startsBefore,
-      endsAfter: endsAfter
+      startOffset,
+      endOffset,
+      reservation
     };
   };
 
@@ -376,23 +380,19 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                       {dateColumns.map((date, dateIndex) => {
-                        const dateStr = format(date, 'yyyy-MM-dd');
-                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-
-                        return <div
-                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
-                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
-                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
-                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                         }
-                         style={{
-                           width: '120px',
-                           height: '100%'
-                         }}
-                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
+                      {dateColumns.map((date, dateIndex) =>
+                      <div
+                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                        }
+                        style={{
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -401,31 +401,20 @@ export default function GanttChart({
                             </div>
                         }
                         </div>
-                        })}
-                        </div>
+                      )}
+                    </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
-                        const client = getClientForReservation(position.reservation);
-                        const isOwnAgency = canSeeClientName(position.reservation);
+                       {bookingPositions.map((position, posIndex) => {
+                         const client = getClientForReservation(position.reservation);
+                         const isOwnAgency = canSeeClientName(position.reservation);
 
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                         const COL_WIDTH = 120;
 
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                         // Calculate pixel position with offset support (0 = start, 0.5 = noon, 1 = end)
+                         const startPixel = position.startIndex * COL_WIDTH + (position.startOffset || 0.5) * COL_WIDTH;
+                         const endPixel = position.endIndex * COL_WIDTH + (position.endOffset || 0.5) * COL_WIDTH;
+                         const widthPixel = endPixel - startPixel;
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
