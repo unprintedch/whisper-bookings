@@ -287,7 +287,7 @@ export default function BookingForm({
 
       // Set default checkout date if checkin is provided
       if (initialData.date_checkin && !initialData.date_checkout) {
-        const checkin = new Date(initialData.date_checkin + 'T00:00:00');
+        const checkin = new Date(initialData.date_checkin + 'T12:00:00');
         initialData.date_checkout = format(addDays(checkin, 1), 'yyyy-MM-dd');
         setNights(1);
       }
@@ -296,7 +296,7 @@ export default function BookingForm({
       // This block is now dependent on initialData.status which is 'RESERVE' by default
       // so it will not run unless initialData.status is explicitly 'OPTION' (e.g. from initialDates prop)
       if (initialData.status === 'OPTION' && initialData.date_checkin) {
-        const checkin = new Date(initialData.date_checkin + 'T00:00:00');
+        const checkin = new Date(initialData.date_checkin + 'T12:00:00');
         initialData.hold_expires_at = addDays(checkin, 15).toISOString();
       }
 
@@ -315,20 +315,20 @@ export default function BookingForm({
 
   // Calculate nights when dates change
   useEffect(() => {
-    if (formData.date_checkin && formData.date_checkout) {
-      const checkinDate = new Date(formData.date_checkin + 'T00:00:00');
-      const checkoutDate = new Date(formData.date_checkout + 'T00:00:00');
-      const diffTime = checkoutDate.getTime() - checkinDate.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+   if (formData.date_checkin && formData.date_checkout) {
+     const checkinDate = new Date(formData.date_checkin + 'T12:00:00');
+     const checkoutDate = new Date(formData.date_checkout + 'T12:00:00');
+     const diffTime = checkoutDate.getTime() - checkinDate.getTime();
+     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      if (diffDays > 0) {
-        setNights(diffDays);
-      } else {
-        setNights(1);
-      }
-    } else {
-      setNights(1);
-    }
+     if (diffDays > 0) {
+       setNights(diffDays);
+     } else {
+       setNights(1);
+     }
+   } else {
+     setNights(1);
+   }
   }, [formData.date_checkin, formData.date_checkout]);
 
   // DERIVED DATA (no more separate state)
@@ -373,16 +373,16 @@ export default function BookingForm({
       return { isAvailable: true, conflicts: [] };
     }
 
-    const checkinDate = new Date(currentFormData.date_checkin + 'T00:00:00');
-    const checkoutDate = new Date(currentFormData.date_checkout + 'T00:00:00');
+    const checkinDate = new Date(currentFormData.date_checkin + 'T12:00:00');
+    const checkoutDate = new Date(currentFormData.date_checkout + 'T12:00:00');
 
     const conflicts = reservations.filter(reservation => {
       if (existingBooking && reservation.id === existingBooking.id) return false;
       if (reservation.status === 'ANNULE') return false;
       if (reservation.room_id !== currentFormData.room_id) return false;
 
-      const resCheckin = new Date(reservation.date_checkin + 'T00:00:00');
-      const resCheckout = new Date(reservation.date_checkout + 'T00:00:00');
+      const resCheckin = new Date(reservation.date_checkin + 'T12:00:00');
+      const resCheckout = new Date(reservation.date_checkout + 'T12:00:00');
 
       return checkinDate < resCheckout && checkoutDate > resCheckin;
     });
@@ -403,8 +403,8 @@ export default function BookingForm({
 
     // Date validation
     if (currentFormData.date_checkin && currentFormData.date_checkout) {
-      const checkin = new Date(currentFormData.date_checkin + 'T00:00:00');
-      const checkout = new Date(currentFormData.date_checkout + 'T00:00:00');
+      const checkin = new Date(currentFormData.date_checkin + 'T12:00:00');
+      const checkout = new Date(currentFormData.date_checkout + 'T12:00:00');
 
       if (checkout <= checkin) {
         newErrors.date_checkout = "Check-out must be after check-in";
@@ -590,8 +590,8 @@ export default function BookingForm({
         const checkoutDate = addDays(date, nights);
         return {
           ...prev,
-          date_checkin: dateStr,
-          date_checkout: format(checkoutDate, 'yyyy-MM-dd')
+          date_checkin: dateStr + 'T12:00:00',
+          date_checkout: format(checkoutDate, 'yyyy-MM-dd') + 'T12:00:00'
         };
       });
       setCheckinPopoverOpen(false);
@@ -607,11 +607,11 @@ export default function BookingForm({
     }
 
     if (formData.date_checkin) {
-      const checkinDate = new Date(formData.date_checkin + 'T00:00:00');
+      const checkinDate = new Date(formData.date_checkin + 'T12:00:00');
       const checkoutDate = addDays(checkinDate, nightsNum);
       setFormData(prev => ({
         ...prev,
-        date_checkout: format(checkoutDate, 'yyyy-MM-dd')
+        date_checkout: format(checkoutDate, 'yyyy-MM-dd') + 'T12:00:00'
       }));
     }
   };
@@ -620,7 +620,7 @@ export default function BookingForm({
     if (date) {
       const dateStr = format(date, 'yyyy-MM-dd');
       // Simply update the checkout date. The useEffect will handle updating the nights.
-      setFormData(prev => ({ ...prev, date_checkout: dateStr }));
+      setFormData(prev => ({ ...prev, date_checkout: dateStr + 'T12:00:00' }));
       setCheckoutPopoverOpen(false);
     }
   };
@@ -961,8 +961,17 @@ export default function BookingForm({
       return;
     }
 
+    // Ensure dates have T12:00:00 for midnight-noon logic
+    const finalData = { ...dataToValidate, notifications: notificationOptions };
+    if (finalData.date_checkin && !finalData.date_checkin.includes('T')) {
+      finalData.date_checkin += 'T12:00:00';
+    }
+    if (finalData.date_checkout && !finalData.date_checkout.includes('T')) {
+      finalData.date_checkout += 'T12:00:00';
+    }
+
     // Ensure the onSave callback receives the final client_id
-    onSave({ ...dataToValidate, notifications: notificationOptions });
+    onSave(finalData);
   };
 
   const handleDelete = () => {
@@ -982,7 +991,7 @@ export default function BookingForm({
 
   const getMaxExpiryDate = () => {
     if (!formData.date_checkin) return null;
-    return addDays(new Date(formData.date_checkin + 'T00:00:00'), 15);
+    return addDays(new Date(formData.date_checkin + 'T12:00:00'), 15);
   };
 
   // Helper function to get booked dates for a room
@@ -998,8 +1007,8 @@ export default function BookingForm({
     const bookedDates = [];
     roomReservations.forEach(reservation => {
       try {
-        const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-        const checkout = new Date(reservation.date_checkout + 'T00:00:00');
+        const checkin = new Date(reservation.date_checkin + 'T12:00:00');
+        const checkout = new Date(reservation.date_checkout + 'T12:00:00');
         const endDateForInterval = addDays(checkout, -1);
         if (checkin <= endDateForInterval) {
           const dateRange = eachDayOfInterval({ start: checkin, end: endDateForInterval });
@@ -1026,16 +1035,16 @@ export default function BookingForm({
       return false;
     }
 
-    const checkinDate = new Date(checkinStr + 'T00:00:00');
-    const checkoutDate = new Date(checkoutStr + 'T00:00:00');
+    const checkinDate = new Date(checkinStr + 'T12:00:00');
+    const checkoutDate = new Date(checkoutStr + 'T12:00:00');
 
     const conflicts = reservations.filter(reservation => {
       if (existingBooking && reservation.id === existingBooking.id) return false;
       if (reservation.status === 'ANNULE') return false;
       if (reservation.room_id !== roomId) return false;
 
-      const resCheckin = new Date(reservation.date_checkin + 'T00:00:00');
-      const resCheckout = new Date(reservation.date_checkout + 'T00:00:00');
+      const resCheckin = new Date(reservation.date_checkin + 'T12:00:00');
+      const resCheckout = new Date(reservation.date_checkout + 'T12:00:00');
 
       return checkinDate < resCheckout && checkoutDate > resCheckin;
     });
