@@ -172,7 +172,7 @@ export default function Dashboard({
       if (!client || !room) return;
       
       try {
-        const settingsList = await NotificationSettings.list();
+        const settingsList = await base44.entities.NotificationSettings.list();
         const settings = settingsList[0] || {};
         
         let template = '';
@@ -212,13 +212,10 @@ export default function Dashboard({
         
         if (notifications.toAdmin) {
           const adminEmails = settings.admin_emails || [];
-          // Note: SendEmail can only send to users who are invited to the app
-          // External emails will fail silently
           adminEmails.forEach(email => {
             emailPromises.push(
-              SendEmail({ to: email, subject, body }).catch(err => {
+              base44.integrations.Core.SendEmail({ to: email, subject, body }).catch(err => {
                 console.warn(`Could not send email to ${email}:`, err.message);
-                // Don't throw - just log the warning
               })
             );
           });
@@ -226,7 +223,7 @@ export default function Dashboard({
         
         if (notifications.toAgency && agency?.email) {
           emailPromises.push(
-            SendEmail({ to: agency.email, subject, body }).catch(err => {
+            base44.integrations.Core.SendEmail({ to: agency.email, subject, body }).catch(err => {
               console.warn(`Could not send email to agency ${agency.email}:`, err.message);
             })
           );
@@ -234,18 +231,16 @@ export default function Dashboard({
         
         if (notifications.toClient && client.contact_email) {
           emailPromises.push(
-            SendEmail({ to: client.contact_email, subject, body }).catch(err => {
+            base44.integrations.Core.SendEmail({ to: client.contact_email, subject, body }).catch(err => {
               console.warn(`Could not send email to client ${client.contact_email}:`, err.message);
             })
           );
         }
 
-        // Wait for all email attempts to complete (but don't fail if some fail)
         await Promise.allSettled(emailPromises);
         
       } catch (error) {
           console.error("Failed to send notification emails:", error);
-          // Don't block the booking operation - just log the error
       }
   };
 
