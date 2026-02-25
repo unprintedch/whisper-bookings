@@ -474,7 +474,7 @@ export default function Dashboard({
           <CardContent className="p-0">
             <GanttChart
               rooms={filteredRooms}
-              reservations={reservations}
+              reservations={filteredReservations}
               groups={groups}
               clients={clients}
               dateColumns={getDateColumns()}
@@ -486,8 +486,7 @@ export default function Dashboard({
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
-              selectedSlots={selectedSlots}
-              onSlotToggle={handleSlotToggle}
+              currentUser={currentUser}
             />
           </CardContent>
         </Card>
