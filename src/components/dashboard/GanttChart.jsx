@@ -162,6 +162,34 @@ export default function GanttChart({
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedSlots, setSelectedSlots] = useState(new Set());
 
+  const calculateAvailableSlots = (room, dateColumns) => {
+    const roomReservations = getReservationsForRoom(room.id);
+    const slots = [];
+    const COL_WIDTH = 120;
+    const HALF_COL_WIDTH = COL_WIDTH / 2;
+
+    dateColumns.forEach((date, dateIndex) => {
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      const isAvailable = !roomReservations.some(res => {
+        const checkin = new Date(res.date_checkin);
+        const checkout = new Date(res.date_checkout);
+        return checkin <= date && checkout > date;
+      });
+
+      if (isAvailable) {
+        slots.push({
+          dateIndex,
+          startPixel: dateIndex * COL_WIDTH + HALF_COL_WIDTH,
+          widthPixel: HALF_COL_WIDTH
+        });
+      }
+    });
+
+    return slots;
+  };
+
   React.useEffect(() => {
     const loadUser = async () => {
       try {
@@ -401,49 +429,6 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {calculateAvailableSlots(room, dateColumns).map((slot, slotIndex) => {
-                        const slotKey = `${room.id}-${slot.dateIndex}`;
-                        const isSelected = selectedSlots.has(slotKey);
-                        return (
-                          <div
-                            key={`available-${slotIndex}`}
-                            className="absolute top-0 pointer-events-auto cursor-pointer group/slot hover:z-10"
-                            style={{
-                              left: `${slot.startPixel}px`,
-                              width: `${slot.widthPixel}px`,
-                              height: '100%'
-                            }}>
-                            <div className={`absolute inset-y-1 w-full rounded transition-all flex items-center justify-end pr-2 ${
-                              isSelected 
-                                ? 'border-2 border-solid border-emerald-500 bg-emerald-100/60 opacity-100' 
-                                : 'border-2 border-dashed border-emerald-300 bg-emerald-50/30 opacity-60 group-hover/slot:opacity-100'
-                            }`}
-                            onClick={!isPublicView ? () => {
-                              const newSelected = new Set(selectedSlots);
-                              if (isSelected) {
-                                newSelected.delete(slotKey);
-                              } else {
-                                newSelected.add(slotKey);
-                              }
-                              setSelectedSlots(newSelected);
-                              if (!isSelected && onCellClick) onCellClick(room, dateColumns[slot.dateIndex]);
-                            } : undefined}>
-                              {isSelected && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newSelected = new Set(selectedSlots);
-                                    newSelected.delete(slotKey);
-                                    setSelectedSlots(newSelected);
-                                  }}
-                                  className="pointer-events-auto flex-shrink-0">
-                                  <X className="w-4 h-4 text-emerald-600 hover:text-emerald-800" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
