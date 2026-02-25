@@ -343,7 +343,7 @@ export default function Dashboard({
         const newCheckinDate = new Date(newStartDate);
         const newCheckoutDate = new Date(newCheckinDate.getTime() + duration);
 
-        await Reservation.update(bookingId, {
+        await base44.entities.Reservation.update(bookingId, {
           room_id: newRoomId,
           date_checkin: format(newCheckinDate, 'yyyy-MM-dd'),
           date_checkout: format(newCheckoutDate, 'yyyy-MM-dd')
