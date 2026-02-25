@@ -254,6 +254,7 @@ export default function GanttChart({
     }
 
     if (onBookingEdit) {
+      console.log("Booking clicked:", reservation);
       onBookingEdit(reservation);
     }
   };
