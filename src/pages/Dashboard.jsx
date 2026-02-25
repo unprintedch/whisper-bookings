@@ -200,33 +200,8 @@ export default function Dashboard({
     });
   }, [reservations, clients, currentUser]);
 
-  // New handler for room edit
   const handleRoomEdit = (room) => {
-    // This function should be implemented or redirect to rooms page
-    // For now, we'll just log it
     console.log('Edit room:', room);
-  };
-
-  // New handler for creating/updating room
-  const handleCreateUpdateRoom = async (roomData) => {
-    try {
-      if (editingRoom) {
-        await Room.update(editingRoom.id, roomData);
-      } else {
-        await Room.create(roomData);
-      }
-      setShowRoomForm(false);
-      setEditingRoom(null);
-      loadData(); // Reload all data after change
-    } catch (error) {
-      console.error('Error saving room:', error);
-    }
-  };
-
-  // New handler for closing room form
-  const handleCloseRoomForm = () => {
-    setShowRoomForm(false);
-    setEditingRoom(null);
   };
 
   return (
