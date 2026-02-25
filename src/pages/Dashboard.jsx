@@ -106,20 +106,21 @@ export default function Dashboard({
   currentDate,
   filters,
 }) {
-  // Local state for data fetched from DB
   const [rooms, setRooms] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [groups, setGroups] = useState([]);
   const [sites, setSites] = useState([]);
-  const [agencies, setAgencies] = useState([]); // New state for agencies
-  const [clients, setClients] = useState([]); // New state for clients
-  const [allBedConfigs, setAllBedConfigs] = useState([]); // New state for bed configs
+  const [agencies, setAgencies] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [allBedConfigs, setAllBedConfigs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Room form modal state remains local
-  const [showRoomForm, setShowRoomForm] = useState(false);
-  const [editingRoom, setEditingRoom] = useState(null);
+  // Editing booking state (for edit via Gantt)
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
+  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
 
   // Multi-selection state
   const [selectedSlots, setSelectedSlots] = useState([]);
