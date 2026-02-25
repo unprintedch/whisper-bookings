@@ -150,12 +150,14 @@ export default function GanttChart({
   highlightDate,
   isLoading,
   onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -405,9 +407,22 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        let startPixel = position.startIndex * COL_WIDTH;
-                        let widthPixel = (position.endIndex - position.startIndex) * COL_WIDTH;
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
@@ -430,9 +445,9 @@ export default function GanttChart({
                             isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
                             }
                             style={{
-                               left: `${startPixel}px`,
-                               width: `${widthPixel}px`,
-                               height: '100%'
+                              left: `${startPixel}px`,
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              height: '100%'
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
