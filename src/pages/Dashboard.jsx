@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { X } from "lucide-react";
@@ -7,15 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Room } from "@/entities/Room";
-import { Reservation } from "@/entities/Reservation";
-import { Group } from "@/entities/Group";
-import { Site } from "@/entities/Site";
-import { Agency } from "@/entities/Agency";
-import { Client } from "@/entities/Client";
-import { BedConfiguration } from "@/entities/BedConfiguration"; // Import BedConfiguration
-import { NotificationSettings } from "@/entities/NotificationSettings"; // Import NotificationSettings
-import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
 import { createPageUrl } from "@/utils"; // Import createPageUrl
 
 import GanttChart from "../components/dashboard/GanttChart";
