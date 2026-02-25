@@ -150,8 +150,6 @@ export default function GanttChart({
   highlightDate,
   isLoading,
   onCellClick,
-  onSlotToggle,
-  selectedSlots = [],
   onBookingEdit,
   onBookingMove,
   onBookingResize,
@@ -377,33 +375,28 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const dateStr = format(date, 'yyyy-MM-dd');
-                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-                        return (
-                          <div
-                            key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                            className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
-                            !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                            isSlotSelected ? 'bg-yellow-100' : ''} ${
-                            highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                            format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                            }
-                            style={{
-                              width: '120px',
-                              height: '100%'
-                            }}
-                            onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
+                      {dateColumns.map((date, dateIndex) =>
+                      <div
+                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                        }
+                        style={{
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, format(date, 'yyyy-MM-dd')) : undefined}>
 
-                            {!isPublicView &&
-                            <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
-                            }
-                          </div>
-                        );
-                      })}
+                        }
+                        </div>
+                      )}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
@@ -412,9 +405,22 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        const startPixel = position.startIndex * COL_WIDTH;
-                        const widthPixel = (position.endIndex - position.startIndex) * COL_WIDTH;
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
@@ -437,9 +443,9 @@ export default function GanttChart({
                             isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
                             }
                             style={{
-                               left: `${startPixel}px`,
-                               width: `${widthPixel}px`,
-                               height: '100%'
+                              left: `${startPixel}px`,
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              height: '100%'
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
