@@ -432,10 +432,11 @@ export default function HomePage() {
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onCellClick={handleCellClick}
+              onSlotToggle={() => {}} 
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
+              selectedSlots={[]}
             />
           </CardContent>
         </Card>
