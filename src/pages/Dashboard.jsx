@@ -336,10 +336,8 @@ export default function Dashboard({
   };
 
   const handleCalendarCellClick = (room, date) => {
-    setSelectedRoomForBooking(room);
-    setSelectedDateForBooking(date);
-    setEditingBooking(null);
-    setShowBookingForm(true);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    handleSlotToggle(room.id, dateStr);
   };
 
   const handleSlotToggle = (roomId, dateStr) => {
