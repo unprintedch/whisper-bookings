@@ -169,8 +169,8 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
       return {
         client_id: clientId,
         room_id: range.roomId,
-        date_checkin: format(range.checkin, 'yyyy-MM-dd'),
-        date_checkout: format(range.checkout, 'yyyy-MM-dd'),
+        date_checkin: format(range.checkin, 'yyyy-MM-dd') + 'T12:00:00',
+        date_checkout: format(range.checkout, 'yyyy-MM-dd') + 'T12:00:00',
         status,
         bed_configuration: details.bed_configuration || undefined,
         adults_count: details.adults_count ? parseInt(details.adults_count) : 0,
