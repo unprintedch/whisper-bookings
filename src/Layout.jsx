@@ -32,7 +32,6 @@ import {
 import { Calendar } from "@/components/ui/calendar"; // Calendar component for date picker
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { BedConfiguration } from "@/entities/BedConfiguration"; // Add BedConfiguration import
 import { Badge } from "@/components/ui/badge"; // Added for agency user badge
 
 const navigationItems = [
