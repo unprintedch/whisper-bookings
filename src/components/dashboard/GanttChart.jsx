@@ -431,6 +431,28 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
+                      {/* Available slots */}
+                      {calculateAvailableSlots(room.id, dateColumns).map((slot, slotIndex) => {
+                        const startPixel = slot.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        const endPixel = slot.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        const widthPixel = endPixel - startPixel;
+
+                        return (
+                          <div
+                            key={`slot-${room.id}-${slotIndex}`}
+                            className="absolute top-0 pointer-events-auto"
+                            style={{
+                              left: `${startPixel}px`,
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              height: '100%'
+                            }}>
+                            <div className="absolute inset-y-1 w-full flex items-center justify-center rounded px-2 py-1 h-full bg-emerald-50/40 border border-dashed border-emerald-200">
+                              <span className="text-xs text-emerald-600 font-medium">Available</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
