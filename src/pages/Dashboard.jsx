@@ -326,6 +326,7 @@ export default function Dashboard({
 
   const handleCalendarCellClick = (room, date) => {
     setSelectedRoomForBooking(room);
+    // Pour la logique midi-à-midi: clique sur colonne = midi de cette date au midi du jour suivant
     setSelectedDateForBooking(date);
     setEditingBooking(null);
     setShowBookingForm(true);
