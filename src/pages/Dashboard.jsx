@@ -485,7 +485,7 @@ export default function Dashboard({
           <CardContent className="p-0">
             <GanttChart
               rooms={filteredRooms}
-              reservations={reservations}
+              reservations={filteredReservations}
               groups={groups}
               clients={clients}
               dateColumns={getDateColumns()}
