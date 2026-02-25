@@ -479,7 +479,7 @@ export default function Dashboard({
           {/* CardHeader has been removed as per new outline */}
           <CardContent className="p-0">
             <GanttChart
-              rooms={filteredRooms}
+              rooms={sortedRooms}
               reservations={filteredReservations}
               groups={groups}
               clients={clients}
