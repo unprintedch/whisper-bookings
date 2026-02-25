@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -239,43 +240,6 @@ export default function GanttChart({
       startsBefore: startsBefore,
       endsAfter: endsAfter
     };
-  };
-
-  const isSlotOccupied = (roomId, dateIndex, dateColumns, roomReservations) => {
-    // Check if a slot at this dateIndex is part of any booking
-    const COL_WIDTH = 120;
-    const HALF_COL_WIDTH = COL_WIDTH / 2;
-    
-    for (const reservation of roomReservations) {
-      const position = calculateBookingPosition(reservation, dateColumns);
-      if (!position) continue;
-      
-      // Calculate pixel positions for this booking
-      let startPixel;
-      if (position.startsBefore) {
-        startPixel = position.startIndex * COL_WIDTH;
-      } else {
-        startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-      }
-      
-      let endPixel;
-      if (position.endsAfter) {
-        endPixel = position.endIndex * COL_WIDTH;
-      } else {
-        endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-      }
-      
-      // Calculate pixel range for this dateIndex (full column)
-      const slotStart = dateIndex * COL_WIDTH;
-      const slotEnd = (dateIndex + 1) * COL_WIDTH;
-      
-      // Check if booking overlaps with this slot
-      if (startPixel < slotEnd && endPixel > slotStart) {
-        return true;
-      }
-    }
-    
-    return false;
   };
 
   const handleBookingClick = (reservation, event) => {
@@ -411,33 +375,34 @@ export default function GanttChart({
                   </div>
 
                   <div className="relative flex-shrink-0 h-full">
-                  <div className="flex h-full">
-                    {dateColumns.map((date, dateIndex) => {
-                      const isOccupied = isSlotOccupied(room.id, dateIndex, dateColumns, roomReservations);
-                      return (
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView && !isOccupied ? 'cursor-pointer hover:bg-blue-50' : !isOccupied ? '' : 'cursor-default'} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && !isOccupied && onCellClick ? () => onCellClick(room, date) : undefined}>
+                    <div className="flex h-full">
+                       {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
 
-                          {!isPublicView && !isOccupied &&
+                        return <div
+                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
+                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
+                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                         }
+                         style={{
+                           width: '120px',
+                           height: '100%'
+                         }}
+                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
+
+                          {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
                         }
                         </div>
-                      );
-                    })}
-                  </div>
+                        })}
+                        </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
