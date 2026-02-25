@@ -272,32 +272,36 @@ export default function GanttChart({
     return sites.find((site) => site.id === siteId);
   };
 
-  const calculateAvailableSlots = (roomId, dateColumns) => {
-    const COL_WIDTH = 120;
-    const roomReservations = getReservationsForRoom(roomId);
+  const calculateAvailableSlots = (room, dateColumns) => {
+    const roomReservations = reservations.filter((r) => r.room_id === room.id);
     const bookingPositions = roomReservations
       .map((reservation) => calculateBookingPosition(reservation, dateColumns))
-      .filter((position) => position !== null)
-      .sort((a, b) => a.startIndex - b.startIndex);
+      .filter((position) => position !== null);
 
-    const availableSlots = [];
-    const viewLength = dateColumns.length;
+    const slots = [];
+    const COL_WIDTH = 120;
+    const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-    if (bookingPositions.length === 0) {
-      // No bookings, entire view is available
-      return [];
-    }
+    for (let dateIndex = 0; dateIndex < dateColumns.length; dateIndex++) {
+      // Check if there's a booking starting in this column
+      const bookingInColumn = bookingPositions.find(
+        (pos) => pos.startIndex === dateIndex && !pos.startsBefore
+      );
 
-    // Check gaps between bookings
-    for (let i = 0; i < bookingPositions.length - 1; i++) {
-      const currentEnd = bookingPositions[i].endIndex;
-      const nextStart = bookingPositions[i + 1].startIndex;
-      if (currentEnd < nextStart) {
-        availableSlots.push({ startIndex: currentEnd, endIndex: nextStart });
+      if (!bookingInColumn) {
+        const startPixel = dateIndex * COL_WIDTH + HALF_COL_WIDTH;
+        const endPixel = (dateIndex + 1) * COL_WIDTH + HALF_COL_WIDTH;
+        const widthPixel = endPixel - startPixel;
+
+        slots.push({
+          startPixel,
+          widthPixel,
+          dateIndex
+        });
       }
     }
 
-    return availableSlots;
+    return slots;
   };
 
   if (isLoading) {
@@ -427,33 +431,8 @@ export default function GanttChart({
                       )}
                     </div>
 
-                    <div className="absolute inset-0">
-                      {/* Available slots */}
-                      {calculateAvailableSlots(room.id, dateColumns).map((slot, slotIndex) => {
-                        const COL_WIDTH = 120;
-                        const startPixel = slot.startIndex * COL_WIDTH;
-                        const endPixel = slot.endIndex * COL_WIDTH;
-                        const widthPixel = endPixel - startPixel;
-
-                        return (
-                          <div
-                            key={`slot-${room.id}-${slotIndex}`}
-                            className="absolute top-0 pointer-events-auto cursor-pointer group/slot hover:z-10"
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${widthPixel}px`,
-                              height: '100%'
-                            }}
-                            onClick={() => onCellClick && onCellClick(room, dateColumns[slot.startIndex])}>
-                            <div className="absolute inset-y-1 w-full flex items-center justify-center rounded px-2 py-1 h-full bg-emerald-50/40 border border-dashed border-emerald-200 group-hover/slot:bg-emerald-100/60 group-hover/slot:border-emerald-300 transition-colors">
-                              <span className="text-xs text-emerald-600 font-medium opacity-0 group-hover/slot:opacity-100 transition-opacity">Available</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      <div className="pointer-events-none">
-                        {bookingPositions.map((position, posIndex) => {
+                    <div className="absolute inset-0 pointer-events-none">
+                      {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
 
@@ -539,12 +518,11 @@ export default function GanttChart({
                           </div>);
 
                       })}
-                      </div>
-                      </div>
-                      </div>
-                      </div>);
+                    </div>
+                  </div>
+                </div>);
 
-                      })}
+            })}
           </div>
         </div>
       </div>
