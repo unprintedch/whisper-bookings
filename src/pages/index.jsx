@@ -37,6 +37,8 @@ export default function HomePage() {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
   const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
+  const [selectedNights, setSelectedNights] = useState(new Map()); // Map<roomId, {startDate, endDate}>
+  const [currentSelectionRoom, setCurrentSelectionRoom] = useState(null);
 
 
   useEffect(() => {
