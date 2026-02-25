@@ -486,7 +486,7 @@ export default function Dashboard({
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
-              currentUser={currentUser}
+              isPublicView={false}
               selectedSlots={selectedSlots}
             />
           </CardContent>
