@@ -130,8 +130,9 @@ export default function Dashboard({
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
 
-  // Multi-selection state
-  const [selectedSlots, setSelectedSlots] = useState([]);
+  // Multi-selection state - now using night ranges
+  const [selectedNights, setSelectedNights] = useState(new Map()); // Map<roomId, {startDate, endDate}>
+  const [currentSelectionRoom, setCurrentSelectionRoom] = useState(null);
   const [showMultiModal, setShowMultiModal] = useState(false);
   const [multiModalRanges, setMultiModalRanges] = useState([]);
 
