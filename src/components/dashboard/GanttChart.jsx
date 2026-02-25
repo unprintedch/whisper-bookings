@@ -149,15 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
   isPublicView = false,
-  selectedSlots = [],
-  onSlotToggle
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -377,19 +376,23 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                       {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+
+                        return <div
+                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
+                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
+                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                         }
+                         style={{
+                           width: '120px',
+                           height: '100%'
+                         }}
+                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -398,37 +401,10 @@ export default function GanttChart({
                             </div>
                         }
                         </div>
-                      )}
-                    </div>
+                        })}
+                        </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {selectedSlots.filter(slot => slot.roomId === room.id).map((slot) => {
-                       const COL_WIDTH = 120;
-                       const HALF_COL_WIDTH = COL_WIDTH / 2;
-                       const slotDateIndex = dateColumns.findIndex(d => format(d, 'yyyy-MM-dd') === slot.date);
-
-                       if (slotDateIndex === -1) return null;
-
-                       const startPixel = slotDateIndex * COL_WIDTH + HALF_COL_WIDTH;
-                       const endPixel = (slotDateIndex + 1) * COL_WIDTH + HALF_COL_WIDTH;
-                       const widthPixel = endPixel - startPixel;
-
-                       return (
-                         <div
-                           key={`selected-${slot.roomId}-${slot.date}`}
-                           className="absolute top-0 pointer-events-auto transition-all duration-200"
-                           style={{
-                             left: `${startPixel}px`,
-                             width: `${widthPixel}px`,
-                             height: '100%'
-                           }}
-                           onClick={(e) => { e.stopPropagation(); if (onSlotToggle) onSlotToggle(room.id, slot.date); }}>
-                           <div className="absolute inset-y-1 w-full rounded px-2 py-1 h-full bg-yellow-300/80 border-l-4 border-yellow-500 flex items-center justify-center cursor-pointer hover:bg-yellow-400/90 transition-colors">
-                             <span className="text-xs font-semibold text-yellow-900">Book</span>
-                           </div>
-                         </div>
-                       );
-                      })}
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
