@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { X } from "lucide-react";
@@ -8,6 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Room } from "@/entities/Room";
+import { Reservation } from "@/entities/Reservation";
+import { Group } from "@/entities/Group";
+import { Site } from "@/entities/Site";
+import { Agency } from "@/entities/Agency";
+import { Client } from "@/entities/Client";
+import { BedConfiguration } from "@/entities/BedConfiguration"; // Import BedConfiguration
+import { NotificationSettings } from "@/entities/NotificationSettings"; // Import NotificationSettings
+import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
 import { createPageUrl } from "@/utils"; // Import createPageUrl
 
 import GanttChart from "../components/dashboard/GanttChart";
@@ -137,22 +145,22 @@ export default function Dashboard({
     setIsLoading(true);
     try {
       const [roomsData, reservationsData, groupsData, sitesData, agenciesData, clientsData, bedConfigsData] = await Promise.all([
-        base44.entities.Room.list(),
-        base44.entities.Reservation.list(),
-        base44.entities.Group.list(),
-        base44.entities.Site.list(),
-        base44.entities.Agency.list(),
-        base44.entities.Client.list(),
-        base44.entities.BedConfiguration.list(),
+        Room.list('-name'), // Changed from Room.list() to Room.list('-name')
+        Reservation.list('-created_date'),
+        Group.list('-created_date'),
+        Site.list(),
+        Agency.list(), // Fetch agencies data
+        Client.list(), // Fetch clients data
+        BedConfiguration.list('sort_order'), // Fetch bed configurations sorted by sort_order
       ]);
 
       setRooms(roomsData);
       setReservations(reservationsData);
-      setGroups(groupsData);
+      setGroups(groupsData); // Setting groups
       setSites(sitesData);
-      setAgencies(agenciesData);
-      setClients(clientsData);
-      setAllBedConfigs(bedConfigsData);
+      setAgencies(agenciesData); // Set agencies data
+      setClients(clientsData); // Set clients data
+      setAllBedConfigs(bedConfigsData); // Set bed configs data
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -172,7 +180,7 @@ export default function Dashboard({
       if (!client || !room) return;
       
       try {
-        const settingsList = await base44.entities.NotificationSettings.list();
+        const settingsList = await NotificationSettings.list();
         const settings = settingsList[0] || {};
         
         let template = '';
@@ -212,10 +220,13 @@ export default function Dashboard({
         
         if (notifications.toAdmin) {
           const adminEmails = settings.admin_emails || [];
+          // Note: SendEmail can only send to users who are invited to the app
+          // External emails will fail silently
           adminEmails.forEach(email => {
             emailPromises.push(
-              base44.integrations.Core.SendEmail({ to: email, subject, body }).catch(err => {
+              SendEmail({ to: email, subject, body }).catch(err => {
                 console.warn(`Could not send email to ${email}:`, err.message);
+                // Don't throw - just log the warning
               })
             );
           });
@@ -223,7 +234,7 @@ export default function Dashboard({
         
         if (notifications.toAgency && agency?.email) {
           emailPromises.push(
-            base44.integrations.Core.SendEmail({ to: agency.email, subject, body }).catch(err => {
+            SendEmail({ to: agency.email, subject, body }).catch(err => {
               console.warn(`Could not send email to agency ${agency.email}:`, err.message);
             })
           );
@@ -231,27 +242,30 @@ export default function Dashboard({
         
         if (notifications.toClient && client.contact_email) {
           emailPromises.push(
-            base44.integrations.Core.SendEmail({ to: client.contact_email, subject, body }).catch(err => {
+            SendEmail({ to: client.contact_email, subject, body }).catch(err => {
               console.warn(`Could not send email to client ${client.contact_email}:`, err.message);
             })
           );
         }
 
+        // Wait for all email attempts to complete (but don't fail if some fail)
         await Promise.allSettled(emailPromises);
         
       } catch (error) {
           console.error("Failed to send notification emails:", error);
+          // Don't block the booking operation - just log the error
       }
   };
 
   const handleCreateBooking = async (bookingDataWithNotifications) => {
     const { notifications, ...bookingData } = bookingDataWithNotifications;
     try {
-      const newBooking = await base44.entities.Reservation.create(bookingData);
+      const newBooking = await Reservation.create(bookingData); // Capture the new booking with its ID
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await loadData();
+      await loadData(); // await loadData to ensure client/room info is available
+      // Pass the new booking ID to sendNotificationEmails
       await sendNotificationEmails({ ...bookingDataWithNotifications, id: newBooking.id }, 'new');
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -269,13 +283,13 @@ export default function Dashboard({
     const { notifications, ...bookingData } = bookingDataWithNotifications;
     try {
       if (editingBooking) {
-        await base44.entities.Reservation.update(editingBooking.id, bookingData);
+        await Reservation.update(editingBooking.id, bookingData);
         setEditingBooking(null);
       }
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await loadData();
+      await loadData(); // await loadData
       await sendNotificationEmails(bookingDataWithNotifications, 'update');
     } catch (error) {
       console.error('Error updating booking:', error);
@@ -287,15 +301,17 @@ export default function Dashboard({
     try {
       const bookingToDelete = reservations.find(r => r.id === bookingId);
       if (bookingToDelete) {
+         // Send notification before deleting. Admin always gets cancellation, others can be configured.
+         // For simplicity, we are notifying admin for now. Extend as needed for agency/client.
          await sendNotificationEmails({ ...bookingToDelete, notifications: { toAdmin: true, toAgency: false, toClient: false }}, 'cancellation');
       }
 
-      await base44.entities.Reservation.delete(bookingId);
+      await Reservation.delete(bookingId);
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
       setEditingBooking(null);
-      loadData();
+      loadData(); // Reload data after deletion
     } catch (error) {
       console.error('Error deleting booking:', error);
     }
@@ -343,7 +359,7 @@ export default function Dashboard({
         const newCheckinDate = new Date(newStartDate);
         const newCheckoutDate = new Date(newCheckinDate.getTime() + duration);
 
-        await base44.entities.Reservation.update(bookingId, {
+        await Reservation.update(bookingId, {
           room_id: newRoomId,
           date_checkin: format(newCheckinDate, 'yyyy-MM-dd'),
           date_checkout: format(newCheckoutDate, 'yyyy-MM-dd')
@@ -357,7 +373,7 @@ export default function Dashboard({
 
   const handleBookingResize = async (bookingId, newStartDate, newEndDate) => {
     try {
-      await base44.entities.Reservation.update(bookingId, {
+      await Reservation.update(bookingId, {
         date_checkin: format(new Date(newStartDate), 'yyyy-MM-dd'),
         date_checkout: format(new Date(newEndDate), 'yyyy-MM-dd')
       });
@@ -391,13 +407,7 @@ export default function Dashboard({
     }
     
     return room.is_active;
-  });
-
-  console.log('Rooms data:', rooms);
-  console.log('Filtered rooms:', filteredRooms);
-  console.log('Date columns:', getDateColumns());
-
-  const sortedRooms = filteredRooms.sort((a, b) => {
+  }).sort((a, b) => {
     const siteA = sites.find(s => s.id === a.site_id)?.name || '';
     const siteB = sites.find(s => s.id === b.site_id)?.name || '';
 
@@ -463,14 +473,13 @@ export default function Dashboard({
           {/* CardHeader has been removed as per new outline */}
           <CardContent className="p-0">
             <GanttChart
-              rooms={sortedRooms}
+              rooms={filteredRooms}
               reservations={filteredReservations}
               groups={groups}
               clients={clients}
               dateColumns={getDateColumns()}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onCellClick={handleCalendarCellClick}
               onSlotToggle={handleSlotToggle}
               onBookingEdit={handleEditBooking}
               onBookingMove={handleBookingMove}
@@ -484,7 +493,7 @@ export default function Dashboard({
         </Card>
 
         <AvailableRooms
-          rooms={sortedRooms}
+          rooms={filteredRooms}
           reservations={filteredReservations} // Use filtered for available rooms
           dateRange={{ startDate, endDate }}
           onRoomSelect={handleRoomSelect}
