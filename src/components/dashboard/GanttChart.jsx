@@ -160,7 +160,7 @@ export default function GanttChart({
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedSlots, setSelectedSlots] = useState(new Set());
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -301,61 +301,6 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
-  const calculateAvailableSlots = (room, dateColumns) => {
-    const roomReservations = getReservationsForRoom(room.id);
-    const bookedDates = new Set();
-    
-    roomReservations.forEach(reservation => {
-      if (!reservation.date_checkin || !reservation.date_checkout) return;
-      const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-      const checkout = new Date(reservation.date_checkout + 'T00:00:00');
-      
-      for (let d = new Date(checkin); d < checkout; d.setDate(d.getDate() + 1)) {
-        bookedDates.add(d.toDateString());
-      }
-    });
-
-    const slots = [];
-    let slotStart = null;
-    
-    dateColumns.forEach((date, dateIndex) => {
-      const dateStr = date.toDateString();
-      const isBooked = bookedDates.has(dateStr);
-      
-      if (!isBooked) {
-        if (slotStart === null) {
-          slotStart = dateIndex;
-        }
-      } else {
-        if (slotStart !== null) {
-          slots.push(createSlot(slotStart, dateIndex - 1));
-          slotStart = null;
-        }
-      }
-    });
-    
-    if (slotStart !== null) {
-      slots.push(createSlot(slotStart, dateColumns.length - 1));
-    }
-    
-    return slots;
-  };
-
-  const createSlot = (startIndex, endIndex) => {
-    const COL_WIDTH = 120;
-    const HALF_COL_WIDTH = COL_WIDTH / 2;
-    
-    const startPixel = startIndex * COL_WIDTH + HALF_COL_WIDTH;
-    const endPixel = (endIndex + 1) * COL_WIDTH + HALF_COL_WIDTH;
-    const widthPixel = endPixel - startPixel;
-    
-    return {
-      dateIndex: startIndex,
-      startPixel,
-      widthPixel
-    };
-  };
-
   return (
     <>
       <div className="w-full overflow-x-auto">
@@ -456,30 +401,6 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {calculateAvailableSlots(room, dateColumns).map((slot, slotIndex) => {
-                        const slotKey = `${room.id}-${slot.dateIndex}`;
-                        const isSelected = selectedSlot === slotKey;
-                        return (
-                          <div
-                            key={`available-${slotIndex}`}
-                            className="absolute top-0 pointer-events-auto cursor-pointer group/slot hover:z-10"
-                            style={{
-                              left: `${slot.startPixel}px`,
-                              width: `${slot.widthPixel}px`,
-                              height: '100%'
-                            }}
-                            onClick={!isPublicView ? () => {
-                              setSelectedSlot(slotKey);
-                              if (onCellClick) onCellClick(room, dateColumns[slot.dateIndex]);
-                            } : undefined}>
-                            <div className={`absolute inset-y-1 w-full rounded transition-all ${
-                              isSelected 
-                                ? 'border-2 border-solid border-emerald-500 bg-emerald-100/60 opacity-100' 
-                                : 'border-2 border-dashed border-emerald-300 bg-emerald-50/30 opacity-60 group-hover/slot:opacity-100'
-                            }`} />
-                          </div>
-                        );
-                      })}
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
