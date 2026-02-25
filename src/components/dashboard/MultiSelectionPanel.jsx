@@ -91,7 +91,7 @@ export default function MultiSelectionPanel({ selectedSlots, onRemoveSlot, onCle
           onClick={() => onConfirm(mergedRanges)}
         >
           <CalendarPlus className="w-4 h-4 mr-2" />
-          Créer les réservations
+          Create reservations
         </Button>
       </div>
     </div>
