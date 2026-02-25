@@ -87,12 +87,12 @@ export default function MultiSelectionPanel({ selectedSlots, onRemoveSlot, onCle
 
       <div className="p-3 border-t">
         <Button
-          className="w-full bg-yellow-700 hover:bg-yellow-800 text-white text-sm"
-          onClick={() => onConfirm(mergedRanges)}
-        >
-          <CalendarPlus className="w-4 h-4 mr-2" />
-          Créer les réservations
-        </Button>
+           className="w-full bg-yellow-700 hover:bg-yellow-800 text-white text-sm"
+           onClick={() => onConfirm(mergedRanges)}
+         >
+           <CalendarPlus className="w-4 h-4 mr-2" />
+           Create reservations
+         </Button>
       </div>
     </div>
   );
