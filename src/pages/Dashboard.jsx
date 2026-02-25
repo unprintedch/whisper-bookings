@@ -18,7 +18,6 @@ import { NotificationSettings } from "@/entities/NotificationSettings"; // Impor
 import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
 import { User } from "@/entities/User"; // Import User entity
 import { createPageUrl } from "@/utils"; // Import createPageUrl
-import { base44 } from "@/api/base44Client";
 
 import GanttChart from "../components/dashboard/GanttChart";
 import AvailableRooms from "../components/dashboard/AvailableRooms";
@@ -146,7 +145,7 @@ export default function Dashboard({
 
   const loadCurrentUser = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await User.me();
       setCurrentUser(user);
     } catch (error) {
       console.error('Error loading user:', error);
