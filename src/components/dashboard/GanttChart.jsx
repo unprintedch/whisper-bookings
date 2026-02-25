@@ -274,6 +274,23 @@ export default function GanttChart({
     return sites.find((site) => site.id === siteId);
   };
 
+  const isDateSlotBooked = (room, dateIndex, dateColumns, roomReservations) => {
+    const currentDate = dateColumns[dateIndex];
+    
+    return roomReservations.some(reservation => {
+      if (reservation.status === 'ANNULE') return false;
+      
+      const checkinStr = reservation.date_checkin.includes('T') ? reservation.date_checkin : reservation.date_checkin + 'T12:00:00';
+      const checkoutStr = reservation.date_checkout.includes('T') ? reservation.date_checkout : reservation.date_checkout + 'T12:00:00';
+      
+      const checkin = new Date(checkinStr);
+      const checkout = new Date(checkoutStr);
+      const dateAtNoon = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 12, 0, 0);
+      
+      return checkin <= dateAtNoon && dateAtNoon < checkout;
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
