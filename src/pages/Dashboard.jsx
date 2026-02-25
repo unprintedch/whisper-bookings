@@ -247,12 +247,11 @@ export default function Dashboard({
   const handleCreateBooking = async (bookingDataWithNotifications) => {
     const { notifications, ...bookingData } = bookingDataWithNotifications;
     try {
-      const newBooking = await Reservation.create(bookingData); // Capture the new booking with its ID
+      const newBooking = await base44.entities.Reservation.create(bookingData);
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await loadData(); // await loadData to ensure client/room info is available
-      // Pass the new booking ID to sendNotificationEmails
+      await loadData();
       await sendNotificationEmails({ ...bookingDataWithNotifications, id: newBooking.id }, 'new');
     } catch (error) {
       console.error('Error creating booking:', error);
