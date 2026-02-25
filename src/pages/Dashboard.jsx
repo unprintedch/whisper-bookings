@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Room } from "@/entities/Room";
 import { Reservation } from "@/entities/Reservation";
 import { Group } from "@/entities/Group";
