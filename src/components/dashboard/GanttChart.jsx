@@ -273,6 +273,37 @@ export default function GanttChart({
     return sites.find((site) => site.id === siteId);
   };
 
+  const calculateBookableSlots = (roomId, dateColumns) => {
+    const roomReservations = reservations.filter((r) => r.room_id === roomId);
+    const slots = [];
+
+    for (let i = 0; i < dateColumns.length - 1; i++) {
+      const dayStart = new Date(dateColumns[i]);
+      const dayEnd = new Date(dateColumns[i + 1]);
+
+      // Check if any reservation overlaps with this slot (noon-to-noon: i@12:00 to i+1@12:00)
+      const slotStart = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), 12, 0, 0);
+      const slotEnd = new Date(dayEnd.getFullYear(), dayEnd.getMonth(), dayEnd.getDate(), 12, 0, 0);
+
+      const isOccupied = roomReservations.some((res) => {
+        const resStart = new Date(res.date_checkin + 'T12:00:00');
+        const resEnd = new Date(res.date_checkout + 'T12:00:00');
+        return slotStart < resEnd && slotEnd > resStart;
+      });
+
+      if (!isOccupied) {
+        slots.push({
+          dateIndex: i,
+          startDate: dateColumns[i],
+          endDate: dateColumns[i + 1],
+          slotId: `${roomId}-${i}`
+        });
+      }
+    }
+
+    return slots;
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
