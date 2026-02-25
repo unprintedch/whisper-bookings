@@ -40,7 +40,6 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
             {room.name}
           </DialogTitle>
         </DialogHeader>
-
         <div className="space-y-6">
           {room.photo_url ? (
             <div className="aspect-video w-full overflow-hidden">
@@ -51,7 +50,6 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
               <Building2 className="w-12 h-12 text-slate-400" />
             </div>
           )}
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h4 className="font-medium text-slate-600 mb-2">Basic Information</h4>
@@ -66,16 +64,12 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Status:</span>
-                  <Badge
-                    variant={room.is_active ? "default" : "secondary"}
-                    className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}
-                  >
+                  <Badge className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}>
                     {room.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
               </div>
             </div>
-
             <div>
               <h4 className="font-medium text-slate-600 mb-2">Bed Configurations</h4>
               <div className="space-y-2">
@@ -90,7 +84,6 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
               </div>
             </div>
           </div>
-
           {room.notes && (
             <div>
               <h4 className="font-medium text-slate-600 mb-2">Notes</h4>
@@ -99,7 +92,6 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
               </div>
             </div>
           )}
-
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>Close</Button>
             {isAdmin && (
@@ -242,7 +234,7 @@ export default function GanttChart({
       <div className="w-full overflow-x-auto">
         <div className="relative" style={{ minWidth: `${ROOM_COLUMN_WIDTH + dateColumns.length * COL_WIDTH}px` }}>
 
-          {/* Header row */}
+          {/* Header */}
           <div className="flex sticky top-0 z-50 bg-white border-b border-slate-200">
             <div
               className="bg-slate-50 font-semibold text-slate-700 border-r border-slate-200 flex items-center justify-center flex-shrink-0 sticky left-0 z-50"
@@ -270,11 +262,10 @@ export default function GanttChart({
             </div>
           </div>
 
-          {/* Room rows */}
+          {/* Rows */}
           <div className="relative">
             {rooms.map((room, roomIndex) => {
-              const roomReservations = getReservationsForRoom(room.id);
-              const bookingPositions = roomReservations
+              const bookingPositions = getReservationsForRoom(room.id)
                 .map(calculateBookingPosition)
                 .filter(Boolean);
               const siteInfo = getSiteInfo(room.site_id);
