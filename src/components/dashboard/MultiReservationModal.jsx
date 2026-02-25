@@ -417,13 +417,13 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                           <div className="px-4 pb-3 pt-1 bg-slate-50/50 space-y-2">
                             {bedConfigs.length > 0 && (
                               <div className="space-y-1">
-                                <Label className="text-xs text-slate-600">Bed config.</Label>
+                                <Label className="text-xs text-slate-600">Bed configuration</Label>
                                 <Select
                                   value={details.bed_configuration || ""}
                                   onValueChange={v => updateRoomDetail(rowKey, 'bed_configuration', v, bedConfigs)}
                                 >
                                   <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Choose..." />
+                                    <SelectValue placeholder="Select..." />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {bedConfigs.map(bc => (
