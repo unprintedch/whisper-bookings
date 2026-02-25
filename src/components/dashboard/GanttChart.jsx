@@ -400,46 +400,6 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {/* Afficher les zones réservables transparentes midi-à-midi */}
-                      {dateColumns.map((date, dateIndex) => {
-                        if (dateIndex === dateColumns.length - 1) return null;
-                        
-                        const nextDate = new Date(date);
-                        nextDate.setDate(nextDate.getDate() + 1);
-                        
-                        const hasBooking = bookingPositions.some(pos => {
-                          const checkin = new Date(pos.reservation.date_checkin + 'T00:00:00');
-                          const checkout = new Date(pos.reservation.date_checkout + 'T00:00:00');
-                          const nightStart = date;
-                          const nightEnd = nextDate;
-                          return !(checkout <= nightStart || checkin >= nightEnd);
-                        });
-                        
-                        if (hasBooking) return null;
-                        
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-                        const startPixel = dateIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        const widthPixel = COL_WIDTH;
-                        
-                        return (
-                          <div
-                            key={`bookable-${room.id}-${date.toISOString()}`}
-                            className="absolute pointer-events-auto cursor-pointer hover:bg-green-100/40 transition-colors"
-                            style={{
-                              left: `${startPixel + 4}px`,
-                              top: '4px',
-                              width: `${widthPixel - 8}px`,
-                              height: 'calc(100% - 8px)',
-                              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                              border: '2px dashed rgba(16, 185, 129, 0.5)',
-                              borderRadius: '4px'
-                            }}
-                            onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
-                            title="Réservable midi-à-midi" />
-                        );
-                      })}
-                      
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
@@ -525,6 +485,45 @@ export default function GanttChart({
                             </div>
                           </div>);
 
+                      })}
+                      
+                      {/* Zones réservables après les bookings pour être au-dessus */}
+                      {dateColumns.map((date, dateIndex) => {
+                        if (dateIndex === dateColumns.length - 1) return null;
+                        
+                        const nextDate = new Date(date);
+                        nextDate.setDate(nextDate.getDate() + 1);
+                        
+                        const hasBooking = bookingPositions.some(pos => {
+                          const checkin = new Date(pos.reservation.date_checkin + 'T00:00:00');
+                          const checkout = new Date(pos.reservation.date_checkout + 'T00:00:00');
+                          const nightStart = date;
+                          const nightEnd = nextDate;
+                          return !(checkout <= nightStart || checkin >= nightEnd);
+                        });
+                        
+                        if (hasBooking) return null;
+                        
+                        const COL_WIDTH = 120;
+                        const startPixel = dateIndex * COL_WIDTH + (COL_WIDTH / 2);
+                        const widthPixel = COL_WIDTH;
+                        
+                        return (
+                          <div
+                            key={`bookable-${room.id}-${date.toISOString()}`}
+                            className="absolute pointer-events-auto cursor-pointer hover:bg-green-100/40 transition-colors z-10"
+                            style={{
+                              left: `${startPixel + 4}px`,
+                              top: '4px',
+                              width: `${widthPixel - 8}px`,
+                              height: 'calc(100% - 8px)',
+                              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                              border: '2px dashed rgba(16, 185, 129, 0.5)',
+                              borderRadius: '4px'
+                            }}
+                            onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                            title="Cliquer pour ajouter cette nuit" />
+                        );
                       })}
                     </div>
                   </div>
