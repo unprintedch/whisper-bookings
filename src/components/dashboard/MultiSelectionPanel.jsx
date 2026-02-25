@@ -3,7 +3,6 @@ import { format, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { X, CalendarPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 // Merge consecutive date slots for same room into date ranges
 export function mergeSlots(slots) {
@@ -69,10 +68,7 @@ export default function MultiSelectionPanel({ selectedSlots, onRemoveSlot, onCle
         {mergedRanges.map((range, i) => (
           <div key={i} className="flex items-center justify-between px-3 py-2">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-medium text-slate-800 truncate">{getRoomName(range.roomId)}</p>
-                <Badge className="bg-blue-100 text-blue-800 text-xs">Booked</Badge>
-              </div>
+              <p className="text-xs font-medium text-slate-800 truncate">{getRoomName(range.roomId)}</p>
               <p className="text-xs text-slate-500">
                 {format(range.checkin, 'd MMM', { locale: fr })} → {format(range.checkout, 'd MMM', { locale: fr })}
               </p>
