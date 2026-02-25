@@ -463,12 +463,12 @@ export default function GanttChart({
                          const client = getClientForReservation(position.reservation);
                          const isOwnAgency = canSeeClientName(position.reservation);
 
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
+                         let startPixel;
+                         if (position.startsBefore) {
+                           startPixel = position.startIndex * COL_WIDTH;
+                         } else {
+                           startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                         }
 
                         let widthPixel;
                         if (position.endsAfter) {
