@@ -326,11 +326,7 @@ export default function Dashboard({
 
   const handleCalendarCellClick = (room, date) => {
     setSelectedRoomForBooking(room);
-    const selectedEnd = addDays(date, 1);
-    setSelectedDateForBooking({ 
-      checkin: format(date, 'yyyy-MM-dd'),
-      checkout: format(selectedEnd, 'yyyy-MM-dd')
-    });
+    setSelectedDateForBooking(date);
     setEditingBooking(null);
     setShowBookingForm(true);
   };
@@ -489,7 +485,6 @@ export default function Dashboard({
               onBookingMove={handleBookingMove}
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
-              onCellClick={handleCalendarCellClick}
               sites={sites}
               currentUser={currentUser}
               selectedSlots={selectedSlots}
@@ -549,7 +544,10 @@ export default function Dashboard({
                   setEditingBooking(null);
                 }}
                 initialRoom={selectedRoomForBooking}
-                initialDates={selectedDateForBooking}
+                initialDates={selectedDateForBooking ? {
+                  checkin: format(selectedDateForBooking, 'yyyy-MM-dd'),
+                  checkout: format(addDays(selectedDateForBooking, 1), 'yyyy-MM-dd')
+                } : null}
                 existingBooking={editingBooking}
                 rooms={rooms}
                 clients={clients}
