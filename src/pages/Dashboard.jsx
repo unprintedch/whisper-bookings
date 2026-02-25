@@ -101,19 +101,10 @@ const RoomForm = ({ onSave, onCancel, initialRoom, sites }) => {
 
 
 export default function Dashboard({
-  // Props are now passed from Layout
   selectedSiteName,
   dateRange,
   currentDate,
   filters,
-  showBookingForm,
-  setShowBookingForm,
-  selectedRoomForBooking,
-  setSelectedRoomForBooking,
-  selectedDateForBooking,
-  setSelectedDateForBooking,
-  editingBooking,
-  setEditingBooking,
 }) {
   // Local state for data fetched from DB
   const [rooms, setRooms] = useState([]);

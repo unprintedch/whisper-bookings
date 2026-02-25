@@ -133,11 +133,7 @@ export default function Layout({ children }) {
 
   // Client Management specific state is now moved to ClientsPage.js
 
-  // State for the booking form modal
-  const [showBookingForm, setShowBookingForm] = useState(false);
-  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
-  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
-  const [editingBooking, setEditingBooking] = useState(null);
+
 
   // Load current user on mount
   useEffect(() => {
