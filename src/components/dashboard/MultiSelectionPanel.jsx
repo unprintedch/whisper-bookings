@@ -56,9 +56,9 @@ export default function MultiSelectionPanel({ selectedSlots, onRemoveSlot, onCle
   return (
     <div className="fixed bottom-6 right-6 z-50 bg-white border border-slate-200 rounded-xl shadow-2xl w-80">
       <div className="flex items-center justify-between p-3 border-b bg-yellow-50 rounded-t-xl">
-        <span className="font-semibold text-slate-800 text-sm">
-          {mergedRanges.length} réservation{mergedRanges.length > 1 ? 's' : ''} sélectionnée{mergedRanges.length > 1 ? 's' : ''}
-        </span>
+         <span className="font-semibold text-slate-800 text-sm">
+           {mergedRanges.length} selected reservation{mergedRanges.length > 1 ? 's' : ''}
+         </span>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClearAll}>
           <Trash2 className="w-3.5 h-3.5 text-slate-500" />
         </Button>
