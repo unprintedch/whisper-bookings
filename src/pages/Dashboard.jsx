@@ -500,7 +500,7 @@ export default function Dashboard({
         </Card>
 
         <AvailableRooms
-          rooms={filteredRooms}
+          rooms={sortedRooms}
           reservations={filteredReservations} // Use filtered for available rooms
           dateRange={{ startDate, endDate }}
           onRoomSelect={handleRoomSelect}
