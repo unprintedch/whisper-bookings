@@ -24,19 +24,13 @@ export default function BookingCell({ position, client, isOwnAgency, onClick }) 
 
   const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-  let startPixel;
-  if (startsBefore) {
-    startPixel = startIndex * COL_WIDTH;
-  } else {
-    startPixel = startIndex * COL_WIDTH + HALF_COL_WIDTH;
-  }
+  let startPixel = startIndex * COL_WIDTH;
 
   let widthPixel;
   if (endsAfter) {
     widthPixel = endIndex * COL_WIDTH - startPixel;
   } else {
-    const endPixel = endIndex * COL_WIDTH + HALF_COL_WIDTH;
-    widthPixel = endPixel - startPixel;
+    widthPixel = endIndex * COL_WIDTH - startPixel;
   }
 
   const adults = reservation.adults_count || 0;
