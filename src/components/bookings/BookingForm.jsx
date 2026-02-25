@@ -288,6 +288,7 @@ export default function BookingForm({
       // Set default checkout date if checkin is provided
       if (initialData.date_checkin && !initialData.date_checkout) {
         const checkin = new Date(initialData.date_checkin + 'T00:00:00');
+        // Pour midi-à-midi: quand on clique colonne X, on veut midi du jour X au midi du jour X+1
         initialData.date_checkout = format(addDays(checkin, 1), 'yyyy-MM-dd');
         setNights(1);
       }
