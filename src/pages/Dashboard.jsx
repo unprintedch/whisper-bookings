@@ -339,36 +339,43 @@ export default function Dashboard({
   const handleCalendarCellClick = (room, date) => {
     const roomId = room.id;
     const currentSelection = selectedNights.get(roomId);
-    const nextDay = new Date(date);
-    nextDay.setDate(nextDay.getDate() + 1);
+    
+    // Normalize clicked date to midnight
+    const clickedDate = new Date(date);
+    clickedDate.setHours(0, 0, 0, 0);
+    
+    // Night starts at clicked date, ends at next day midnight
+    const nightStart = new Date(clickedDate);
+    const nightEnd = new Date(clickedDate);
+    nightEnd.setDate(nightEnd.getDate() + 1);
 
     if (currentSelection) {
-      const startDate = new Date(currentSelection.startDate);
-      const endDate = new Date(currentSelection.endDate);
-      const clickedDate = new Date(date);
+      const selStart = new Date(currentSelection.startDate);
+      const selEnd = new Date(currentSelection.endDate);
 
-      // Check if clicked date is inside selection
-      if (clickedDate >= startDate && clickedDate < endDate) {
+      // Check if clicked date is inside current selection
+      if (clickedDate >= selStart && clickedDate < selEnd) {
+        // Deselect
         setSelectedNights(prev => {
           const newMap = new Map(prev);
           newMap.delete(roomId);
           return newMap;
         });
-      } else if (clickedDate.getTime() === endDate.getTime()) {
-        // Extend forward
-        const newEnd = new Date(nextDay);
+      } else if (clickedDate.getTime() === selEnd.getTime()) {
+        // Extend forward - next day
+        const newEnd = new Date(selEnd);
         newEnd.setDate(newEnd.getDate() + 1);
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate, endDate: newEnd }));
-      } else if (clickedDate.getTime() === startDate.getTime() - 86400000) {
-        // Extend backward
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate }));
+        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: selStart, endDate: newEnd }));
+      } else if (clickedDate.getTime() === selStart.getTime() - 86400000) {
+        // Extend backward - previous day
+        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate: selEnd }));
       } else {
         // Non-adjacent - new selection
-        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: clickedDate, endDate: nextDay }));
+        setSelectedNights(prev => new Map(prev).set(roomId, { startDate: nightStart, endDate: nightEnd }));
       }
     } else {
       // New selection
-      setSelectedNights(prev => new Map(prev).set(roomId, { startDate: date, endDate: nextDay }));
+      setSelectedNights(prev => new Map(prev).set(roomId, { startDate: nightStart, endDate: nightEnd }));
     }
 
     setCurrentSelectionRoom(room);
