@@ -490,6 +490,7 @@ export default function Dashboard({
               onBookingMove={handleBookingMove}
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
+              onCellClick={handleCalendarCellClick}
               sites={sites}
               currentUser={currentUser}
               selectedSlots={selectedSlots}
