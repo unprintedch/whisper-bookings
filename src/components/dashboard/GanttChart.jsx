@@ -8,15 +8,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
 
-// ── MIDDAY-TO-MIDDAY LAYOUT RULE ─────────────────────────────────────────────
-// COL_WIDTH = 120px. Each column represents one calendar day.
-// A "night" starts at the MIDPOINT (60px) of the check-in day column
-// and ends at the MIDPOINT (60px) of the check-out day column.
-// This rule applies to: booking bars, hover highlights, selected-slot highlights.
-// THIS RULE MUST NEVER BE CHANGED.
+// ── LAYOUT RULE (NEVER CHANGE) ────────────────────────────────────────────────
+// COL_WIDTH = 120px per day column.
+// A booking bar starts at the MIDPOINT of the check-in day column
+// and ends at the MIDPOINT of the check-out day column.
+// startPixel = checkinIndex * 120 + 60   (or 0 if starts before view)
+// endPixel   = checkoutIndex * 120 + 60  (or n*120 if ends after view)
+// The same midpoint rule applies to hover / selected highlights.
 // ─────────────────────────────────────────────────────────────────────────────
 const COL_WIDTH = 120;
-const HALF = COL_WIDTH / 2; // 60px = midday anchor
+const HALF = 60; // midpoint = midday
 
 const statusIcons = {
   OPTION:   { icon: Clock,        color: "text-amber-600"   },
@@ -78,7 +79,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Status:</span>
-                  <Badge variant={room.is_active ? "default" : "secondary"} className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}>
+                  <Badge className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}>
                     {room.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
@@ -120,7 +121,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   );
 }
 
-// ── Main GanttChart ───────────────────────────────────────────────────────────
+// ── GanttChart ────────────────────────────────────────────────────────────────
 export default function GanttChart({
   rooms,
   reservations,
@@ -162,7 +163,7 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
-  // Calculate pixel positions using MIDDAY-TO-MIDDAY rule
+  // MIDDAY-TO-MIDDAY: bar starts at midpoint of check-in col, ends at midpoint of check-out col
   const calculateBookingPosition = (reservation) => {
     if (!reservation.date_checkin || !reservation.date_checkout) return null;
 
@@ -171,8 +172,8 @@ export default function GanttChart({
 
     const normalized = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
     const viewStart  = normalized[0];
-    const viewEnd    = new Date(normalized[normalized.length - 1]);
-    viewEnd.setDate(viewEnd.getDate() + 1);
+    const lastCol    = normalized[normalized.length - 1];
+    const viewEnd    = new Date(lastCol.getFullYear(), lastCol.getMonth(), lastCol.getDate() + 1);
 
     if (checkin >= viewEnd || checkout <= viewStart) return null;
 
@@ -186,8 +187,8 @@ export default function GanttChart({
         d.getMonth()    === checkin.getMonth()    &&
         d.getDate()     === checkin.getDate()
       );
+      if (startIndex === -1) return null;
     }
-    if (startIndex === -1) return null;
 
     let endIndex, endsAfter = false;
     const checkoutOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
@@ -235,7 +236,7 @@ export default function GanttChart({
       <div className="w-full overflow-x-auto">
         <div className="relative" style={{ minWidth: `${ROOM_COLUMN_WIDTH + dateColumns.length * COL_WIDTH}px` }}>
 
-          {/* ── Header row ── */}
+          {/* Header */}
           <div className="flex sticky top-0 z-50 bg-white border-b border-slate-200">
             <div
               className="bg-slate-50 font-semibold text-slate-700 border-r border-slate-200 flex items-center justify-center flex-shrink-0 sticky left-0 z-50"
@@ -263,7 +264,7 @@ export default function GanttChart({
             </div>
           </div>
 
-          {/* ── Room rows ── */}
+          {/* Room rows */}
           <div className="relative">
             {rooms.map((room, roomIndex) => {
               const bookingPositions = getReservationsForRoom(room.id)
@@ -305,15 +306,15 @@ export default function GanttChart({
                     </div>
                   </div>
 
-                  {/* ── Cell grid + booking bars ── */}
+                  {/* Cell grid + booking bars */}
                   <div className="relative flex-shrink-0 h-full">
 
-                    {/* Cell grid */}
+                    {/* Day cells */}
                     <div className="flex h-full">
                       {dateColumns.map((date, dateIndex) => {
-                        const dateStr   = format(date, 'yyyy-MM-dd');
+                        const dateStr    = format(date, 'yyyy-MM-dd');
                         const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-                        const isHovered  = hoveredCell?.roomId === room.id && hoveredCell?.dateStr === dateStr;
+                        const isHovered  = !isPublicView && hoveredCell?.roomId === room.id && hoveredCell?.dateStr === dateStr;
                         const isSunday   = format(date, 'EEE', { locale: enUS }) === 'Sun';
                         const isHighlighted = highlightDate && isSameDay(date, highlightDate);
 
@@ -330,14 +331,20 @@ export default function GanttChart({
                             onMouseEnter={!isPublicView ? () => setHoveredCell({ roomId: room.id, dateStr }) : undefined}
                             onMouseLeave={!isPublicView ? () => setHoveredCell(null) : undefined}
                           >
-                            {/* Right-half overlay: the "night" starts at midday of this column */}
+                            {/* Right half = the night starting this day (midday-to-midday rule) */}
                             {isSelected && (
-                              <div className="absolute top-0 bottom-0 right-0 pointer-events-none flex items-center justify-center" style={{ width: `${HALF}px`, backgroundColor: 'rgba(234,179,8,0.25)' }}>
+                              <div
+                                className="absolute top-0 bottom-0 right-0 pointer-events-none flex items-center justify-center"
+                                style={{ width: `${HALF}px`, backgroundColor: 'rgba(234,179,8,0.25)' }}
+                              >
                                 <CheckCircle2 className="w-3.5 h-3.5 text-yellow-600" />
                               </div>
                             )}
-                            {!isSelected && isHovered && !isPublicView && (
-                              <div className="absolute top-0 bottom-0 right-0 pointer-events-none flex items-center justify-center" style={{ width: `${HALF}px`, backgroundColor: 'rgba(59,130,246,0.10)' }}>
+                            {!isSelected && isHovered && (
+                              <div
+                                className="absolute top-0 bottom-0 right-0 pointer-events-none flex items-center justify-center"
+                                style={{ width: `${HALF}px`, backgroundColor: 'rgba(59,130,246,0.10)' }}
+                              >
                                 <Plus className="w-3.5 h-3.5 text-blue-400" />
                               </div>
                             )}
@@ -346,19 +353,22 @@ export default function GanttChart({
                       })}
                     </div>
 
-                    {/* Booking bars — midday-to-midday */}
+                    {/* Booking bars — MIDDAY-TO-MIDDAY */}
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position) => {
-                        const client       = getClientForReservation(position.reservation);
-                        const isOwnAgency  = canSeeClientName(position.reservation);
+                        const client      = getClientForReservation(position.reservation);
+                        const isOwnAgency = canSeeClientName(position.reservation);
 
-                        // MIDDAY-TO-MIDDAY pixel calculation — NEVER CHANGE
+                        // startPixel = midpoint of check-in column
                         const startPixel = position.startsBefore
                           ? position.startIndex * COL_WIDTH
                           : position.startIndex * COL_WIDTH + HALF;
-                        const endPixel   = position.endsAfter
+
+                        // endPixel = midpoint of check-out column
+                        const endPixel = position.endsAfter
                           ? position.endIndex * COL_WIDTH
                           : position.endIndex * COL_WIDTH + HALF;
+
                         const widthPixel = Math.max(endPixel - startPixel, HALF);
 
                         const adults   = position.reservation.adults_count   || 0;
@@ -414,7 +424,6 @@ export default function GanttChart({
                         );
                       })}
                     </div>
-
                   </div>
                 </div>
               );
