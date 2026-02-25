@@ -602,14 +602,30 @@ export default function Dashboard({
         </div>
       )}
 
-      <MultiSelectionPanel
-        selectedSlots={selectedSlots}
-        onRemoveSlot={handleRemoveRoomSlots}
-        onClearAll={() => setSelectedSlots([])}
-        onConfirm={handleConfirmMulti}
-        rooms={rooms}
-        sites={sites}
-      />
+      {selectedNights.size > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-900">Sélections actives</h3>
+              <p className="text-sm text-blue-700 mt-1">
+                {Array.from(selectedNights.entries()).map(([roomId, selection]) => {
+                  const room = rooms.find(r => r.id === roomId);
+                  const nights = Math.ceil((new Date(selection.endDate) - new Date(selection.startDate)) / (24 * 60 * 60 * 1000));
+                  return `${room?.name || 'Unknown'}: ${nights} nuit${nights > 1 ? 's' : ''}`;
+                }).join(' • ')}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedNights(new Map())}
+              className="text-blue-700 border-blue-200 hover:bg-blue-100"
+            >
+              Effacer tout
+            </Button>
+          </div>
+        </div>
+      )}
 
       <MultiReservationModal
         isOpen={showMultiModal}
