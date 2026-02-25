@@ -382,6 +382,7 @@ export default function GanttChart({
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
                         !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        selectedSlots.some(s => s.roomId === room.id && s.date === format(date, 'yyyy-MM-dd')) ? 'bg-emerald-50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
                         style={{
