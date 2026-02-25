@@ -155,9 +155,7 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  selectedSlots = [],
-  onSlotToggle
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -375,155 +373,136 @@ export default function GanttChart({
                     </div>
                   </div>
 
+                  {/* ── MIDDAY-TO-MIDDAY GRID — NEVER CHANGE THIS RULE ──────────
+                      COL_WIDTH = 120px. Each "night" occupies from the midpoint
+                      (60px) of the check-in column to the midpoint (60px) of the
+                      check-out column. Hover/selected highlights use the same rule:
+                      right half of check-in col → right half of check-out col.
+                  ──────────────────────────────────────────────────────────── */}
                   <div className="relative flex-shrink-0 h-full">
-                    {/* Background grid — visual borders only, no interaction */}
-                    <div className="flex h-full" style={{ pointerEvents: 'none' }}>
-                      {dateColumns.map((date, dateIndex) =>
-                        <div
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 flex-shrink-0 ${
-                            highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                            format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
-                          style={{ width: '120px', height: '100%' }}
-                        />
-                      )}
+                    <div className="flex h-full">
+                      {dateColumns.map((date, dateIndex) => {
+                        const COL_WIDTH = 120;
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+                        const isHovered = hoveredCell?.roomId === room.id && hoveredCell?.dateStr === dateStr;
+                        const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
+                        const isHighlighted = highlightDate && isSameDay(date, highlightDate);
+
+                        // Each cell shows: left half = checkout night of prev day, right half = checkin night of this day
+                        // Selected/hover: colour the RIGHT half only (= the night starting this day at midday)
+                        let bgColor = 'transparent';
+                        if (isSelected) bgColor = 'rgba(234,179,8,0.25)';
+                        else if (isHovered && !isPublicView) bgColor = 'rgba(59,130,246,0.12)';
+                        else if (isHighlighted) bgColor = 'rgba(148,163,184,0.15)';
+
+                        return (
+                          <div
+                            key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                            className={`border-r border-slate-200 flex items-center justify-center relative flex-shrink-0 transition-colors ${
+                              !isPublicView ? 'cursor-pointer' : ''} ${
+                              isSunday ? 'border-r-2 border-r-slate-300' : ''}`}
+                            style={{ width: `${COL_WIDTH}px`, height: '100%' }}
+                            onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                            onMouseEnter={!isPublicView ? () => setHoveredCell({ roomId: room.id, dateStr }) : undefined}
+                            onMouseLeave={!isPublicView ? () => setHoveredCell(null) : undefined}
+                          >
+                            {/* Right-half highlight overlay (midday→midday) */}
+                            <div
+                              className="absolute top-0 bottom-0 right-0 pointer-events-none"
+                              style={{ width: '60px', backgroundColor: bgColor }}
+                            />
+                            {/* Hover icon centered in right half */}
+                            {!isPublicView && isHovered && !isSelected && (
+                              <div className="absolute right-0 flex items-center justify-center text-blue-400" style={{ width: '60px' }}>
+                                <Plus className="w-3.5 h-3.5" />
+                              </div>
+                            )}
+                            {!isPublicView && isSelected && (
+                              <div className="absolute right-0 flex items-center justify-center text-yellow-600" style={{ width: '60px' }}>
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
-                    {/* Interactive hover zones: each zone is centered on its date column (mid to mid) */}
-                    {!isPublicView && (
-                      <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
-                        {dateColumns.map((date, dateIndex) => {
-                          const COL_WIDTH = 120;
-                          const HALF = COL_WIDTH / 2;
-                          const dateStr = format(date, 'yyyy-MM-dd');
-                          const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-
-                          // Zone: starts at mid of this column, width = full column (ends at mid of next column)
-                          const zoneLeft = dateIndex * COL_WIDTH + HALF;
-
-                          // Check if this zone is occupied by a booking bar
-                          const hasBooking = bookingPositions.some(pos => {
-                            const barStart = pos.startsBefore
-                              ? pos.startIndex * COL_WIDTH
-                              : pos.startIndex * COL_WIDTH + HALF;
-                            const barEnd = pos.endsAfter
-                              ? pos.endIndex * COL_WIDTH
-                              : pos.endIndex * COL_WIDTH + HALF;
-                            return barStart < zoneLeft + COL_WIDTH && barEnd > zoneLeft;
-                          });
-
-                          if (hasBooking) return null;
-
-                          return (
-                            <div
-                              key={`${room.id}-zone-${dateStr}`}
-                              className={`absolute top-0 h-full group/zone cursor-pointer flex items-center justify-center ${
-                                isSelected ? 'bg-yellow-100' : 'hover:bg-blue-50'}`}
-                              style={{ left: `${zoneLeft}px`, width: `${COL_WIDTH}px`, pointerEvents: 'auto' }}
-                              onClick={() => onSlotToggle ? onSlotToggle(room.id, dateStr) : onCellClick && onCellClick(room, date)}
-                            >
-                              {isSelected ? (
-                                <div className="flex items-center gap-1 text-yellow-700 text-sm">
-                                  <Plus className="w-4 h-4 rotate-45" />
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/zone:opacity-100 transition-opacity">
-                                  <Plus className="w-4 h-4" />
-                                  <span>Book</span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
+                    {/* ── BOOKING BARS — MIDDAY-TO-MIDDAY — NEVER CHANGE ──────────
+                        startPixel = checkinColIndex * 120 + 60
+                        endPixel   = checkoutColIndex * 120 + 60
+                        If starts before view: startPixel = 0 (left edge)
+                        If ends after view:    endPixel = n * 120 (right edge)
+                    ──────────────────────────────────────────────────────────── */}
                     <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
+                      {bookingPositions.map((position) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        const HALF = 60; // midday
 
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
+                        const startPixel = position.startsBefore
+                          ? position.startIndex * COL_WIDTH
+                          : position.startIndex * COL_WIDTH + HALF;
 
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                        const endPixel = position.endsAfter
+                          ? position.endIndex * COL_WIDTH
+                          : position.endIndex * COL_WIDTH + HALF;
+
+                        const widthPixel = Math.max(endPixel - startPixel, HALF);
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
                         const infants = position.reservation.infants_count || 0;
                         const occupancyDisplay = [
-                        adults > 0 ? `${adults}A` : null,
-                        children > 0 ? `${children}C` : null,
-                        infants > 0 ? `${infants}I` : null].
-                        filter(Boolean).join(' ');
+                          adults > 0 ? `${adults}A` : null,
+                          children > 0 ? `${children}C` : null,
+                          infants > 0 ? `${infants}I` : null
+                        ].filter(Boolean).join(' ');
 
                         const reservationStatus = position.reservation.status;
                         const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
-                        const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
+                        const statusColor = statusIcons[reservationStatus]?.color || 'text-gray-500';
                         const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
 
                         return (
                           <div
                             key={position.reservation.id}
                             className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
-                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
-                            }
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
-                            }}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}>
-
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
-
-
-
-                            style={{
-                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                            }}>
-
+                              isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'
+                            }`}
+                            style={{ left: `${startPixel}px`, width: `${widthPixel}px`, height: '100%' }}
+                            onClick={(e) => handleBookingClick(position.reservation, e)}
+                          >
+                            <div
+                              className="absolute inset-y-1 w-full flex flex-col justify-center rounded px-2 py-1"
+                              style={{
+                                backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
+                                borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
+                              }}
+                            >
                               <div className="flex items-center gap-2">
                                 <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
                                 <div className="text-sm font-semibold text-slate-800 truncate">
                                   {isOwnAgency ? client?.name || 'Client' : '•••'}
                                 </div>
                               </div>
-
-                              {isOwnAgency &&
-                              <div>
-                                  {(occupancyDisplay || position.reservation.bed_configuration) &&
+                              {isOwnAgency && (occupancyDisplay || position.reservation.bed_configuration) && (
                                 <div className="text-xs text-slate-600 truncate">
-                                      {occupancyDisplay && position.reservation.bed_configuration ?
-                                  `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
-                                  occupancyDisplay || position.reservation.bed_configuration}
-                                    </div>
-                                }
+                                  {occupancyDisplay && position.reservation.bed_configuration
+                                    ? `${occupancyDisplay} - ${position.reservation.bed_configuration}`
+                                    : occupancyDisplay || position.reservation.bed_configuration}
                                 </div>
-                              }
-
-                              {isOwnAgency &&
-                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
+                              )}
+                              {isOwnAgency && (
+                                <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
                                   <Edit className="w-3 h-3 text-slate-500" />
                                 </div>
-                              }
+                              )}
                             </div>
-                          </div>);
-
+                          </div>
+                        );
                       })}
                     </div>
                   </div>
