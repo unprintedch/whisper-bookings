@@ -292,6 +292,8 @@ export default function GanttChart({
   }
 
   const ROOM_COLUMN_WIDTH = 230;
+  const COL_WIDTH = 120;
+  const HALF_COL_WIDTH = COL_WIDTH / 2;
 
   const canSeeClientName = (reservation) => {
     if (isPublicView) return false;
