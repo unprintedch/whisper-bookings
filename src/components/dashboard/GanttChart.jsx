@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import BookingCell from "@/components/dashboard/BookingCell";
 
+const ROOM_COLUMN_WIDTH = 230;
+const COL_WIDTH = 120;
+
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
 
@@ -63,7 +66,10 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Status:</span>
-                  <Badge variant={room.is_active ? "default" : "secondary"} className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}>
+                  <Badge
+                    variant={room.is_active ? "default" : "secondary"}
+                    className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}
+                  >
                     {room.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
@@ -109,9 +115,6 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   );
 }
 
-const ROOM_COLUMN_WIDTH = 230;
-const COL_WIDTH = 120;
-
 export default function GanttChart({
   rooms,
   reservations,
@@ -122,8 +125,12 @@ export default function GanttChart({
   isLoading,
   onCellClick,
   onBookingEdit,
+  onBookingMove,
+  onBookingResize,
   onRoomEdit,
   sites = [],
+  selectedSlots = [],
+  onSlotToggle,
   isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
