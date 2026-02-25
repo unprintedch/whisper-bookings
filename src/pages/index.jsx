@@ -190,7 +190,6 @@ export default function HomePage() {
 
   const handleBookingSubmit = async (formData) => {
     try {
-      // Create a new client record for the public booking request
       const clientData = {
         name: formData.contact_name,
         contact_email: formData.contact_email,
@@ -205,7 +204,6 @@ export default function HomePage() {
 
       const newClient = await dbClient.entities.Client.create(clientData);
 
-      // Create the reservation
       const reservationData = {
         client_id: newClient.id,
         room_id: formData.room_id,
@@ -222,8 +220,13 @@ export default function HomePage() {
       await dbClient.entities.Reservation.create(reservationData);
 
       setShowBookingForm(false);
+      setSelectedNights(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(formData.room_id);
+        return newMap;
+      });
       alert('Booking request submitted successfully! We will contact you shortly.');
-      loadData(); // Reload data to show the new booking
+      loadData();
     } catch (error) {
       console.error('Error submitting booking:', error);
       alert('Error submitting booking request. Please try again.');
