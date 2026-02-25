@@ -269,13 +269,13 @@ export default function Dashboard({
     const { notifications, ...bookingData } = bookingDataWithNotifications;
     try {
       if (editingBooking) {
-        await Reservation.update(editingBooking.id, bookingData);
+        await base44.entities.Reservation.update(editingBooking.id, bookingData);
         setEditingBooking(null);
       }
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await loadData(); // await loadData
+      await loadData();
       await sendNotificationEmails(bookingDataWithNotifications, 'update');
     } catch (error) {
       console.error('Error updating booking:', error);
