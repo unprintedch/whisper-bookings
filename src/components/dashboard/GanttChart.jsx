@@ -435,9 +435,6 @@ export default function GanttChart({
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
 
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-
                         let startPixel;
                         if (position.startsBefore) {
                           startPixel = position.startIndex * COL_WIDTH;
