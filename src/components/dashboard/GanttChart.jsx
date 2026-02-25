@@ -155,7 +155,9 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  onSlotToggle,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -290,8 +292,6 @@ export default function GanttChart({
   }
 
   const ROOM_COLUMN_WIDTH = 230;
-  const COL_WIDTH = 120;
-  const HALF_COL_WIDTH = COL_WIDTH / 2;
 
   const canSeeClientName = (reservation) => {
     if (isPublicView) return false;
@@ -402,73 +402,19 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {/* Render selected slots with same positioning logic as reservations */}
-                      {(() => {
-                        const roomSlots = selectedSlots.filter(s => s.roomId === room.id);
-                        const normalizedDateColumns = dateColumns.map(d => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+                      {bookingPositions.map((position, posIndex) => {
+                        const client = getClientForReservation(position.reservation);
+                        const isOwnAgency = canSeeClientName(position.reservation);
 
-                        // Group consecutive slots into ranges
-                        const ranges = [];
-                        roomSlots.sort((a, b) => new Date(a.date) - new Date(b.date));
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        roomSlots.forEach(slot => {
-                          const slotDate = new Date(slot.date + 'T00:00:00');
-                          const lastRange = ranges[ranges.length - 1];
-
-                          if (lastRange && new Date(lastRange.endDate) >= slotDate) {
-                            lastRange.endDate = slot.date;
-                          } else {
-                            ranges.push({ startDate: slot.date, endDate: slot.date });
-                          }
-                        });
-
-                        return ranges.map((range, idx) => {
-                          const startDate = new Date(range.startDate + 'T00:00:00');
-                          const endDate = new Date(range.endDate + 'T23:59:59');
-
-                          const startIdx = normalizedDateColumns.findIndex(d => 
-                            d.getFullYear() === startDate.getFullYear() &&
-                            d.getMonth() === startDate.getMonth() &&
-                            d.getDate() === startDate.getDate()
-                          );
-                          const endIdx = normalizedDateColumns.findIndex(d =>
-                            d.getFullYear() === endDate.getFullYear() &&
-                            d.getMonth() === endDate.getMonth() &&
-                            d.getDate() === endDate.getDate()
-                          );
-
-                          if (startIdx === -1 || endIdx === -1) return null;
-
-                          const startPixel = startIdx * COL_WIDTH + HALF_COL_WIDTH;
-                          const endPixel = (endIdx + 1) * COL_WIDTH + HALF_COL_WIDTH;
-                          const widthPixel = endPixel - startPixel;
-
-                          return (
-                            <div 
-                              key={`selected-${idx}`} 
-                              className="absolute top-0 pointer-events-auto transition-all duration-200"
-                              style={{
-                                left: `${startPixel}px`,
-                                width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                                height: '100%'
-                              }}>
-                              <div className="absolute inset-y-1 w-full rounded px-2 py-1 flex items-center justify-center bg-yellow-200/80 ring-2 ring-yellow-400 hover:ring-yellow-500">
-                                <span className="text-xs font-semibold text-yellow-800">Selected</span>
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                       {bookingPositions.map((position, posIndex) => {
-                         const client = getClientForReservation(position.reservation);
-                         const isOwnAgency = canSeeClientName(position.reservation);
-
-                         let startPixel;
-                         if (position.startsBefore) {
-                           startPixel = position.startIndex * COL_WIDTH;
-                         } else {
-                           startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                         }
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
 
                         let widthPixel;
                         if (position.endsAfter) {
