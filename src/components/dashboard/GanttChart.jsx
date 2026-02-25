@@ -294,163 +294,26 @@ export default function GanttChart({
           <div className="relative">
             {rooms.map((room, roomIndex) => {
               const roomReservations = getReservationsForRoom(room.id);
-              const bookingPositions = roomReservations.
-              map((reservation) => calculateBookingPosition(reservation, dateColumns)).
-              filter((position) => position !== null);
+              const bookingPositions = roomReservations
+                .map((reservation) => calculateBookingPosition(reservation, dateColumns))
+                .filter((position) => position !== null);
               const siteInfo = getSiteInfo(room.site_id);
 
               return (
-                <div
+                <RoomRow
                   key={`${room.id}-${roomIndex}`}
-                  className="flex border-b border-slate-200 group relative"
-                  style={{ height: '50px' }}>
-
-                  <div
-                    className={`bg-white border-r border-slate-200 p-3 flex-shrink-0 sticky left-0 z-40 h-full ${
-                    !isPublicView ? 'cursor-pointer hover:bg-blue-50/50' : ''}`
-                    }
-                    style={{ width: `${ROOM_COLUMN_WIDTH}px` }}
-                    onClick={!isPublicView ? () => handleRoomClick(room) : undefined}>
-
-                    <div className="flex items-center gap-2 h-full">
-                      <div className="flex flex-col justify-center flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-slate-800 text-sm truncate">
-                            {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
-                          </h4>
-                          {!isPublicView &&
-                          <Eye className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                          }
-                        </div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
-                            <span className="truncate">{room.type_label}</span>
-                            <span className="text-slate-400">–</span>
-                            <span className="flex items-center gap-1 flex-shrink-0">
-                                <Users className="w-3 h-3" />
-                                <span>{room.capacity_max}</span>
-                            </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative flex-shrink-0 h-full">
-                    <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
-
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
-                            </div>
-                        }
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
-                        const client = getClientForReservation(position.reservation);
-                        const isOwnAgency = canSeeClientName(position.reservation);
-
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
-
-                        const adults = position.reservation.adults_count || 0;
-                        const children = position.reservation.children_count || 0;
-                        const infants = position.reservation.infants_count || 0;
-                        const occupancyDisplay = [
-                        adults > 0 ? `${adults}A` : null,
-                        children > 0 ? `${children}C` : null,
-                        infants > 0 ? `${infants}I` : null].
-                        filter(Boolean).join(' ');
-
-                        const reservationStatus = position.reservation.status;
-                        const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
-                        const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
-                        const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
-
-                        return (
-                          <div
-                            key={position.reservation.id}
-                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
-                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
-                            }
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
-                            }}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}>
-
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
-
-
-
-                            style={{
-                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                            }}>
-
-                              <div className="flex items-center gap-2">
-                                <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
-                                <div className="text-sm font-semibold text-slate-800 truncate">
-                                  {isOwnAgency ? client?.name || 'Client' : '•••'}
-                                </div>
-                              </div>
-
-                              {isOwnAgency &&
-                              <div>
-                                  {(occupancyDisplay || position.reservation.bed_configuration) &&
-                                <div className="text-xs text-slate-600 truncate">
-                                      {occupancyDisplay && position.reservation.bed_configuration ?
-                                  `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
-                                  occupancyDisplay || position.reservation.bed_configuration}
-                                    </div>
-                                }
-                                </div>
-                              }
-
-                              {isOwnAgency &&
-                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
-                                  <Edit className="w-3 h-3 text-slate-500" />
-                                </div>
-                              }
-                            </div>
-                          </div>);
-
-                      })}
-                    </div>
-                  </div>
-                </div>);
-
+                  room={room}
+                  siteInfo={siteInfo}
+                  dateColumns={dateColumns}
+                  bookingPositions={bookingPositions}
+                  highlightDate={highlightDate}
+                  isPublicView={isPublicView}
+                  onRoomClick={handleRoomClick}
+                  onBookingClick={handleBookingClick}
+                  getClientForReservation={getClientForReservation}
+                  canSeeClientName={canSeeClientName}
+                />
+              );
             })}
           </div>
         </div>
