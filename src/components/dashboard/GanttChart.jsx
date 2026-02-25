@@ -187,60 +187,54 @@ export default function GanttChart({
     return clients.find((client) => client.id === reservation?.client_id);
   };
 
+  /**
+   * MIDI-TO-MIDI NIGHT LOGIC
+   * Each column = one night. Column index N represents the night starting on dateColumns[N].
+   * A reservation checkin=D1, checkout=D2 occupies columns D1, D1+1, ..., D2-1.
+   * Bar left edge  = checkinColIndex * COL_WIDTH
+   * Bar right edge = checkoutColIndex * COL_WIDTH
+   * No half-column offsets.
+   */
   const calculateBookingPosition = (reservation, dateColumns) => {
-    if (!reservation.date_checkin || !reservation.date_checkout) {
-      console.warn("Skipping reservation with invalid dates:", reservation);
-      return null;
+    if (!reservation.date_checkin || !reservation.date_checkout) return null;
+
+    // Parse dates from "yyyy-MM-dd" without timezone shift
+    const [ciY, ciM, ciD] = reservation.date_checkin.split('-').map(Number);
+    const [coY, coM, coD] = reservation.date_checkout.split('-').map(Number);
+
+    const toNum = (y, m, d) => y * 10000 + m * 100 + d;
+    const checkinNum  = toNum(ciY, ciM, ciD);
+    const checkoutNum = toNum(coY, coM, coD);
+
+    const colNums = dateColumns.map(d => toNum(d.getFullYear(), d.getMonth() + 1, d.getDate()));
+    const viewStartNum = colNums[0];
+    const lastColNum   = colNums[colNums.length - 1];
+    // Day after last column (exclusive right boundary)
+    const viewEndNum   = (() => {
+      const last = dateColumns[dateColumns.length - 1];
+      const next = new Date(last); next.setDate(next.getDate() + 1);
+      return toNum(next.getFullYear(), next.getMonth() + 1, next.getDate());
+    })();
+
+    if (checkoutNum <= viewStartNum || checkinNum >= viewEndNum) return null;
+
+    // Left column index
+    let leftIdx = colNums.findIndex(n => n === checkinNum);
+    if (leftIdx === -1) {
+      if (checkinNum < viewStartNum) leftIdx = 0;
+      else return null;
     }
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
-
-    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-
-    const viewStart = normalizedDateColumns[0];
-    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
-
-    if (checkin >= viewEnd || checkout <= viewStart) {
-      return null;
+    // Right column index (checkout day = first column NOT painted)
+    let rightIdx = colNums.findIndex(n => n === checkoutNum);
+    if (rightIdx === -1) {
+      if (checkoutNum > lastColNum) rightIdx = dateColumns.length;
+      else return null;
     }
 
-    let startIndex;
-    let startsBefore = false;
-    if (checkin < viewStart) {
-      startIndex = 0;
-      startsBefore = true;
-    } else {
-      startIndex = normalizedDateColumns.findIndex((date) =>
-      date.getFullYear() === checkin.getFullYear() &&
-      date.getMonth() === checkin.getMonth() &&
-      date.getDate() === checkin.getDate()
-      );
-    }
+    if (rightIdx <= leftIdx) return null;
 
-    if (startIndex === -1) return null;
-
-    let endIndex;
-    let endsAfter = false;
-    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-    const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDateOnly.getTime());
-
-    if (foundEndIndex !== -1) {
-      endIndex = foundEndIndex;
-    } else {
-      endIndex = normalizedDateColumns.length;
-      if (checkout > viewEnd) {
-        endsAfter = true;
-      }
-    }
-
-    return {
-      startIndex,
-      endIndex,
-      reservation,
-      startsBefore: startsBefore,
-      endsAfter: endsAfter
-    };
+    return { leftIdx, rightIdx, reservation };
   };
 
   const handleBookingClick = (reservation, event) => {
