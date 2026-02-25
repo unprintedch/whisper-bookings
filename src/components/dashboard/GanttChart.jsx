@@ -155,40 +155,13 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedNights = new Map(),
+  currentSelectionRoom = null
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [selectedSlots, setSelectedSlots] = useState(new Set());
-
-  const calculateAvailableSlots = (room, dateColumns) => {
-    const roomReservations = getReservationsForRoom(room.id);
-    const slots = [];
-    const COL_WIDTH = 120;
-    const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-    dateColumns.forEach((date, dateIndex) => {
-      const nextDate = new Date(date);
-      nextDate.setDate(nextDate.getDate() + 1);
-
-      const isAvailable = !roomReservations.some(res => {
-        const checkin = new Date(res.date_checkin);
-        const checkout = new Date(res.date_checkout);
-        return checkin <= date && checkout > date;
-      });
-
-      if (isAvailable) {
-        slots.push({
-          dateIndex,
-          startPixel: dateIndex * COL_WIDTH + HALF_COL_WIDTH,
-          widthPixel: HALF_COL_WIDTH
-        });
-      }
-    });
-
-    return slots;
-  };
 
   React.useEffect(() => {
     const loadUser = async () => {
