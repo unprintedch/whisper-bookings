@@ -265,8 +265,8 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
             </div>
           </div>
 
-          {/* Agency + Client Contact block (always visible) */}
-          {(
+          {/* Agency + Client Contact block (like BookingForm) */}
+          {selectedClient && !isNewClient && (
             <div className="space-y-4 p-4 px-6 border rounded-lg bg-slate-50/70 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Agency Details - Now First */}
@@ -277,7 +277,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                       <Edit className="w-3 h-3 mr-1" /> Edit
                     </Button>
                   </div>
-                  {selectedClient && agencyForSelectedClient ? (
+                  {agencyForSelectedClient ? (
                     <div className="space-y-2 text-slate-700">
                       <p className="font-semibold">{agencyForSelectedClient.name}</p>
                       {agencyContactDisplay && (
@@ -315,25 +315,25 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-medium text-slate-800">Client Contact</h4>
-                    <Button type="button" variant="outline" size="sm" className="h-8 shadow-sm" onClick={() => setIsClientEditOpen(true)} disabled={!selectedClient}>
+                    <Button type="button" variant="outline" size="sm" className="h-8 shadow-sm" onClick={() => setIsClientEditOpen(true)}>
                       <Edit className="w-3 h-3 mr-1" /> Edit
                     </Button>
                   </div>
-                  {selectedClient && (selectedClient.contact_name || selectedClient.contact_email || selectedClient.contact_phone) ? (
+                  {selectedClient.contact_name || selectedClient.contact_email || selectedClient.contact_phone ? (
                     <div className="space-y-2 text-slate-700">
-                      {selectedClient?.contact_name && (
+                      {selectedClient.contact_name && (
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-slate-500" />
                           <span>{selectedClient.contact_name}</span>
                         </div>
                       )}
-                      {selectedClient?.contact_email && (
+                      {selectedClient.contact_email && (
                         <div className="flex items-center gap-2">
                           <Mail className="w-4 h-4 text-slate-500" />
                           <a href={`mailto:${selectedClient.contact_email}`} className="text-yellow-700 hover:underline">{selectedClient.contact_email}</a>
                         </div>
                       )}
-                      {selectedClient?.contact_phone && (
+                      {selectedClient.contact_phone && (
                         <div className="flex items-center gap-2">
                           <Phone className="w-4 h-4 text-slate-500" />
                           <span>{selectedClient.contact_phone}</span>
@@ -341,7 +341,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                       )}
                     </div>
                   ) : (
-                    <p className="text-slate-500 italic mt-2">{selectedClient ? "No direct contact provided." : "Select a client first"}</p>
+                    <p className="text-slate-500 italic mt-2">No direct contact provided.</p>
                   )}
                 </div>
               </div>

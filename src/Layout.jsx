@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { 
@@ -267,17 +267,11 @@ export default function Layout({ children }) {
     );
   }
 
-  // Home page - no layout (and check if user should have access)
+  // Home page - no layout
   const isHomePage = location.pathname === '/' || location.pathname === '/index';
 
   if (isHomePage) {
-    // For public home page, return children without layout
     return children;
-  }
-
-  // If not authenticated and not on home page, redirect to home
-  if (!currentUser) {
-    return <Navigate to={createPageUrl("Home")} replace />;
   }
 
   return (
