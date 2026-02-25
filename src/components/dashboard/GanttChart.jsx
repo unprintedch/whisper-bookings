@@ -155,14 +155,11 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  selectedSlots = [],
-  onSlotToggle,
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [hoveredCell, setHoveredCell] = useState(null); // { roomId, dateStr }
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -377,75 +374,97 @@ export default function GanttChart({
                   </div>
 
                   <div className="relative flex-shrink-0 h-full">
+                    {/* ── CELL GRID ─────────────────────────────────────────────
+                        Each cell is 120px wide. A "night" starts at the midpoint
+                        of the check-in day column (60px) and ends at the midpoint
+                        of the check-out day column (60px).
+                        THIS RULE MUST NEVER BE CHANGED.
+                    ──────────────────────────────────────────────────────────── */}
                     <div className="flex h-full">
                       {dateColumns.map((date, dateIndex) => {
                         const dateStr = format(date, 'yyyy-MM-dd');
                         const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-
                         const isHovered = hoveredCell?.roomId === room.id && hoveredCell?.dateStr === dateStr;
                         const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
                         const isHighlighted = highlightDate && isSameDay(date, highlightDate);
 
+                        // Selected slot: highlight the RIGHT half of this cell (mid→next mid)
+                        // We use a split background: left half normal, right half coloured
+                        let bgStyle = {};
+                        if (isSelected) {
+                          bgStyle = {
+                            background: 'linear-gradient(to right, transparent 50%, rgba(234,179,8,0.18) 50%)'
+                          };
+                        } else if (isHovered && !isPublicView) {
+                          bgStyle = {
+                            background: 'linear-gradient(to right, transparent 50%, rgba(59,130,246,0.10) 50%)'
+                          };
+                        }
+
                         return (
-                        <div
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 flex items-center justify-center relative flex-shrink-0 transition-colors ${
-                            !isPublicView ? 'cursor-pointer' : ''} ${
-                            isSunday ? 'border-r-2 border-r-slate-300' : ''} ${
-                            isSelected ? 'bg-yellow-100' : isHighlighted ? 'bg-slate-100/50' : isHovered ? 'bg-blue-50' : ''}`
-                          }
-                          style={{ width: '120px', height: '100%' }}
-                          onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
-                          onMouseEnter={!isPublicView ? () => setHoveredCell({ roomId: room.id, dateStr }) : undefined}
-                          onMouseLeave={!isPublicView ? () => setHoveredCell(null) : undefined}
-                        >
-                          {!isPublicView && !isSelected && isHovered && (
-                            <div className="flex items-center gap-1 text-yellow-700 text-sm">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
-                            </div>
-                          )}
-                          {!isPublicView && isSelected && (
-                            <div className="flex items-center gap-1 text-yellow-700 text-sm font-medium">
-                              <CheckCircle2 className="w-4 h-4" />
-                            </div>
-                          )}
-                        </div>
+                          <div
+                            key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                            className={`border-r border-slate-200 flex items-center justify-end pr-1 relative flex-shrink-0 transition-colors ${
+                              !isPublicView ? 'cursor-pointer' : ''} ${
+                              isSunday ? 'border-r-2 border-r-slate-300' : ''} ${
+                              isHighlighted && !isSelected && !isHovered ? 'bg-slate-100/50' : ''}`
+                            }
+                            style={{ width: '120px', height: '100%', ...bgStyle }}
+                            onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                            onMouseEnter={!isPublicView ? () => setHoveredCell({ roomId: room.id, dateStr }) : undefined}
+                            onMouseLeave={!isPublicView ? () => setHoveredCell(null) : undefined}
+                          >
+                            {/* Hover hint shown in right half */}
+                            {!isPublicView && isHovered && !isSelected && (
+                              <div className="flex items-center gap-0.5 text-blue-500 text-xs pr-1">
+                                <Plus className="w-3 h-3" />
+                              </div>
+                            )}
+                            {!isPublicView && isSelected && (
+                              <div className="flex items-center text-yellow-600 text-xs pr-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
 
+                    {/* ── BOOKING BARS ──────────────────────────────────────────
+                        startPixel = checkin_column_index * 120 + 60   (midday)
+                        endPixel   = checkout_column_index * 120 + 60  (midday)
+                        Exception: if booking starts before view → left edge (0)
+                                   if booking ends after view  → right edge (n*120)
+                        THIS RULE MUST NEVER BE CHANGED.
+                    ──────────────────────────────────────────────────────────── */}
                     <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
+                      {bookingPositions.map((position) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        const HALF = COL_WIDTH / 2; // 60px = midday
 
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
+                        // Start: midday of check-in column, or left edge if starts before view
+                        const startPixel = position.startsBefore
+                          ? position.startIndex * COL_WIDTH
+                          : position.startIndex * COL_WIDTH + HALF;
 
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                        // End: midday of check-out column, or right edge if ends after view
+                        const endPixel = position.endsAfter
+                          ? position.endIndex * COL_WIDTH
+                          : position.endIndex * COL_WIDTH + HALF;
+
+                        const widthPixel = Math.max(endPixel - startPixel, HALF);
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
                         const infants = position.reservation.infants_count || 0;
                         const occupancyDisplay = [
-                        adults > 0 ? `${adults}A` : null,
-                        children > 0 ? `${children}C` : null,
-                        infants > 0 ? `${infants}I` : null].
-                        filter(Boolean).join(' ');
+                          adults > 0 ? `${adults}A` : null,
+                          children > 0 ? `${children}C` : null,
+                          infants > 0 ? `${infants}I` : null
+                        ].filter(Boolean).join(' ');
 
                         const reservationStatus = position.reservation.status;
                         const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
@@ -456,51 +475,39 @@ export default function GanttChart({
                           <div
                             key={position.reservation.id}
                             className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
-                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
-                            }
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
-                            }}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}>
-
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
-
-
-
-                            style={{
-                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                            }}>
-
+                              isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'
+                            }`}
+                            style={{ left: `${startPixel}px`, width: `${widthPixel}px`, height: '100%' }}
+                            onClick={(e) => handleBookingClick(position.reservation, e)}
+                          >
+                            <div
+                              className="absolute inset-y-1 w-full flex flex-col justify-center rounded px-2 py-1"
+                              style={{
+                                backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
+                                borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
+                              }}
+                            >
                               <div className="flex items-center gap-2">
                                 <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
                                 <div className="text-sm font-semibold text-slate-800 truncate">
                                   {isOwnAgency ? client?.name || 'Client' : '•••'}
                                 </div>
                               </div>
-
-                              {isOwnAgency &&
-                              <div>
-                                  {(occupancyDisplay || position.reservation.bed_configuration) &&
+                              {isOwnAgency && (occupancyDisplay || position.reservation.bed_configuration) && (
                                 <div className="text-xs text-slate-600 truncate">
-                                      {occupancyDisplay && position.reservation.bed_configuration ?
-                                  `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
-                                  occupancyDisplay || position.reservation.bed_configuration}
-                                    </div>
-                                }
+                                  {occupancyDisplay && position.reservation.bed_configuration
+                                    ? `${occupancyDisplay} - ${position.reservation.bed_configuration}`
+                                    : occupancyDisplay || position.reservation.bed_configuration}
                                 </div>
-                              }
-
-                              {isOwnAgency &&
-                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
+                              )}
+                              {isOwnAgency && (
+                                <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
                                   <Edit className="w-3 h-3 text-slate-500" />
                                 </div>
-                              }
+                              )}
                             </div>
-                          </div>);
-
+                          </div>
+                        );
                       })}
                     </div>
                   </div>
