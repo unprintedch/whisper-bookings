@@ -378,28 +378,40 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                      {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+                        const isHovered = hoveredCell?.roomId === room.id && hoveredCell?.dateStr === dateStr;
+                        const isSunday = format(date, 'EEE', { locale: enUS }) === 'Sun';
+                        const isHighlighted = highlightDate && isSameDay(date, highlightDate);
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                        return (
+                        <div
+                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                          className={`border-r border-slate-200 flex items-center justify-center relative flex-shrink-0 transition-colors ${
+                            !isPublicView ? 'cursor-pointer' : ''} ${
+                            isSunday ? 'border-r-2 border-r-slate-300' : ''} ${
+                            isSelected ? 'bg-yellow-100' : isHighlighted ? 'bg-slate-100/50' : isHovered ? 'bg-blue-50' : ''}`
+                          }
+                          style={{ width: '120px', height: '100%' }}
+                          onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                          onMouseEnter={!isPublicView ? () => setHoveredCell({ roomId: room.id, dateStr }) : undefined}
+                          onMouseLeave={!isPublicView ? () => setHoveredCell(null) : undefined}
+                        >
+                          {!isPublicView && !isSelected && isHovered && (
+                            <div className="flex items-center gap-1 text-yellow-700 text-sm">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
-                        }
+                          )}
+                          {!isPublicView && isSelected && (
+                            <div className="flex items-center gap-1 text-yellow-700 text-sm font-medium">
+                              <CheckCircle2 className="w-4 h-4" />
+                            </div>
+                          )}
                         </div>
-                      )}
+                        );
+                      })}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
