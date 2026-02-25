@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 
-import GanttChart from "../components/dashboard/GanttChart";
+import GanttChart from "../components/dashboard/GanttChart.jsx";
 import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
 import MultiReservationModal from "../components/dashboard/MultiReservationModal";
 
