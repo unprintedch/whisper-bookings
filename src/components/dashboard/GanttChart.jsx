@@ -1,514 +1,374 @@
-import React, { useState } from "react";
-import { format, isSameDay } from "date-fns";
+import React, { useState, useEffect } from "react";
+import { format, isSameDay, parseISO } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
+import { Building2, Users, Plus, Eye, Clock, CheckCircle2, DollarSign, X, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/entities/User";
+import { Badge } from "@/components/ui/badge";
+import { base44 } from "@/api/base44Client";
 
-const statusColors = {
-  OPTION: "bg-amber-100 border-amber-300 text-amber-800",
-  RESERVE: "bg-blue-100 border-blue-300 text-blue-800",
-  CONFIRME: "bg-emerald-100 border-emerald-300 text-emerald-800",
-  PAYE: "bg-green-100 border-green-300 text-green-800",
-  ANNULE: "bg-gray-100 border-gray-300 text-gray-500"
+/**
+ * GANTT GRID LOGIC — MIDNIGHT-TO-MIDNIGHT IS FORBIDDEN
+ *
+ * Each column = one NIGHT (e.g. column "Jun 1" = the night from Jun 1 noon → Jun 2 noon)
+ * 
+ * A reservation with checkin=Jun 1, checkout=Jun 3 occupies nights: Jun 1, Jun 2 (2 nights).
+ * Rule: a night column N is occupied if checkin <= N < checkout
+ * 
+ * Visual rendering:
+ *   - Reservation starts at the LEFT edge of its checkin column (arrival at noon)
+ *   - Reservation ends at the RIGHT edge of its last night column = LEFT edge of checkout column (departure at noon)
+ *   - So: left = checkinColIndex * COL_WIDTH, width = (checkoutColIndex - checkinColIndex) * COL_WIDTH
+ *   - If reservation starts before view: clamp left to 0
+ *   - If reservation ends after view: clamp right to total width
+ *
+ * Free slot selection: clicking a cell toggles that NIGHT as selected (roomId + date of night start)
+ */
+
+const COL_WIDTH = 80;
+const ROW_HEIGHT = 52;
+const ROOM_COL_WIDTH = 220;
+
+const STATUS_STYLES = {
+  REQUEST:  { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' },
+  OPTION:   { bg: '#fef9c3', border: '#eab308', text: '#854d0e' },
+  RESERVE:  { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+  CONFIRME: { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
+  PAYE:     { bg: '#bbf7d0', border: '#16a34a', text: '#14532d' },
+  ANNULE:   { bg: '#f1f5f9', border: '#cbd5e1', text: '#94a3b8' },
 };
 
-const statusIcons = {
-  OPTION: { icon: Clock, color: "text-amber-600" },
-  RESERVE: { icon: Clock, color: "text-yellow-700" },
-  CONFIRME: { icon: CheckCircle2, color: "text-emerald-600" },
-  PAYE: { icon: DollarSign, color: "text-green-600" },
-  ANNULE: { icon: X, color: "text-gray-500" }
+const STATUS_ICONS = {
+  REQUEST:  Clock,
+  OPTION:   Clock,
+  RESERVE:  Clock,
+  CONFIRME: CheckCircle2,
+  PAYE:     DollarSign,
+  ANNULE:   X,
 };
 
-const statusBackgrounds = {
-  OPTION: '#fef3c7',
-  RESERVE: '#dbeafe',
-  CONFIRME: '#d1fae5',
-  PAYE: '#d1fae5',
-  ANNULE: '#f1f5f9'
-};
-
-function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
-  const [user, setUser] = useState(null);
-
-  React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const currentUser = await User.me();
-        setUser(currentUser);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
-    };
-    loadUser();
-  }, []);
-
+function RoomModal({ room, isOpen, onClose }) {
   if (!room) return null;
-
-  const isAdmin = user?.role === 'admin';
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
+          <DialogTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-yellow-700" />
             {room.name}
           </DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-6">
-          {room.photo_url ?
-          <div className="aspect-video w-full overflow-hidden">
-              <img
-              src={room.photo_url}
-              alt={room.name}
-              className="w-full h-full object-cover"
-              loading="lazy" />
-
-            </div> :
-
-          <div className="aspect-video w-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-              <Building2 className="w-12 h-12 text-slate-400" />
-            </div>
-          }
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium text-slate-600 mb-2">Basic Information</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Type:</span>
-                  <span className="font-medium">{room.type_label}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Max Capacity:</span>
-                  <span className="font-medium">{room.capacity_max} people</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Status:</span>
-                  <Badge variant={room.is_active ? "default" : "secondary"} className={room.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}>
-                    {room.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-medium text-slate-600 mb-2">Bed Configurations</h4>
-              <div className="space-y-2">
-                {room.bed_configurations?.map((config, index) =>
-                <div key={index} className="bg-slate-50 p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-700">{config.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {config.max_occupancy} people
-                      </Badge>
-                    </div>
-                  </div>
-                ) || <p className="text-sm text-slate-500">No bed configurations defined</p>}
-              </div>
-            </div>
+        <div className="space-y-3 text-sm">
+          {room.photo_url && (
+            <img src={room.photo_url} alt={room.name} className="w-full h-40 object-cover rounded" />
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <div><span className="text-slate-500">Type:</span> <span className="font-medium">{room.type_label}</span></div>
+            <div><span className="text-slate-500">Capacité max:</span> <span className="font-medium">{room.capacity_max}</span></div>
           </div>
-
-          {room.notes &&
-          <div>
-              <h4 className="font-medium text-slate-600 mb-2">Notes</h4>
-              <div className="bg-slate-50 p-3">
-                <p className="text-sm text-slate-700">{room.notes}</p>
-              </div>
-            </div>
-          }
-
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-            {isAdmin &&
-            <Button onClick={() => onEdit(room)} className="bg-yellow-700 hover:bg-yellow-800">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Room
-              </Button>
-            }
-          </div>
+          {room.notes && <p className="text-slate-600 bg-slate-50 p-2 rounded">{room.notes}</p>}
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button variant="outline" onClick={onClose}>Fermer</Button>
         </div>
       </DialogContent>
-    </Dialog>);
-
+    </Dialog>
+  );
 }
 
 export default function GanttChart({
-  rooms,
-  reservations,
-  groups,
+  rooms = [],
+  reservations = [],
   clients = [],
-  dateColumns,
-  highlightDate,
-  isLoading,
-  onCellClick,
-  onBookingEdit,
-  onBookingMove,
-  onBookingResize,
-  onRoomEdit,
   sites = [],
-  isPublicView = false,
+  dateColumns = [],       // array of Date objects, each = start of a NIGHT (noon→noon)
+  highlightDate,
+  isLoading = false,
+  onBookingEdit,
   selectedSlots = [],
   onSlotToggle,
+  isPublicView = false,
 }) {
+  const [currentUser, setCurrentUser] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
-  React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await User.me();
-        setCurrentUser(user);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
-    };
-    loadUser();
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const getReservationsForRoom = (roomId) => {
-    return reservations.filter((reservation) => reservation.room_id === roomId);
+  const canSeeClient = (reservation) => {
+    if (isPublicView) return false;
+    if (!currentUser) return true;
+    if (currentUser.custom_role !== 'agency') return true;
+    const client = clients.find(c => c.id === reservation.client_id);
+    return client?.agency_id === currentUser.agency_id;
   };
 
-  const getGroupForReservation = (reservation) => {
-    return groups.find((group) => group.id === reservation?.group_id);
-  };
+  /**
+   * For a reservation, compute its left pixel offset and width in pixels,
+   * given the visible dateColumns (each column = one night).
+   *
+   * A night column at index i represents the night starting at dateColumns[i].
+   * A reservation occupies columns where: checkinDate <= colDate < checkoutDate
+   *
+   * left  = firstOccupiedColIndex * COL_WIDTH
+   * right = checkoutColIndex * COL_WIDTH  (first col NOT occupied)
+   * width = right - left
+   */
+  const getBookingLayout = (reservation) => {
+    if (!reservation.date_checkin || !reservation.date_checkout) return null;
 
-  const getClientForReservation = (reservation) => {
-    return clients.find((client) => client.id === reservation?.client_id);
-  };
+    // Parse as local date (no timezone shift)
+    const checkin = parseISO(reservation.date_checkin);   // e.g. 2024-06-01
+    const checkout = parseISO(reservation.date_checkout); // e.g. 2024-06-03
 
-  const calculateBookingPosition = (reservation, dateColumns) => {
-    if (!reservation.date_checkin || !reservation.date_checkout) {
-      console.warn("Skipping reservation with invalid dates:", reservation);
-      return null;
+    const viewStart = dateColumns[0];
+    const viewEnd = dateColumns[dateColumns.length - 1];
+
+    // No overlap at all
+    if (!viewStart || !viewEnd) return null;
+    // checkout <= viewStart → entirely before view
+    if (checkout <= viewStart) return null;
+    // checkin > viewEnd → entirely after view (checkin > last night start means after view)
+    const dayAfterView = new Date(viewEnd);
+    dayAfterView.setDate(dayAfterView.getDate() + 1);
+    if (checkin >= dayAfterView) return null;
+
+    // Left boundary: index of checkin column, clamped to 0
+    let leftCol = dateColumns.findIndex(d =>
+      d.getFullYear() === checkin.getFullYear() &&
+      d.getMonth() === checkin.getMonth() &&
+      d.getDate() === checkin.getDate()
+    );
+    const startsBefore = leftCol === -1 && checkin < viewStart;
+    if (startsBefore) leftCol = 0;
+    if (leftCol === -1) return null; // checkin not found and doesn't start before
+
+    // Right boundary: index of checkout column (= first col NOT occupied)
+    let rightCol = dateColumns.findIndex(d =>
+      d.getFullYear() === checkout.getFullYear() &&
+      d.getMonth() === checkout.getMonth() &&
+      d.getDate() === checkout.getDate()
+    );
+    const endsAfter = rightCol === -1 && checkout > dayAfterView;
+    if (endsAfter) rightCol = dateColumns.length;
+    if (rightCol === -1) {
+      // checkout is within view but exact date not found? shouldn't happen but safeguard
+      rightCol = dateColumns.length;
     }
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
-
-    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-
-    const viewStart = normalizedDateColumns[0];
-    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
-
-    if (checkin >= viewEnd || checkout <= viewStart) {
-      return null;
-    }
-
-    let startIndex;
-    let startsBefore = false;
-    if (checkin < viewStart) {
-      startIndex = 0;
-      startsBefore = true;
-    } else {
-      startIndex = normalizedDateColumns.findIndex((date) =>
-      date.getFullYear() === checkin.getFullYear() &&
-      date.getMonth() === checkin.getMonth() &&
-      date.getDate() === checkin.getDate()
-      );
-    }
-
-    if (startIndex === -1) return null;
-
-    let endIndex;
-    let endsAfter = false;
-    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-    const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDateOnly.getTime());
-
-    if (foundEndIndex !== -1) {
-      endIndex = foundEndIndex;
-    } else {
-      endIndex = normalizedDateColumns.length;
-      if (checkout > viewEnd) {
-        endsAfter = true;
-      }
-    }
+    if (rightCol <= leftCol) return null;
 
     return {
-      startIndex,
-      endIndex,
-      reservation,
-      startsBefore: startsBefore,
-      endsAfter: endsAfter
+      left: leftCol * COL_WIDTH,
+      width: (rightCol - leftCol) * COL_WIDTH,
+      startsBefore,
+      endsAfter,
     };
-  };
-
-  const handleBookingClick = (reservation, event) => {
-    event.stopPropagation();
-
-    if (currentUser?.custom_role === 'agency') {
-      const client = clients.find((c) => c.id === reservation.client_id);
-      if (client?.agency_id !== currentUser.agency_id) {
-        return;
-      }
-    }
-
-    if (onBookingEdit) {
-      onBookingEdit(reservation);
-    }
-  };
-
-  const handleRoomClick = (room) => {
-    setSelectedRoom(room);
-    setIsRoomModalOpen(true);
-  };
-
-  const handleRoomEdit = (room) => {
-    setIsRoomModalOpen(false);
-    if (onRoomEdit) {
-      onRoomEdit(room);
-    }
-  };
-
-  const getSiteInfo = (siteId) => {
-    return sites.find((site) => site.id === siteId);
   };
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
-        {Array(8).fill(0).map((_, i) =>
-        <div key={i} className="flex items-center gap-4">
-            <Skeleton className="w-80 h-20" />
-            <div className="flex-1 grid grid-cols-7 gap-1">
-              {Array(7).fill(0).map((_, j) =>
-            <Skeleton key={j} className="h-20" />
-            )}
+      <div className="p-6 space-y-3">
+        {Array(8).fill(0).map((_, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <Skeleton className="w-56 h-12" />
+            <div className="flex gap-1 flex-1">
+              {Array(10).fill(0).map((_, j) => <Skeleton key={j} className="h-12 flex-1" />)}
             </div>
           </div>
-        )}
-      </div>);
-
+        ))}
+      </div>
+    );
   }
 
-  const ROOM_COLUMN_WIDTH = 230;
-
-  const canSeeClientName = (reservation) => {
-    if (isPublicView) return false;
-    if (!currentUser) return true;
-    if (currentUser.custom_role !== 'agency') return true;
-
-    const client = clients.find((c) => c.id === reservation.client_id);
-    return client?.agency_id === currentUser.agency_id;
-  };
+  const totalWidth = ROOM_COL_WIDTH + dateColumns.length * COL_WIDTH;
 
   return (
     <>
       <div className="w-full overflow-x-auto">
-        <div className="relative" style={{ minWidth: `${ROOM_COLUMN_WIDTH + dateColumns.length * 120}px` }}>
-          <div className="flex sticky top-0 z-50 bg-white border-b border-slate-200">
-            <div className="bg-slate-50 font-semibold text-slate-700 border-r border-slate-200 flex items-center justify-center flex-shrink-0 sticky left-0 z-50"
-            style={{ width: `${ROOM_COLUMN_WIDTH}px` }}>
-              <span className="text-lg">Rooms</span>
-            </div>
-            <div className="flex flex-shrink-0">
-              {dateColumns.map((date) =>
-              <div
-                key={date.toISOString()}
-                className={`border-r border-slate-200 flex items-center justify-center py-3 flex-shrink-0 ${
-                highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100' : 'bg-slate-50/40'} ${
-                format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
-                style={{ width: '120px' }}>
-                  <div className="text-sm font-bold text-slate-800 text-center">
-                    <span className="text-xs font-medium text-slate-600 uppercase tracking-wide mr-1">
-                      {format(date, 'EEE', { locale: enUS })}
-                    </span>
-                    <span>
-                      {format(date, 'd MMM', { locale: enUS })}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        <div style={{ minWidth: `${totalWidth}px` }}>
 
-          <div className="relative">
-            {rooms.map((room, roomIndex) => {
-              const roomReservations = getReservationsForRoom(room.id);
-              const bookingPositions = roomReservations.
-              map((reservation) => calculateBookingPosition(reservation, dateColumns)).
-              filter((position) => position !== null);
-              const siteInfo = getSiteInfo(room.site_id);
-
+          {/* HEADER ROW */}
+          <div className="flex sticky top-0 z-50 bg-white border-b border-slate-200" style={{ height: '40px' }}>
+            {/* Room label */}
+            <div
+              className="flex-shrink-0 sticky left-0 z-50 bg-slate-50 border-r border-slate-200 flex items-center justify-center"
+              style={{ width: ROOM_COL_WIDTH }}
+            >
+              <span className="text-sm font-semibold text-slate-600">Chambres</span>
+            </div>
+            {/* Date columns */}
+            {dateColumns.map((date, i) => {
+              const isToday = highlightDate && isSameDay(date, highlightDate);
+              const isSun = format(date, 'EEE', { locale: enUS }) === 'Sun';
               return (
                 <div
-                  key={`${room.id}-${roomIndex}`}
-                  className="flex border-b border-slate-200 group relative"
-                  style={{ height: '50px' }}>
-
-                  <div
-                    className={`bg-white border-r border-slate-200 p-3 flex-shrink-0 sticky left-0 z-40 h-full ${
-                    !isPublicView ? 'cursor-pointer hover:bg-blue-50/50' : ''}`
-                    }
-                    style={{ width: `${ROOM_COLUMN_WIDTH}px` }}
-                    onClick={!isPublicView ? () => handleRoomClick(room) : undefined}>
-
-                    <div className="flex items-center gap-2 h-full">
-                      <div className="flex flex-col justify-center flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-slate-800 text-sm truncate">
-                            {siteInfo?.name || 'Unknown'} – {room.number ? `${room.number} – ` : ''}{room.name}
-                          </h4>
-                          {!isPublicView &&
-                          <Eye className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                          }
-                        </div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
-                            <span className="truncate">{room.type_label}</span>
-                            <span className="text-slate-400">–</span>
-                            <span className="flex items-center gap-1 flex-shrink-0">
-                                <Users className="w-3 h-3" />
-                                <span>{room.capacity_max}</span>
-                            </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative flex-shrink-0 h-full">
-                    <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                       const dateStr = format(date, 'yyyy-MM-dd');
-                       const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-                       return (
-                       <div
-                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                         !isPublicView ? 'cursor-pointer' : ''} ${
-                         isSelected ? 'bg-yellow-100' : highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : 'hover:bg-blue-50'} ${
-                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                         }
-                         style={{ width: '120px', height: '100%' }}
-                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
-
-                           {!isPublicView && !isSelected &&
-                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                               <Plus className="w-4 h-4" />
-                               <span>Book</span>
-                             </div>
-                         }
-                         {!isPublicView && isSelected &&
-                         <div className="flex items-center gap-1 text-yellow-700 text-sm">
-                               <Plus className="w-4 h-4 rotate-45" />
-                             </div>
-                         }
-                         </div>
-                       );
-                      })}
-                    </div>
-
-                    <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
-                        const client = getClientForReservation(position.reservation);
-                        const isOwnAgency = canSeeClientName(position.reservation);
-
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
-
-                        const adults = position.reservation.adults_count || 0;
-                        const children = position.reservation.children_count || 0;
-                        const infants = position.reservation.infants_count || 0;
-                        const occupancyDisplay = [
-                        adults > 0 ? `${adults}A` : null,
-                        children > 0 ? `${children}C` : null,
-                        infants > 0 ? `${infants}I` : null].
-                        filter(Boolean).join(' ');
-
-                        const reservationStatus = position.reservation.status;
-                        const StatusIcon = statusIcons[reservationStatus]?.icon || Clock;
-                        const statusColor = statusIcons[reservationStatus]?.color || "text-gray-500";
-                        const backgroundColor = statusBackgrounds[reservationStatus] || '#f8fafc';
-
-                        return (
-                          <div
-                            key={position.reservation.id}
-                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
-                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
-                            }
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
-                            }}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}>
-
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  opacity-40 h-full"
-
-
-
-                            style={{
-                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                            }}>
-
-                              <div className="flex items-center gap-2">
-                                <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
-                                <div className="text-sm font-semibold text-slate-800 truncate">
-                                  {isOwnAgency ? client?.name || 'Client' : '•••'}
-                                </div>
-                              </div>
-
-                              {isOwnAgency &&
-                              <div>
-                                  {(occupancyDisplay || position.reservation.bed_configuration) &&
-                                <div className="text-xs text-slate-600 truncate">
-                                      {occupancyDisplay && position.reservation.bed_configuration ?
-                                  `${occupancyDisplay} - ${position.reservation.bed_configuration}` :
-                                  occupancyDisplay || position.reservation.bed_configuration}
-                                    </div>
-                                }
-                                </div>
-                              }
-
-                              {isOwnAgency &&
-                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
-                                  <Edit className="w-3 h-3 text-slate-500" />
-                                </div>
-                              }
-                            </div>
-                          </div>);
-
-                      })}
-                    </div>
-                  </div>
-                </div>);
-
+                  key={i}
+                  className={`flex-shrink-0 border-r flex flex-col items-center justify-center ${
+                    isSun ? 'border-r-2 border-r-slate-300' : 'border-slate-200'
+                  } ${isToday ? 'bg-yellow-50' : 'bg-slate-50/60'}`}
+                  style={{ width: COL_WIDTH }}
+                >
+                  <span className="text-xs font-medium text-slate-500 uppercase leading-none">
+                    {format(date, 'EEE', { locale: enUS })}
+                  </span>
+                  <span className={`text-xs font-bold leading-tight ${isToday ? 'text-yellow-700' : 'text-slate-700'}`}>
+                    {format(date, 'd MMM', { locale: enUS })}
+                  </span>
+                </div>
+              );
             })}
           </div>
+
+          {/* ROOM ROWS */}
+          {rooms.map((room) => {
+            const site = sites.find(s => s.id === room.site_id);
+            const roomReservations = reservations.filter(r => r.room_id === room.id && r.status !== 'ANNULE');
+
+            return (
+              <div
+                key={room.id}
+                className="flex border-b border-slate-100 group relative"
+                style={{ height: ROW_HEIGHT }}
+              >
+                {/* Room label */}
+                <div
+                  className="flex-shrink-0 sticky left-0 z-30 bg-white border-r border-slate-200 flex flex-col justify-center px-3 cursor-pointer hover:bg-slate-50"
+                  style={{ width: ROOM_COL_WIDTH }}
+                  onClick={() => { setSelectedRoom(room); setIsRoomModalOpen(true); }}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-semibold text-slate-800 truncate">
+                      {site?.name || ''}{room.number ? ` – ${room.number}` : ''}{room.name ? ` – ${room.name}` : ''}
+                    </span>
+                    {!isPublicView && <Eye className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 flex-shrink-0" />}
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <span>{room.type_label}</span>
+                    <span>·</span>
+                    <Users className="w-3 h-3" />
+                    <span>{room.capacity_max}</span>
+                  </div>
+                </div>
+
+                {/* CELLS + RESERVATIONS */}
+                <div className="relative flex-1 flex-shrink-0" style={{ width: dateColumns.length * COL_WIDTH }}>
+                  {/* Background cells for click/hover */}
+                  <div className="absolute inset-0 flex">
+                    {dateColumns.map((date, i) => {
+                      const dateStr = format(date, 'yyyy-MM-dd');
+                      const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+                      const isToday = highlightDate && isSameDay(date, highlightDate);
+                      const isSun = format(date, 'EEE', { locale: enUS }) === 'Sun';
+
+                      return (
+                        <div
+                          key={i}
+                          className={`flex-shrink-0 border-r h-full flex items-center justify-center cursor-pointer group/cell transition-colors ${
+                            isSun ? 'border-r-2 border-r-slate-200' : 'border-slate-100'
+                          } ${
+                            isSelected
+                              ? 'bg-yellow-100 hover:bg-yellow-200'
+                              : isToday
+                              ? 'bg-yellow-50/40 hover:bg-yellow-100/60'
+                              : 'hover:bg-blue-50'
+                          }`}
+                          style={{ width: COL_WIDTH }}
+                          onClick={() => !isPublicView && onSlotToggle && onSlotToggle(room.id, dateStr)}
+                        >
+                          {!isPublicView && !isSelected && (
+                            <Plus className="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover/cell:opacity-100 transition-opacity" />
+                          )}
+                          {!isPublicView && isSelected && (
+                            <X className="w-3.5 h-3.5 text-yellow-600" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Reservation bars — rendered on top */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {roomReservations.map((reservation) => {
+                      const layout = getBookingLayout(reservation);
+                      if (!layout) return null;
+
+                      const client = clients.find(c => c.id === reservation.client_id);
+                      const visible = canSeeClient(reservation);
+                      const style = STATUS_STYLES[reservation.status] || STATUS_STYLES.REQUEST;
+                      const Icon = STATUS_ICONS[reservation.status] || Clock;
+
+                      const adults = reservation.adults_count || 0;
+                      const children = reservation.children_count || 0;
+                      const infants = reservation.infants_count || 0;
+                      const pax = [
+                        adults > 0 ? `${adults}A` : null,
+                        children > 0 ? `${children}C` : null,
+                        infants > 0 ? `${infants}I` : null,
+                      ].filter(Boolean).join(' ');
+
+                      return (
+                        <div
+                          key={reservation.id}
+                          className="absolute top-1 bottom-1 pointer-events-auto cursor-pointer group/booking"
+                          style={{ left: layout.left, width: layout.width }}
+                          onClick={(e) => { e.stopPropagation(); if (onBookingEdit && visible) onBookingEdit(reservation); }}
+                        >
+                          <div
+                            className="h-full rounded flex flex-col justify-center px-2 overflow-hidden relative"
+                            style={{
+                              backgroundColor: visible ? style.bg : '#f1f5f9',
+                              borderLeft: `4px solid ${visible ? (client?.color_hex || style.border) : '#cbd5e1'}`,
+                              borderTop: `1px solid ${visible ? style.border : '#e2e8f0'}`,
+                              borderRight: `1px solid ${visible ? style.border : '#e2e8f0'}`,
+                              borderBottom: `1px solid ${visible ? style.border : '#e2e8f0'}`,
+                            }}
+                          >
+                            <div className="flex items-center gap-1 min-w-0">
+                              <Icon className="w-3 h-3 flex-shrink-0" style={{ color: visible ? style.text : '#94a3b8' }} />
+                              <span className="text-xs font-semibold truncate" style={{ color: visible ? style.text : '#94a3b8' }}>
+                                {visible ? (client?.name || 'Client') : '•••'}
+                              </span>
+                            </div>
+                            {visible && (pax || reservation.bed_configuration) && (
+                              <div className="text-xs truncate" style={{ color: style.text, opacity: 0.8 }}>
+                                {[pax, reservation.bed_configuration].filter(Boolean).join(' · ')}
+                              </div>
+                            )}
+                            {visible && onBookingEdit && (
+                              <div className="absolute top-1 right-1 opacity-0 group-hover/booking:opacity-100 transition-opacity">
+                                <Edit className="w-3 h-3" style={{ color: style.text }} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {rooms.length === 0 && (
+            <div className="flex items-center justify-center py-16 text-slate-400">
+              <div className="text-center">
+                <Building2 className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Aucune chambre à afficher</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      <RoomDetailsModal
+      <RoomModal
         room={selectedRoom}
         isOpen={isRoomModalOpen}
         onClose={() => setIsRoomModalOpen(false)}
-        onEdit={handleRoomEdit} />
-
-    </>);
-
+      />
+    </>
+  );
 }
