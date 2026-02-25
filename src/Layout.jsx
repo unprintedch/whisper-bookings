@@ -169,7 +169,7 @@ export default function Layout({ children }) {
   useEffect(() => {
     const loadBedConfigs = async () => {
       try {
-        const configs = await BedConfiguration.list('sort_order');
+        const configs = await base44.entities.BedConfiguration.list('sort_order');
         setBedConfigurations(configs);
       } catch (error) {
         console.error('Error loading bed configurations:', error);
