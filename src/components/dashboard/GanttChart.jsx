@@ -397,9 +397,36 @@ export default function GanttChart({
                         }
                         </div>
                       )}
-                    </div>
+                      </div>
 
-                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-0 pointer-events-none">
+                      {selectedSlots.filter(slot => slot.roomId === room.id).map((slot, slotIndex) => {
+                       const COL_WIDTH = 120;
+                       const HALF_COL_WIDTH = COL_WIDTH / 2;
+                       const slotDateIndex = dateColumns.findIndex(d => format(d, 'yyyy-MM-dd') === slot.date);
+
+                       if (slotDateIndex === -1) return null;
+
+                       const startPixel = slotDateIndex * COL_WIDTH + HALF_COL_WIDTH;
+                       const endPixel = (slotDateIndex + 1) * COL_WIDTH + HALF_COL_WIDTH;
+                       const widthPixel = endPixel - startPixel;
+
+                       return (
+                         <div
+                           key={`selected-${slot.roomId}-${slot.date}`}
+                           className="absolute top-0 pointer-events-auto transition-all duration-200"
+                           style={{
+                             left: `${startPixel}px`,
+                             width: `${widthPixel}px`,
+                             height: '100%'
+                           }}
+                           onClick={(e) => { e.stopPropagation(); if (onSlotToggle) onSlotToggle(room.id, slot.date); }}>
+                           <div className="absolute inset-y-1 w-full rounded px-2 py-1 h-full bg-yellow-300/80 border-l-4 border-yellow-500 flex items-center justify-center cursor-pointer hover:bg-yellow-400/90 transition-colors">
+                             <span className="text-xs font-semibold text-yellow-900">Book</span>
+                           </div>
+                         </div>
+                       );
+                      })}
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
@@ -408,19 +435,19 @@ export default function GanttChart({
                         const HALF_COL_WIDTH = COL_WIDTH / 2;
 
                         let startPixel;
-                         if (position.startsBefore) {
-                           startPixel = position.startIndex * COL_WIDTH;
-                         } else {
-                           startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                         }
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
 
-                         let endPixel;
-                         if (position.endsAfter) {
-                           endPixel = position.endIndex * COL_WIDTH;
-                         } else {
-                           endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                         }
-                         const widthPixel = endPixel - startPixel;
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
