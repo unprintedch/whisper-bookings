@@ -328,8 +328,9 @@ export default function GanttChart({
                     </span>
                   </div>
                 </div>
-              )}
-            </div>
+                );
+                })}
+                </div>
           </div>
 
           <div className="relative">
