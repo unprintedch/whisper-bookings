@@ -401,7 +401,31 @@ export default function GanttChart({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {bookingPositions.map((position, posIndex) => {
+                      {calculateAvailableSlots(room, dateColumns).map((slot, slotIndex) => {
+                        const slotKey = `${room.id}-${slot.dateIndex}`;
+                        const isSelected = selectedSlot === slotKey;
+                        return (
+                          <div
+                            key={`available-${slotIndex}`}
+                            className="absolute top-0 pointer-events-auto cursor-pointer group/slot hover:z-10"
+                            style={{
+                              left: `${slot.startPixel}px`,
+                              width: `${slot.widthPixel}px`,
+                              height: '100%'
+                            }}
+                            onClick={!isPublicView ? () => {
+                              setSelectedSlot(slotKey);
+                              if (onCellClick) onCellClick(room, dateColumns[slot.dateIndex]);
+                            } : undefined}>
+                            <div className={`absolute inset-y-1 w-full rounded transition-all ${
+                              isSelected 
+                                ? 'border-2 border-solid border-emerald-500 bg-emerald-100/60 opacity-100' 
+                                : 'border-2 border-dashed border-emerald-300 bg-emerald-50/30 opacity-60 group-hover/slot:opacity-100'
+                            }`} />
+                          </div>
+                        );
+                      })}
+                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
 
