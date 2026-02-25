@@ -140,23 +140,11 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  currentUser = null
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await User.me();
-        setCurrentUser(user);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
-    };
-    loadUser();
-  }, []);
 
   const getReservationsForRoom = (roomId) => {
     return reservations.filter((reservation) => reservation.room_id === roomId);
