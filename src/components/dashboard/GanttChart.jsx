@@ -222,7 +222,7 @@ export default function GanttChart({
 
     let endIndex;
     let endsAfter = false;
-    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
+    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate(), 12, 0, 0);
     const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDateOnly.getTime());
 
     if (foundEndIndex !== -1) {
