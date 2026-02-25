@@ -149,14 +149,13 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onSlotToggle,
+  onCellClick,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  selectedSlots = []
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -376,23 +375,19 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                       {dateColumns.map((date, dateIndex) => {
-                        const dateStr = format(date, 'yyyy-MM-dd');
-                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-
-                        return <div
-                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
-                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
-                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
-                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                         }
-                         style={{
-                           width: '120px',
-                           height: '100%'
-                         }}
-                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
+                      {dateColumns.map((date, dateIndex) =>
+                      <div
+                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                        }
+                        style={{
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -401,10 +396,52 @@ export default function GanttChart({
                             </div>
                         }
                         </div>
-                        })}
-                        </div>
+                      )}
+                    </div>
 
                     <div className="absolute inset-0 pointer-events-none">
+                      {/* Afficher les zones réservables transparentes midi-à-midi */}
+                      {dateColumns.map((date, dateIndex) => {
+                        if (dateIndex === dateColumns.length - 1) return null; // Pas de zone sur la dernière colonne
+                        
+                        const nextDate = new Date(date);
+                        nextDate.setDate(nextDate.getDate() + 1);
+                        
+                        // Vérifier s'il y a une réservation chevauchant cette nuit (midi du jour à midi du lendemain)
+                        const hasBooking = bookingPositions.some(pos => {
+                          const checkin = new Date(pos.reservation.date_checkin + 'T00:00:00');
+                          const checkout = new Date(pos.reservation.date_checkout + 'T00:00:00');
+                          
+                          // Cette nuit (midi à midi) est libre si la réservation ne chevauche pas
+                          const nightStart = date;
+                          const nightEnd = nextDate;
+                          
+                          return !(checkout <= nightStart || checkin >= nightEnd);
+                        });
+                        
+                        if (hasBooking) return null; // Ne pas afficher si occupé
+                        
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        const startPixel = dateIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        const widthPixel = COL_WIDTH;
+                        
+                        return (
+                          <div
+                            key={`bookable-${room.id}-${date.toISOString()}`}
+                            className="absolute top-0 pointer-events-auto cursor-pointer hover:bg-green-100/30 transition-colors"
+                            style={{
+                              left: `${startPixel}px`,
+                              width: `${widthPixel}px`,
+                              height: '100%',
+                              backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                              border: '1px dashed rgba(16, 185, 129, 0.3)'
+                            }}
+                            onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                            title="Réservable midi-à-midi" />
+                        );
+                      })}
+                      
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
