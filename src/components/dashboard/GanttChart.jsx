@@ -410,8 +410,8 @@ export default function GanttChart({
                           }
                           </div>
                           );
-                          })
-                    </div>
+                          })}
+                          </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
