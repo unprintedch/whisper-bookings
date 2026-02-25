@@ -191,8 +191,8 @@ export default function GanttChart({
       return null;
     }
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
+    const checkin = new Date(reservation.date_checkin.includes('T') ? reservation.date_checkin : reservation.date_checkin + 'T12:00:00');
+    const checkout = new Date(reservation.date_checkout.includes('T') ? reservation.date_checkout : reservation.date_checkout + 'T12:00:00');
 
     const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
 
@@ -239,6 +239,21 @@ export default function GanttChart({
       startsBefore: startsBefore,
       endsAfter: endsAfter
     };
+  };
+
+  const isDateSlotBooked = (room, dateIndex, dateColumns, roomReservations) => {
+    const currentDate = dateColumns[dateIndex];
+    const nextDate = dateColumns[dateIndex + 1];
+    
+    return roomReservations.some(reservation => {
+      const checkin = new Date(reservation.date_checkin.includes('T') ? reservation.date_checkin : reservation.date_checkin + 'T12:00:00');
+      const checkout = new Date(reservation.date_checkout.includes('T') ? reservation.date_checkout : reservation.date_checkout + 'T12:00:00');
+      const dateAtNoon = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 12, 0, 0);
+      
+      if (reservation.status === 'ANNULE') return false;
+      
+      return checkin <= dateAtNoon && dateAtNoon < checkout;
+    });
   };
 
   const handleBookingClick = (reservation, event) => {
@@ -375,56 +390,61 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                      {dateColumns.map((date, dateIndex) => {
+                        const isBooked = isDateSlotBooked(room, dateIndex, dateColumns, roomReservations);
+                        
+                        return (
+                        <div
+                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                          !isPublicView && !isBooked ? 'cursor-pointer hover:bg-green-100' : isBooked ? 'bg-red-50' : ''} ${
+                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                          }
+                          style={{
+                            width: '120px',
+                            height: '100%'
+                          }}
+                          onClick={!isPublicView && onCellClick && !isBooked ? () => onCellClick(room, date) : undefined}>
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
+                            {!isPublicView && !isBooked &&
+                          <div className="flex items-center gap-1 text-green-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                                <Plus className="w-4 h-4" />
+                                <span>Book</span>
+                              </div>
+                          }
+                          {isBooked &&
+                          <div className="text-xs text-red-600 opacity-60 font-medium">
+                              Booked
                             </div>
-                        }
-                        </div>
-                      )}
+                          }
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
-                         const client = getClientForReservation(position.reservation);
-                         const isOwnAgency = canSeeClientName(position.reservation);
+                        const client = getClientForReservation(position.reservation);
+                        const isOwnAgency = canSeeClientName(position.reservation);
 
-                         const COL_WIDTH = 120;
-                         const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                         let startPixel;
-                         if (position.startsBefore) {
-                           startPixel = position.startIndex * COL_WIDTH;
-                         } else {
-                           startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                         }
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
 
-                         let widthPixel;
-                         if (position.endsAfter) {
-                           widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                         } else {
-                           const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                           widthPixel = endPixel - startPixel;
-                         }
-
-                         // Stagger overlapping bookings vertically
-                         const bookingHeight = 20;
-                         const topOffset = (posIndex % 2) * bookingHeight;
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
