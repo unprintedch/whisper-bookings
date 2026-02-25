@@ -155,11 +155,14 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+
+  const hasSelectedSlots = selectedSlots.length > 0;
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -387,7 +390,8 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                        data-slot={`${room.id}_${format(date, 'yyyy-MM-dd')}`}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -449,7 +453,7 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 h-full"
+                            <div className={`absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 h-full transition-opacity duration-150 ${hasSelectedSlots ? 'opacity-40' : 'opacity-100'}`}
 
 
 

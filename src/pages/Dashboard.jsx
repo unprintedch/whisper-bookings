@@ -498,7 +498,6 @@ export default function Dashboard({
               onRoomEdit={handleRoomEdit}
               sites={sites}
               selectedSlots={selectedSlots}
-              onSlotToggle={handleSlotToggle}
             />
           </CardContent>
         </Card>
