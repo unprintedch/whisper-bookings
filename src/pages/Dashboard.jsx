@@ -324,12 +324,11 @@ export default function Dashboard({
     setShowBookingForm(true);
   };
 
-  const handleCalendarCellClick = (room, startDate, endDate) => {
+  const handleCalendarCellClick = (room, date) => {
     setSelectedRoomForBooking(room);
-    // If endDate is provided (from transparent zones), use it; otherwise default to +1 day
-    const selectedEnd = endDate || addDays(startDate, 1);
+    const selectedEnd = addDays(date, 1);
     setSelectedDateForBooking({ 
-      checkin: format(startDate, 'yyyy-MM-dd'),
+      checkin: format(date, 'yyyy-MM-dd'),
       checkout: format(selectedEnd, 'yyyy-MM-dd')
     });
     setEditingBooking(null);
