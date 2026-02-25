@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -375,46 +376,33 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center relative group/cell flex-shrink-0 ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}>
-                        
-                        {/* Non-clickable left half (midnight → noon) */}
-                        <div
-                          style={{
-                            width: '60px',
-                            height: '100%'
-                          }}>
-                        </div>
+                       {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
 
-                        {/* Clickable right half (noon → midnight) */}
-                        <div
-                          className={`flex items-center justify-center flex-1 relative ${
-                          !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''}`
-                          }
-                          style={{
-                            height: '100%'
-                          }}
-                          onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        return <div
+                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
+                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
+                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                         }
+                         style={{
+                           width: '120px',
+                           height: '100%'
+                         }}
+                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
 
                           {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
                         }
                         </div>
+                        })}
                         </div>
-                      )}
-                    </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
