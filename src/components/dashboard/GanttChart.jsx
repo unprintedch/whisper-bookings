@@ -191,15 +191,13 @@ export default function GanttChart({
       return null;
     }
 
-    const checkinStr = reservation.date_checkin.includes('T') ? reservation.date_checkin : reservation.date_checkin + 'T12:00:00';
-    const checkoutStr = reservation.date_checkout.includes('T') ? reservation.date_checkout : reservation.date_checkout + 'T12:00:00';
-    const checkin = new Date(checkinStr);
-    const checkout = new Date(checkoutStr);
+    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
+    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
 
-    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0));
+    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
 
     const viewStart = normalizedDateColumns[0];
-    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 12, 0, 0);
+    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
 
     if (checkin >= viewEnd || checkout <= viewStart) {
       return null;
@@ -254,7 +252,6 @@ export default function GanttChart({
     }
 
     if (onBookingEdit) {
-      console.log("Booking clicked:", reservation);
       onBookingEdit(reservation);
     }
   };
@@ -404,26 +401,30 @@ export default function GanttChart({
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
-                        const client = getClientForReservation(position.reservation);
-                        const isOwnAgency = canSeeClientName(position.reservation);
+                         const client = getClientForReservation(position.reservation);
+                         const isOwnAgency = canSeeClientName(position.reservation);
 
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                         const COL_WIDTH = 120;
+                         const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
+                         let startPixel;
+                         if (position.startsBefore) {
+                           startPixel = position.startIndex * COL_WIDTH;
+                         } else {
+                           startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                         }
 
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                         let widthPixel;
+                         if (position.endsAfter) {
+                           widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                         } else {
+                           const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                           widthPixel = endPixel - startPixel;
+                         }
+
+                         // Stagger overlapping bookings vertically
+                         const bookingHeight = 20;
+                         const topOffset = (posIndex % 2) * bookingHeight;
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
@@ -452,7 +453,7 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1 h-full pointer-events-auto"
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  h-full"
 
 
 
