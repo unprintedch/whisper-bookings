@@ -525,8 +525,8 @@ export default function Dashboard({
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
-              selectedSlots={selectedSlots}
-              onSlotToggle={handleSlotToggle}
+              selectedNights={selectedNights}
+              currentSelectionRoom={currentSelectionRoom}
             />
           </CardContent>
         </Card>
