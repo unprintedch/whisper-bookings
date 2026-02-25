@@ -192,12 +192,7 @@ export default function Layout({ children }) {
     }
   };
 
-  const handleOpenNewBooking = () => {
-    setSelectedRoomForBooking(null);
-    setSelectedDateForBooking(null);
-    setEditingBooking(null);
-    setShowBookingForm(true);
-  };
+
 
   // Helper to check if user can access a page
   const canAccessPage = (pageName) => {
