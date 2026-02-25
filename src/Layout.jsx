@@ -233,10 +233,6 @@ export default function Layout({ children }) {
     isDatePopoverOpen, setIsDatePopoverOpen,
     filters, setFilters,
     navigateDate,
-    showBookingForm, setShowBookingForm,
-    selectedRoomForBooking, setSelectedRoomForBooking,
-    selectedDateForBooking, setSelectedDateForBooking,
-    editingBooking, setEditingBooking,
   };
 
   // No specific props for Client Management page in this layout anymore.
