@@ -481,16 +481,26 @@ export default function HomePage() {
         </Card>
       </div>
 
-      <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
+      <Dialog open={showBookingForm} onOpenChange={(open) => {
+        setShowBookingForm(open);
+        if (!open) {
+          setSelectedRoomForBooking(null);
+          setSelectedDateForBooking(null);
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Request a Booking
-              {selectedRoomForBooking && selectedDateForBooking && (
-                <span className="text-sm font-normal text-slate-600 ml-2">
-                  – {selectedRoomForBooking.name} from {format(selectedDateForBooking, 'dd MMM yyyy')}
-                </span>
-              )}
+              {currentSelectionRoom && selectedNights.get(currentSelectionRoom.id) && (() => {
+                const selection = selectedNights.get(currentSelectionRoom.id);
+                const nights = Math.ceil((new Date(selection.endDate) - new Date(selection.startDate)) / (24 * 60 * 60 * 1000));
+                return (
+                  <span className="text-sm font-normal text-slate-600 ml-2">
+                    – {currentSelectionRoom.name}, {nights} night{nights > 1 ? 's' : ''} from {format(new Date(selection.startDate), 'dd MMM yyyy')}
+                  </span>
+                );
+              })()}
             </DialogTitle>
           </DialogHeader>
           <PublicBookingForm
@@ -500,8 +510,9 @@ export default function HomePage() {
             reservations={reservations}
             agencies={agencies}
             onSubmit={handleBookingSubmit}
-            initialRoom={selectedRoomForBooking}
-            initialDate={selectedDateForBooking}
+            initialRoom={currentSelectionRoom}
+            initialDate={selectedNights.get(currentSelectionRoom?.id)?.startDate}
+            selectedNights={selectedNights.get(currentSelectionRoom?.id)}
           />
         </DialogContent>
       </Dialog>
