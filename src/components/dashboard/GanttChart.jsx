@@ -155,9 +155,7 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  selectedNights = new Map(),
-  currentSelectionRoom = null
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -377,71 +375,46 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                      {dateColumns.map((date, dateIndex) => {
+                        const isSelected = selectedNights?.has(room.id) && 
+                          new Date(selectedNights.get(room.id).startDate) <= date && 
+                          date < new Date(selectedNights.get(room.id).endDate);
+                        const isCellEmpty = !bookingPositions.some(pos => {
+                          const COL_WIDTH = 120;
+                          const posStart = pos.startIndex * COL_WIDTH;
+                          const posEnd = (pos.endIndex + 1) * COL_WIDTH;
+                          const cellStart = dateIndex * COL_WIDTH;
+                          const cellEnd = (dateIndex + 1) * COL_WIDTH;
+                          return !(posEnd <= cellStart || posStart >= cellEnd);
+                        });
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
-                            </div>
-                        }
-                        </div>
-                      )}
+                        return (
+                        <div
+                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                          !isPublicView && isCellEmpty ? 'cursor-pointer' : ''} ${
+                          isSelected ? 'bg-green-200 hover:bg-green-300' : (!isPublicView && isCellEmpty ? 'hover:bg-yellow-100' : '')} ${
+                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                          }
+                          style={{
+                            width: '120px',
+                            height: '100%'
+                          }}
+                          onClick={!isPublicView && isCellEmpty && onCellClick ? () => onCellClick(room, date) : undefined}>
+
+                            {!isPublicView && isCellEmpty &&
+                          <div className={`flex items-center gap-1 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity ${isSelected ? 'text-green-700 font-semibold' : 'text-yellow-700'}`}>
+                                <Plus className="w-4 h-4" />
+                                <span>{isSelected ? 'Booked' : 'Book'}</span>
+                              </div>
+                          }
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
-                      {/* Render selected nights */}
-                      {currentSelectionRoom?.id === room.id && selectedNights.get(room.id) && (() => {
-                        const selection = selectedNights.get(room.id);
-                        const startDate = new Date(selection.startDate);
-                        const endDate = new Date(selection.endDate);
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-                        
-                        const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-                        const startIdx = normalizedDateColumns.findIndex(d => 
-                          d.getFullYear() === startDate.getFullYear() &&
-                          d.getMonth() === startDate.getMonth() &&
-                          d.getDate() === startDate.getDate()
-                        );
-                        const endIdx = normalizedDateColumns.findIndex(d =>
-                          d.getFullYear() === endDate.getFullYear() &&
-                          d.getMonth() === endDate.getMonth() &&
-                          d.getDate() === endDate.getDate()
-                        );
-                        
-                        if (startIdx === -1) return null;
-                        
-                        const startPixel = startIdx * COL_WIDTH + HALF_COL_WIDTH;
-                        const endPixel = (endIdx === -1 ? dateColumns.length : endIdx) * COL_WIDTH + HALF_COL_WIDTH;
-                        const widthPixel = endPixel - startPixel;
-                        
-                        return (
-                          <div
-                            key={`selection-${room.id}`}
-                            className="absolute top-0 pointer-events-none"
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${widthPixel}px`,
-                              height: '100%'
-                            }}>
-                            <div className="absolute inset-y-1 w-full bg-blue-300 opacity-30 rounded" />
-                          </div>
-                        );
-                      })()}
-                      
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
