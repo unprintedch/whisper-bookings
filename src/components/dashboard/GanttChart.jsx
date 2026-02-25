@@ -301,6 +301,61 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
+  const calculateAvailableSlots = (room, dateColumns) => {
+    const roomReservations = getReservationsForRoom(room.id);
+    const bookedDates = new Set();
+    
+    roomReservations.forEach(reservation => {
+      if (!reservation.date_checkin || !reservation.date_checkout) return;
+      const checkin = new Date(reservation.date_checkin + 'T00:00:00');
+      const checkout = new Date(reservation.date_checkout + 'T00:00:00');
+      
+      for (let d = new Date(checkin); d < checkout; d.setDate(d.getDate() + 1)) {
+        bookedDates.add(d.toDateString());
+      }
+    });
+
+    const slots = [];
+    let slotStart = null;
+    
+    dateColumns.forEach((date, dateIndex) => {
+      const dateStr = date.toDateString();
+      const isBooked = bookedDates.has(dateStr);
+      
+      if (!isBooked) {
+        if (slotStart === null) {
+          slotStart = dateIndex;
+        }
+      } else {
+        if (slotStart !== null) {
+          slots.push(createSlot(slotStart, dateIndex - 1));
+          slotStart = null;
+        }
+      }
+    });
+    
+    if (slotStart !== null) {
+      slots.push(createSlot(slotStart, dateColumns.length - 1));
+    }
+    
+    return slots;
+  };
+
+  const createSlot = (startIndex, endIndex) => {
+    const COL_WIDTH = 120;
+    const HALF_COL_WIDTH = COL_WIDTH / 2;
+    
+    const startPixel = startIndex * COL_WIDTH + HALF_COL_WIDTH;
+    const endPixel = (endIndex + 1) * COL_WIDTH + HALF_COL_WIDTH;
+    const widthPixel = endPixel - startPixel;
+    
+    return {
+      dateIndex: startIndex,
+      startPixel,
+      widthPixel
+    };
+  };
+
   return (
     <>
       <div className="w-full overflow-x-auto">
