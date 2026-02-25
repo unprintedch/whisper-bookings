@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -375,43 +376,33 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        // Check if this date overlaps with any reservation (noon to noon logic)
-                        const isBlocked = roomReservations.some((reservation) => {
-                          const checkin = new Date(reservation.date_checkin + 'T12:00:00');
-                          const checkout = new Date(reservation.date_checkout + 'T12:00:00');
-                          const dateAtNoon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
-                          const nextDayAtNoon = new Date(dateAtNoon);
-                          nextDayAtNoon.setDate(nextDayAtNoon.getDate() + 1);
+                       {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
 
-                          // Check if [noon today, noon tomorrow) overlaps with [checkin, checkout)
-                          return checkin < nextDayAtNoon && checkout > dateAtNoon;
-                        });
+                        return <div
+                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
+                         !isPublicView ? 'cursor-pointer hover:bg-yellow-100' : ''} ${
+                         isSlotSelected ? 'bg-yellow-300 ring-2 ring-yellow-500' : ''} ${
+                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                         }
+                         style={{
+                           width: '120px',
+                           height: '100%'
+                         }}
+                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
 
-                        return (
-                        <div
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                          !isPublicView && !isBlocked ? 'cursor-pointer hover:bg-blue-50' : isBlocked ? 'bg-slate-200/30 cursor-not-allowed' : ''} ${
-                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                          }
-                          style={{
-                            width: '120px',
-                            height: '100%'
-                          }}
-                          onClick={!isPublicView && !isBlocked && onCellClick ? () => onCellClick(room, date) : undefined}>
-
-                          {!isPublicView && !isBlocked &&
-                          <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
-                          }
-                          </div>
-                          );
-                          })}
-                          </div>
+                        }
+                        </div>
+                        })}
+                        </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
