@@ -267,11 +267,17 @@ export default function Layout({ children }) {
     );
   }
 
-  // Home page - no layout
+  // Home page - no layout (and check if user should have access)
   const isHomePage = location.pathname === '/' || location.pathname === '/index';
 
   if (isHomePage) {
+    // For public home page, return children without layout
     return children;
+  }
+
+  // If not authenticated and not on home page, redirect to home
+  if (!currentUser) {
+    return <Navigate to={createPageUrl("Home")} replace />;
   }
 
   return (
