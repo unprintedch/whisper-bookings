@@ -191,8 +191,10 @@ export default function GanttChart({
       return null;
     }
 
-    const checkin = new Date(reservation.date_checkin.includes('T') ? reservation.date_checkin : reservation.date_checkin + 'T12:00:00');
-    const checkout = new Date(reservation.date_checkout.includes('T') ? reservation.date_checkout : reservation.date_checkout + 'T12:00:00');
+    const checkinStr = reservation.date_checkin.includes('T') ? reservation.date_checkin : reservation.date_checkin + 'T12:00:00';
+    const checkoutStr = reservation.date_checkout.includes('T') ? reservation.date_checkout : reservation.date_checkout + 'T12:00:00';
+    const checkin = new Date(checkinStr);
+    const checkout = new Date(checkoutStr);
 
     const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
 
@@ -239,21 +241,6 @@ export default function GanttChart({
       startsBefore: startsBefore,
       endsAfter: endsAfter
     };
-  };
-
-  const isDateSlotBooked = (room, dateIndex, dateColumns, roomReservations) => {
-    const currentDate = dateColumns[dateIndex];
-    const nextDate = dateColumns[dateIndex + 1];
-    
-    return roomReservations.some(reservation => {
-      const checkin = new Date(reservation.date_checkin.includes('T') ? reservation.date_checkin : reservation.date_checkin + 'T12:00:00');
-      const checkout = new Date(reservation.date_checkout.includes('T') ? reservation.date_checkout : reservation.date_checkout + 'T12:00:00');
-      const dateAtNoon = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 12, 0, 0);
-      
-      if (reservation.status === 'ANNULE') return false;
-      
-      return checkin <= dateAtNoon && dateAtNoon < checkout;
-    });
   };
 
   const handleBookingClick = (reservation, event) => {
@@ -390,37 +377,28 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const isBooked = isDateSlotBooked(room, dateIndex, dateColumns, roomReservations);
-                        
-                        return (
-                        <div
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 transition-colors ${
-                          !isPublicView && !isBooked ? 'cursor-pointer hover:bg-green-100' : isBooked ? 'bg-red-50' : ''} ${
-                          highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                          }
-                          style={{
-                            width: '120px',
-                            height: '100%'
-                          }}
-                          onClick={!isPublicView && onCellClick && !isBooked ? () => onCellClick(room, date) : undefined}>
+                      {dateColumns.map((date, dateIndex) =>
+                      <div
+                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                        }
+                        style={{
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
-                            {!isPublicView && !isBooked &&
-                          <div className="flex items-center gap-1 text-green-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                <Plus className="w-4 h-4" />
-                                <span>Book</span>
-                              </div>
-                          }
-                          {isBooked &&
-                          <div className="text-xs text-red-600 opacity-60 font-medium">
-                              Booked
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                              <Plus className="w-4 h-4" />
+                              <span>Book</span>
                             </div>
-                          }
-                          </div>
-                        );
-                      })}
+                        }
+                        </div>
+                      )}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
