@@ -415,7 +415,37 @@ export default function GanttChart({
                       )}
                     </div>
 
-                    <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0">
+                      {/* Zones réservables transparentes midi-à-midi */}
+                      {dateColumns.map((date, dateIndex) => {
+                        const isBooked = bookingPositions.some(pos => 
+                          pos.startIndex <= dateIndex && pos.endIndex > dateIndex
+                        );
+
+                        if (isBooked) return null;
+
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+                        const startPixel = dateIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        const widthPixel = COL_WIDTH;
+
+                        return (
+                          <div
+                            key={`selectable-${room.id}-${dateIndex}`}
+                            className="absolute top-0 pointer-events-auto opacity-0 hover:opacity-30 transition-opacity"
+                            style={{
+                              left: `${startPixel}px`,
+                              width: `${widthPixel}px`,
+                              height: '100%',
+                              backgroundColor: '#3b82f6',
+                              cursor: !isPublicView ? 'pointer' : 'default'
+                            }}
+                            onClick={!isPublicView ? () => handleSelectableZoneClick(room, dateIndex, dateColumns) : undefined}
+                          />
+                        );
+                      })}
+
+                      {/* Bookings */}
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
