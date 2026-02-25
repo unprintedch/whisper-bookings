@@ -246,6 +246,7 @@ export default function Layout({ children }) {
     selectedRoomForBooking, setSelectedRoomForBooking,
     selectedDateForBooking, setSelectedDateForBooking,
     editingBooking, setEditingBooking,
+    currentUser,
   };
 
   // No specific props for Client Management page in this layout anymore.
