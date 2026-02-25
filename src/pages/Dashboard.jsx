@@ -499,6 +499,7 @@ export default function Dashboard({
               sites={sites}
               selectedSlots={selectedSlots}
               onSlotToggle={handleSlotToggle}
+              isPublicView={false}
             />
           </CardContent>
         </Card>
