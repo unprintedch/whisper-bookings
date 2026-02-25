@@ -473,7 +473,8 @@ export default function GanttChart({
         room={selectedRoom}
         isOpen={isRoomModalOpen}
         onClose={() => setIsRoomModalOpen(false)}
-        onEdit={handleRoomEdit} />
+        onEdit={handleRoomEdit}
+        currentUser={currentUser} />
 
     </>);
 
