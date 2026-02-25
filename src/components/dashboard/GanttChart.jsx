@@ -382,29 +382,30 @@ export default function GanttChart({
                         const dateStr = format(date, 'yyyy-MM-dd');
                         const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
                         return (
-                       <div
-                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                         !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                         isSlotSelected ? 'bg-yellow-100' : ''} ${
-                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                         }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, format(date, 'yyyy-MM-dd')) : undefined}>
+                         <div
+                           key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                           className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                           !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                           isSlotSelected ? 'bg-yellow-100' : ''} ${
+                           highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                           format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                           }
+                           style={{
+                             width: '120px',
+                             height: '100%'
+                           }}
+                           onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, format(date, 'yyyy-MM-dd')) : undefined}>
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
-                            </div>
-                        }
-                        </div>
-                      )}
-                    </div>
+                           {!isPublicView &&
+                           <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                             <Plus className="w-4 h-4" />
+                             <span>Book</span>
+                           </div>
+                           }
+                         </div>
+                       );
+                      })}
+                      </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
