@@ -402,24 +402,20 @@ export default function GanttChart({
                     <div className="absolute inset-0 pointer-events-none">
                       {/* Afficher les zones réservables transparentes midi-à-midi */}
                       {dateColumns.map((date, dateIndex) => {
-                        if (dateIndex === dateColumns.length - 1) return null; // Pas de zone sur la dernière colonne
+                        if (dateIndex === dateColumns.length - 1) return null;
                         
                         const nextDate = new Date(date);
                         nextDate.setDate(nextDate.getDate() + 1);
                         
-                        // Vérifier s'il y a une réservation chevauchant cette nuit (midi du jour à midi du lendemain)
                         const hasBooking = bookingPositions.some(pos => {
                           const checkin = new Date(pos.reservation.date_checkin + 'T00:00:00');
                           const checkout = new Date(pos.reservation.date_checkout + 'T00:00:00');
-                          
-                          // Cette nuit (midi à midi) est libre si la réservation ne chevauche pas
                           const nightStart = date;
                           const nightEnd = nextDate;
-                          
                           return !(checkout <= nightStart || checkin >= nightEnd);
                         });
                         
-                        if (hasBooking) return null; // Ne pas afficher si occupé
+                        if (hasBooking) return null;
                         
                         const COL_WIDTH = 120;
                         const HALF_COL_WIDTH = COL_WIDTH / 2;
@@ -429,13 +425,15 @@ export default function GanttChart({
                         return (
                           <div
                             key={`bookable-${room.id}-${date.toISOString()}`}
-                            className="absolute top-0 pointer-events-auto cursor-pointer hover:bg-green-100/30 transition-colors"
+                            className="absolute pointer-events-auto cursor-pointer hover:bg-green-100/40 transition-colors"
                             style={{
-                              left: `${startPixel}px`,
-                              width: `${widthPixel}px`,
-                              height: '100%',
-                              backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                              border: '1px dashed rgba(16, 185, 129, 0.3)'
+                              left: `${startPixel + 4}px`,
+                              top: '4px',
+                              width: `${widthPixel - 8}px`,
+                              height: 'calc(100% - 8px)',
+                              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                              border: '2px dashed rgba(16, 185, 129, 0.5)',
+                              borderRadius: '4px'
                             }}
                             onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
                             title="Réservable midi-à-midi" />
