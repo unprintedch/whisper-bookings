@@ -385,19 +385,22 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
-                      <div
-                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                        }
-                        style={{
-                          width: '120px',
-                          height: '100%'
-                        }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                      {dateColumns.map((date, dateIndex) => {
+                        const occupied = isDateOccupied(room.id, date);
+                        return (
+                        <div
+                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                         !isPublicView && !occupied ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                         occupied ? 'bg-slate-200/30 cursor-not-allowed' : ''} ${
+                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                         }
+                         style={{
+                           width: '120px',
+                           height: '100%'
+                         }}
+                         onClick={!isPublicView && !occupied && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
