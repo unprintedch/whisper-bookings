@@ -18,7 +18,7 @@ import { NotificationSettings } from "@/entities/NotificationSettings"; // Impor
 import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
 import { createPageUrl } from "@/utils"; // Import createPageUrl
 
-import GanttChart from "../components/dashboard/GanttChart";
+import GanttChart from "../components/dashboard/GanttChart.jsx";
 import AvailableRooms from "../components/dashboard/AvailableRooms";
 import BookingForm from "../components/bookings/BookingForm";
 import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
