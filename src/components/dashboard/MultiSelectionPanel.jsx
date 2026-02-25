@@ -3,6 +3,7 @@ import { format, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { X, CalendarPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 // Merge consecutive date slots for same room into date ranges
 export function mergeSlots(slots) {
