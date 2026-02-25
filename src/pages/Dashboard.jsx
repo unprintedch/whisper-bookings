@@ -114,6 +114,7 @@ export default function Dashboard({
   setSelectedDateForBooking,
   editingBooking,
   setEditingBooking,
+  currentUser,
 }) {
   // Local state for data fetched from DB
   const [rooms, setRooms] = useState([]);
@@ -124,7 +125,6 @@ export default function Dashboard({
   const [clients, setClients] = useState([]); // New state for clients
   const [allBedConfigs, setAllBedConfigs] = useState([]); // New state for bed configs
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
 
   // Room form modal state remains local
   const [showRoomForm, setShowRoomForm] = useState(false);
