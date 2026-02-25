@@ -155,6 +155,7 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
+  currentUser = null,
   isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -300,22 +301,6 @@ export default function GanttChart({
     return client?.agency_id === currentUser.agency_id;
   };
 
-  const isTimeSlotBooked = (room, dateIndex) => {
-    return bookingPositions?.some(pos => 
-      pos.startIndex <= dateIndex && pos.endIndex > dateIndex
-    ) || false;
-  };
-
-  const handleSelectableZoneClick = (room, dateIndex, dateColumns) => {
-    const startDate = dateColumns[dateIndex];
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1);
-
-    if (onCellClick) {
-      onCellClick(room, startDate, endDate, 'midi');
-    }
-  };
-
   return (
     <>
       <div className="w-full overflow-x-auto">
@@ -400,47 +385,22 @@ export default function GanttChart({
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
                         style={{
-                           width: '120px',
-                           height: '100%'
-                         }}
-                         onClick={undefined}>
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
-
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                              <Plus className="w-4 h-4" />
+                              <span>Book</span>
+                            </div>
+                        }
                         </div>
                       )}
                     </div>
 
-                    <div className="absolute inset-0">
-                      {/* Zones réservables transparentes midi-à-midi */}
-                      {dateColumns.map((date, dateIndex) => {
-                        const isBooked = bookingPositions.some(pos => 
-                          pos.startIndex <= dateIndex && pos.endIndex > dateIndex
-                        );
-
-                        if (isBooked) return null;
-
-                        const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-                        const startPixel = dateIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        const widthPixel = COL_WIDTH;
-
-                        return (
-                          <div
-                            key={`selectable-${room.id}-${dateIndex}`}
-                            className="absolute top-0 pointer-events-auto opacity-0 hover:opacity-30 transition-opacity"
-                            style={{
-                              left: `${startPixel}px`,
-                              width: `${widthPixel}px`,
-                              height: '100%',
-                              backgroundColor: '#3b82f6',
-                              cursor: !isPublicView ? 'pointer' : 'default'
-                            }}
-                            onClick={!isPublicView ? () => handleSelectableZoneClick(room, dateIndex, dateColumns) : undefined}
-                          />
-                        );
-                      })}
-
-                      {/* Bookings */}
+                    <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
                         const client = getClientForReservation(position.reservation);
                         const isOwnAgency = canSeeClientName(position.reservation);
