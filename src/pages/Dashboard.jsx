@@ -13,11 +13,9 @@ import { Group } from "@/entities/Group";
 import { Site } from "@/entities/Site";
 import { Agency } from "@/entities/Agency";
 import { Client } from "@/entities/Client";
-import { BedConfiguration } from "@/entities/BedConfiguration"; // Import BedConfiguration
-import { NotificationSettings } from "@/entities/NotificationSettings"; // Import NotificationSettings
-import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
-import { User } from "@/entities/User"; // Import User entity
-import { createPageUrl } from "@/utils"; // Import createPageUrl
+import { BedConfiguration } from "@/entities/BedConfiguration";
+import { User } from "@/entities/User";
+import { createPageUrl } from "@/utils";
 
 import GanttChart from "../components/dashboard/GanttChart";
 import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
