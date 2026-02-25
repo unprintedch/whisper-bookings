@@ -287,17 +287,15 @@ export default function Dashboard({
     try {
       const bookingToDelete = reservations.find(r => r.id === bookingId);
       if (bookingToDelete) {
-         // Send notification before deleting. Admin always gets cancellation, others can be configured.
-         // For simplicity, we are notifying admin for now. Extend as needed for agency/client.
          await sendNotificationEmails({ ...bookingToDelete, notifications: { toAdmin: true, toAgency: false, toClient: false }}, 'cancellation');
       }
 
-      await Reservation.delete(bookingId);
+      await base44.entities.Reservation.delete(bookingId);
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
       setEditingBooking(null);
-      loadData(); // Reload data after deletion
+      loadData();
     } catch (error) {
       console.error('Error deleting booking:', error);
     }
