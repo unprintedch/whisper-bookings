@@ -1,18 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LogIn, ChevronLeft, ChevronRight } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { startOfDay, addDays, format } from "date-fns";
-import GanttChart from "../components/dashboard/GanttChart";
-import PublicBookingForm from "../components/bookings/PublicBookingForm";
 
 export default function HomePage() {
   const navigate = useNavigate();
