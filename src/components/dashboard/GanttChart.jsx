@@ -161,7 +161,7 @@ export default function GanttChart({
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const loadUser = async () => {
       try {
         const user = await User.me();
