@@ -503,54 +503,6 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
         </div>
       </div>
 
-      {/* Edit Client Contact - custom overlay to prevent closing parent */}
-      {isClientEditOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[60]"
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="bg-white rounded-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-bold text-slate-800">Edit Client Contact</h3>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsClientEditOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-4">
-              <ClientContactForm
-                client={selectedClient}
-                onSave={handleSaveClientInModal}
-                onCancel={() => setIsClientEditOpen(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Agency - custom overlay to prevent closing parent */}
-      {isAgencyEditOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[60]"
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="bg-white rounded-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-bold text-slate-800">Edit Client's Agency</h3>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsAgencyEditOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-4">
-              <AgencyEditForm
-                client={selectedClient}
-                agencies={agencies}
-                onSave={handleSaveAgencyInModal}
-                onCancel={() => setIsAgencyEditOpen(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
