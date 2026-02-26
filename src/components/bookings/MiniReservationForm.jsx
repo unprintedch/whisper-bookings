@@ -215,15 +215,15 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
       <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
         <div className="space-y-1">
           <Label className="text-xs">Adults (+16)</Label>
-          <Input type="number" min="0" max={maxOcc || 999} value={adults} onChange={e => setAdults(parseInt(e.target.value, 10) || 0)} className="h-8 text-xs" />
+          <Input type="number" min="0" max={maxOcc || 999} value={adults} onChange={disabled ? () => {} : e => setAdults(parseInt(e.target.value, 10) || 0)} className="h-8 text-xs" disabled={disabled} />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Children (5-16)</Label>
-          <Input type="number" min="0" max={maxOcc || 999} value={children} onChange={e => setChildren(parseInt(e.target.value, 10) || 0)} className="h-8 text-xs" />
+          <Input type="number" min="0" max={maxOcc || 999} value={children} onChange={disabled ? () => {} : e => setChildren(parseInt(e.target.value, 10) || 0)} className="h-8 text-xs" disabled={disabled} />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Infants (-5)</Label>
-          <Input type="number" min="0" max={maxOcc || 999} value={infants} onChange={e => setInfants(parseInt(e.target.value, 10) || 0)} className="h-8 text-xs" />
+          <Input type="number" min="0" max={maxOcc || 999} value={infants} onChange={disabled ? () => {} : e => setInfants(parseInt(e.target.value, 10) || 0)} className="h-8 text-xs" disabled={disabled} />
         </div>
         <div className="flex items-end h-[52px]">
           {selectedConfig ? (
