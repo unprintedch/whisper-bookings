@@ -193,25 +193,26 @@ export default function GanttChart({
     }
 
     const COL_WIDTH = 120;
-    const checkinDate = new Date(reservation.date_checkin + 'T00:00:00Z');
-    const checkoutDate = new Date(reservation.date_checkout + 'T00:00:00Z');
+    const parseLocalDate = (dateString) => {
+      const [year, month, day] = dateString.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    };
+    const normalizeLocalDate = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-    checkinDate.setUTCHours(0, 0, 0, 0);
-    checkoutDate.setUTCHours(0, 0, 0, 0);
+    const checkinDate = parseLocalDate(reservation.date_checkin);
+    const checkoutDate = parseLocalDate(reservation.date_checkout);
 
-    const viewStart = new Date(dateColumns[0]);
-    viewStart.setUTCHours(0, 0, 0, 0);
-    const viewEnd = new Date(dateColumns[dateColumns.length - 1]);
-    viewEnd.setUTCHours(0, 0, 0, 0);
+    const normalizedDateColumns = dateColumns.map(normalizeLocalDate);
+    const viewStart = normalizedDateColumns[0];
+    const viewEnd = normalizedDateColumns[normalizedDateColumns.length - 1];
 
     if (checkoutDate <= viewStart || checkinDate > viewEnd) {
       return null;
     }
 
     let startIndex = 0;
-    for (let i = 0; i < dateColumns.length; i++) {
-      const colDate = new Date(dateColumns[i]);
-      colDate.setUTCHours(0, 0, 0, 0);
+    for (let i = 0; i < normalizedDateColumns.length; i++) {
+      const colDate = normalizedDateColumns[i];
       if (colDate.getTime() === checkinDate.getTime()) {
         startIndex = i;
         break;
@@ -219,12 +220,11 @@ export default function GanttChart({
     }
 
     const lastDay = new Date(checkoutDate);
-    lastDay.setUTCDate(lastDay.getUTCDate() - 1);
+    lastDay.setDate(lastDay.getDate() - 1);
 
-    let endIndex = dateColumns.length - 1;
-    for (let i = dateColumns.length - 1; i >= 0; i--) {
-      const colDate = new Date(dateColumns[i]);
-      colDate.setUTCHours(0, 0, 0, 0);
+    let endIndex = normalizedDateColumns.length - 1;
+    for (let i = normalizedDateColumns.length - 1; i >= 0; i--) {
+      const colDate = normalizedDateColumns[i];
       if (colDate.getTime() === lastDay.getTime()) {
         endIndex = i;
         break;
