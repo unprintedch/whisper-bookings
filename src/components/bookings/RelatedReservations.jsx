@@ -30,6 +30,7 @@ export default function RelatedReservations({
   allAgencies,
   allBedConfigs,
   selectedSiteName,
+  onReservationsUpdated,
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [deleteDialogId, setDeleteDialogId] = useState(null);
