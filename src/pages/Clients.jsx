@@ -116,7 +116,7 @@ export default function ClientsPage() {
   useEffect(() => {
     const saveViewModePreference = async () => {
       try {
-        await User.updateMyUserData({ client_view_mode: clientViewMode });
+        await base44.auth.updateMe({ client_view_mode: clientViewMode });
       } catch (error) {
         console.error('Error saving view mode preference:', error);
       }
@@ -133,7 +133,7 @@ export default function ClientsPage() {
   const handleColumnVisibilityChange = async (newVisibility) => {
     setColumnVisibility(newVisibility);
     try {
-      await User.updateMyUserData({ client_view_column_visibility: newVisibility });
+      await base44.auth.updateMe({ client_view_column_visibility: newVisibility });
     } catch (error) {
       console.error('Error saving column visibility preference:', error);
     }
