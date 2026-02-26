@@ -239,17 +239,31 @@ export default function RelatedReservations({
                           />
                         </div>
                       ) : (
-                        <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-600">
-                          {r.bed_configuration && (
-                            <div><span className="text-slate-400">Bed:</span> <span className="font-medium">{r.bed_configuration}</span></div>
-                          )}
-                          {occupancySummary && (
-                            <div><span className="text-slate-400">Guests:</span> <span className="font-medium">{occupancySummary}</span></div>
-                          )}
-                          <div><span className="text-slate-400">Status:</span> <span className="font-medium">{r.status}</span></div>
-                          {r.comment && (
-                            <div className="col-span-2"><span className="text-slate-400">Comment:</span> <span className="font-medium">{r.comment}</span></div>
-                          )}
+                        <div className="px-4 py-3 space-y-2">
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-600">
+                            {r.bed_configuration && (
+                              <div><span className="text-slate-400">Bed:</span> <span className="font-medium">{r.bed_configuration}</span></div>
+                            )}
+                            {occupancySummary && (
+                              <div><span className="text-slate-400">Guests:</span> <span className="font-medium">{occupancySummary}</span></div>
+                            )}
+                            {r.comment && (
+                              <div className="col-span-2"><span className="text-slate-400">Comment:</span> <span className="font-medium">{r.comment}</span></div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-400">Status:</span>
+                            <Select value={r.status} onValueChange={v => handleChangeStatus(r.id, v)}>
+                              <SelectTrigger className="h-7 w-28 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       )}
                     </div>
