@@ -83,7 +83,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   }
 
   const filteredClients = clientSearch.trim()
-    ? clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()))
+    ? localClients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()))
     : [];
 
   const handleSelectClient = (c) => {
@@ -92,6 +92,8 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setEditingClientNumber(c?.client_number || "");
     setIsEditingClientNumber(false);
     setShowSuggestions(false);
+    setIsNewClient(false);
+    setNewClientData({ name: "", client_number: "", agency_id: null, agency_contact_id: null, contact_name: "", contact_email: "", contact_phone: "" });
   };
 
   const handleClearClient = () => {
@@ -99,6 +101,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setClientSearch("");
     setEditingClientNumber("");
     setIsEditingClientNumber(false);
+    setIsNewClient(false);
   };
 
   const handleSaveClientNumber = async () => {
