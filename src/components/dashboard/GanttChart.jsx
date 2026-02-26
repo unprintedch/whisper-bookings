@@ -155,9 +155,7 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  selectedSlots = [],
-  onSlotToggle
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -377,16 +375,11 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const dateStr = format(date, 'yyyy-MM-dd');
-                        const isSlotSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-
-                        return (
+                      {dateColumns.map((date, dateIndex) =>
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                        className={`border-r border-slate-200 relative group/cell flex-shrink-0 transition-colors ${
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
                         !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
-                        isSlotSelected ? 'bg-green-200/70' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
@@ -394,17 +387,16 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                           {!isPublicView &&
-                          <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
-                          }
+                        }
                         </div>
-                       );
-                       })}
+                      )}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
@@ -415,20 +407,8 @@ export default function GanttChart({
                         const COL_WIDTH = 120;
                         const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                        let startPixel = position.startIndex * COL_WIDTH;
+                        let widthPixel = (position.endIndex - position.startIndex) * COL_WIDTH;
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
