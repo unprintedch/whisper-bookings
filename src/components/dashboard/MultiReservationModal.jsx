@@ -275,13 +275,28 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                   placeholder="Search or create a client..."
                   value={clientSearch}
                   onChange={e => {
-                    setClientSearch(e.target.value);
+                    const val = e.target.value;
+                    setClientSearch(val);
                     setClientId("");
                     setShowSuggestions(true);
+                    // Detect if it's a new client (no exact match)
+                    const exactMatch = localClients.find(c => c.name.toLowerCase() === val.toLowerCase());
+                    if (exactMatch) {
+                      handleSelectClient(exactMatch);
+                    } else if (val.trim()) {
+                      setIsNewClient(true);
+                      setNewClientData(prev => ({
+                        ...prev,
+                        name: val.trim(),
+                        client_number: prev.client_number || generateNextClientNumber(null),
+                      }));
+                    } else {
+                      setIsNewClient(false);
+                    }
                   }}
                   onFocus={() => setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  className="h-10"
+                  className={`h-10 ${isNewClient && clientSearch.trim() ? 'border-yellow-500 focus-visible:ring-yellow-500' : ''}`}
                 />
                 {showSuggestions && filteredClients.length > 0 && (
                   <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
