@@ -141,11 +141,10 @@ export default function RelatedReservations({
               </div>
             </div>
             {group.items.map(r => {
-              const room = allRooms.find(rm => rm.id === r.room_id);
-              const site = allSites.find(s => s.id === room?.site_id);
-              const isExpanded = expandedId === r.id;
-              const isEditing = editingId === r.id;
-              const adults = r.adults_count || 0;
+               const room = allRooms.find(rm => rm.id === r.room_id);
+               const site = allSites.find(s => s.id === room?.site_id);
+               const isExpanded = expandedId === r.id;
+               const adults = r.adults_count || 0;
               const children = r.children_count || 0;
               const infants = r.infants_count || 0;
               const occupancySummary = [
