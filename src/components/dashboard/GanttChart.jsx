@@ -439,24 +439,16 @@ export default function GanttChart({
                         return (
                           <div
                             key={position.reservation.id}
-                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
+                            className={`absolute top-0 bottom-0 flex flex-col justify-center rounded pointer-events-auto transition-all duration-200 px-2 py-1 ${
                             isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
                             }
                             style={{
                               left: `${startPixel}px`,
                               width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
-                              height: '100%'
-                            }}
-                            onClick={(e) => handleBookingClick(position.reservation, e)}>
-
-                            <div className="absolute inset-0 flex flex-col justify-center rounded px-2 py-1"
-
-
-
-                            style={{
                               backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
                               borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
-                            }}>
+                            }}
+                            onClick={(e) => handleBookingClick(position.reservation, e)}>
 
                               <div className="flex items-center gap-2">
                                 <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
@@ -482,7 +474,6 @@ export default function GanttChart({
                                   <Edit className="w-3 h-3 text-slate-500" />
                                 </div>
                               }
-                            </div>
                           </div>);
 
                       })}
