@@ -88,13 +88,6 @@ export default function RelatedReservations({
 
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
-      <div className="bg-slate-50 px-4 py-2 border-b flex items-center justify-between">
-        <span className="text-sm font-semibold text-slate-700">
-          All reservations for {selectedClient.name}
-        </span>
-        <span className="text-xs text-slate-500">{relatedReservations.length} reservation{relatedReservations.length > 1 ? 's' : ''}</span>
-      </div>
-
       <div className="divide-y divide-slate-100">
         {Object.entries(groups).map(([key, group]) => (
           <div key={key}>
