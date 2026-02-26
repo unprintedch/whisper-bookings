@@ -200,8 +200,29 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     return Object.entries(groups);
   }, [mergedRanges]);
 
+  const handleCreateNewClient = async () => {
+    if (!clientSearch.trim()) return null;
+    const clientData = {
+      ...newClientData,
+      name: clientSearch.trim(),
+      client_number: newClientData.client_number || null,
+      color_hex: `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`,
+    };
+    const newClient = await base44.entities.Client.create(clientData);
+    setLocalClients(prev => [...prev, newClient]);
+    setClientId(newClient.id);
+    setEditingClientNumber(newClient.client_number || "");
+    setIsNewClient(false);
+    return newClient.id;
+  };
+
   const handleSubmit = async () => {
-    if (!clientId) return;
+    let finalClientId = clientId;
+    if (isNewClient && !clientId) {
+      finalClientId = await handleCreateNewClient();
+      if (!finalClientId) return;
+    }
+    if (!finalClientId) return;
     setIsSubmitting(true);
 
     const reservationsToCreate = mergedRanges.map(range => {
