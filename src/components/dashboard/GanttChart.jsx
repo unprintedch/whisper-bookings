@@ -38,7 +38,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   React.useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await User.me();
+        const currentUser = await base44.auth.me();
         setUser(currentUser);
       } catch (error) {
         console.error('Error loading user:', error);
