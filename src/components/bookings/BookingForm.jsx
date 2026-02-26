@@ -189,6 +189,9 @@ export default function BookingForm({
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // Related reservations (same client, same period) for edit mode
+  const [expandedRelated, setExpandedRelated] = useState({});
+
   const generateNextClientNumber = useCallback((agencyId) => {
     let agencyCode = 'XXX';
 
