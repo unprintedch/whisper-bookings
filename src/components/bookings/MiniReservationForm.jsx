@@ -10,7 +10,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, ChevronsUpDown, Check } from "lucide-react";
 
-export default function MiniReservationForm({ reservation, allRooms, allSites, allBedConfigs, reservations, onSave, onCancel }) {
+export default function MiniReservationForm({ reservation, allRooms, allSites, allBedConfigs, reservations, onSave, onCancel, disabled = false }) {
   const [checkin, setCheckin] = useState(reservation.date_checkin || '');
   const [checkout, setCheckout] = useState(reservation.date_checkout || '');
   const [nights, setNights] = useState(1);
