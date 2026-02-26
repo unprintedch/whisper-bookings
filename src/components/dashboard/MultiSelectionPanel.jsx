@@ -1,44 +1,31 @@
 import React from "react";
-import { format, addDays } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { X, CalendarPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { mergeConsecutiveSlots } from "./multiSelectLogic";
 
-// Merge consecutive date slots for same room into date ranges
+// Wrapper pour compatibilité (adapte le format de slots)
 export function mergeSlots(slots) {
   if (!slots.length) return [];
-
-  // Group by room
-  const byRoom = {};
-  slots.forEach(s => {
-    if (!byRoom[s.roomId]) byRoom[s.roomId] = [];
-    byRoom[s.roomId].push(new Date(s.date));
-  });
-
-  const merged = [];
-  Object.entries(byRoom).forEach(([roomId, dates]) => {
-    // Sort dates
-    dates.sort((a, b) => a - b);
-    // Merge consecutive
-    let start = dates[0];
-    let end = dates[0];
-    for (let i = 1; i < dates.length; i++) {
-      const prev = dates[i - 1];
-      const curr = dates[i];
-      const diffMs = curr.getTime() - prev.getTime();
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      if (diffDays === 1) {
-        end = curr;
-      } else {
-        merged.push({ roomId, checkin: start, checkout: addDays(end, 1) });
-        start = curr;
-        end = curr;
-      }
-    }
-    merged.push({ roomId, checkin: start, checkout: addDays(end, 1) });
-  });
-
-  return merged;
+  
+  // Convertir format UI (Date objects) en format métier (ISO strings)
+  const slotsIso = slots.map(s => ({
+    roomId: s.roomId,
+    date: typeof s.date === 'string' 
+      ? s.date 
+      : s.date.toISOString().split('T')[0]
+  }));
+  
+  // Utilise logique métier pure
+  const merged = mergeConsecutiveSlots(slotsIso);
+  
+  // Convertir en format de retour (Date objects pour compatibilité)
+  return merged.map(m => ({
+    roomId: m.roomId,
+    checkin: new Date(m.checkin),
+    checkout: new Date(m.checkout)
+  }));
 }
 
 export default function MultiSelectionPanel({ selectedSlots, onRemoveSlot, onClearAll, onConfirm, rooms, sites }) {
