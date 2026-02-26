@@ -65,6 +65,12 @@ class EntityWrapper {
     if (!this.sdk) throw new Error(`Entity ${this.entityName} not found in SDK`);
     return this.sdk.schema();
   }
+
+  // Spécial pour User: me() et auth
+  async me() {
+    if (this.entityName !== 'User') throw new Error('me() is only available for User');
+    return base44.auth.me();
+  }
 }
 
 // Instances pour chaque entité
