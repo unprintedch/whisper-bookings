@@ -218,8 +218,6 @@ export default function GanttChart({
 
     if (startIndex === -1) return null;
 
-    console.log(`Reservation ${reservation.id}: checkin=${reservation.date_checkin} startIndex=${startIndex}, checkinDate=${checkin.toISOString()}, viewStart=${viewStart.toISOString()}`);
-
     let endIndex;
     let endsAfter = false;
     const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
@@ -232,6 +230,11 @@ export default function GanttChart({
       if (checkout > viewEnd) {
         endsAfter = true;
       }
+    }
+    
+    // For single night stays (checkin + 1 day = checkout), show only the checkin night
+    if (endIndex === startIndex + 1) {
+      endIndex = startIndex + 1;
     }
 
     return {
