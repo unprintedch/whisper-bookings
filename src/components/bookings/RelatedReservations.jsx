@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { base44 } from "@/api/base44Client";
-import BookingForm from "./BookingForm";
+import MiniReservationForm from "./MiniReservationForm";
 
 export default function RelatedReservations({
   existingBooking,
