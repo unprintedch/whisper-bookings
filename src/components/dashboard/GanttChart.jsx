@@ -387,18 +387,7 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={(e) => {
-                          if (!isPublicView) {
-                            // Shift+click = multi-select slots
-                            if (e.shiftKey && onSlotToggle) {
-                              e.stopPropagation();
-                              const dateStr = format(date, 'yyyy-MM-dd');
-                              onSlotToggle(room.id, dateStr);
-                            } else if (onCellClick) {
-                              onCellClick(room, date);
-                            }
-                          }
-                        }}>
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -416,22 +405,9 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                        const startPixel = position.startIndex * COL_WIDTH;
+                        const endPixel = position.endIndex * COL_WIDTH;
+                        const widthPixel = endPixel - startPixel;
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
