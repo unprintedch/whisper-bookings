@@ -83,6 +83,8 @@ export default function RelatedReservations({
       r.id === reservationId ? { ...r, ...data } : r
     );
     setLocalReservations(updated);
+    // Notify parent (e.g., Dashboard) to refresh the Gantt
+    if (onReservationsUpdated) onReservationsUpdated(updated);
     // Don't auto-close - let user close manually
   };
 
