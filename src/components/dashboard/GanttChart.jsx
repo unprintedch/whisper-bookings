@@ -187,59 +187,28 @@ export default function GanttChart({
     return clients.find((client) => client.id === reservation?.client_id);
   };
 
+  // Utilise le mode de rendu full-day pour calculer les positions
   const calculateBookingPosition = (reservation, dateColumns) => {
     if (!reservation.date_checkin || !reservation.date_checkout) {
       console.warn("Skipping reservation with invalid dates:", reservation);
       return null;
     }
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
-
-    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
-
-    const viewStart = normalizedDateColumns[0];
-    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
-
-    if (checkin >= viewEnd || checkout <= viewStart) {
-      return null;
-    }
-
-    let startIndex;
-    let startsBefore = false;
-    if (checkin < viewStart) {
-      startIndex = 0;
-      startsBefore = true;
-    } else {
-      startIndex = normalizedDateColumns.findIndex((date) =>
-      date.getFullYear() === checkin.getFullYear() &&
-      date.getMonth() === checkin.getMonth() &&
-      date.getDate() === checkin.getDate()
-      );
-    }
-
-    if (startIndex === -1) return null;
-
-    let endIndex;
-    let endsAfter = false;
-    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
-    const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDateOnly.getTime());
-
-    if (foundEndIndex !== -1) {
-      endIndex = foundEndIndex;
-    } else {
-      endIndex = normalizedDateColumns.length;
-      if (checkout > viewEnd) {
-        endsAfter = true;
-      }
-    }
+    const renderMode = FULL_DAY_MODE;
+    const { left, width } = renderMode.calculatePixels(reservation, dateColumns);
+    
+    // Convertir en indices pour compatibilité avec le reste du code
+    const COL_WIDTH = 120;
+    const startIndex = Math.round(left / COL_WIDTH);
+    const endIndex = startIndex + Math.round(width / COL_WIDTH) - 1;
 
     return {
       startIndex,
       endIndex,
       reservation,
-      startsBefore: startsBefore,
-      endsAfter: endsAfter
+      // Flags pour le rendu
+      pixelLeft: left,
+      pixelWidth: width
     };
   };
 
