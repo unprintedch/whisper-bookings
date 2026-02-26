@@ -377,7 +377,7 @@ export default function GanttChart({
                     <div className="flex h-full">
                       {dateColumns.map((date, dateIndex) => {
                         const dateStr = format(date, 'yyyy-MM-dd');
-                        const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+                        const isSelected = (selectedSlots || []).some(s => s.roomId === room.id && s.date === dateStr);
                         return (
                           <div
                             key={`${room.id}-${date.toISOString()}-${dateIndex}`}
@@ -412,8 +412,22 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const startPixel = position.startIndex * COL_WIDTH;
-                        const widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
@@ -442,7 +456,7 @@ export default function GanttChart({
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
-                            <div className="absolute inset-0 w-full flex flex-col justify-center rounded px-2 py-1"
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  h-full"
 
 
 
