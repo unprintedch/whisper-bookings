@@ -269,7 +269,16 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-1 border-t">
         <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onCancel}>Cancel</Button>
-        <Button type="button" size="sm" className="h-7 text-xs bg-yellow-700 hover:bg-yellow-800" onClick={handleSave} disabled={!checkin || !checkout || !roomId || !bedConfigId}>Save</Button>
+        <Button type="button" size="sm" className="h-7 text-xs bg-yellow-700 hover:bg-yellow-800 flex items-center gap-1.5" onClick={handleSave} disabled={!checkin || !checkout || !roomId || !bedConfigId || isSaving}>
+          {isSaving ? (
+            <>
+              <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+              Saving...
+            </>
+          ) : (
+            'Save'
+          )}
+        </Button>
       </div>
     </div>
   );
