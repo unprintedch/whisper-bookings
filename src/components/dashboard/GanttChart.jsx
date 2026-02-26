@@ -402,9 +402,9 @@ export default function GanttChart({
                               <span>Book</span>
                             </div>
                           }
-                          </div>
-                          );
-                          })}
+                        </div>
+                       );
+                       })}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
