@@ -1629,7 +1629,7 @@ export default function BookingForm({
 
           {/* Guests Row - 3 input columns + 1 badge column */}
           {!existingBooking && (
-        <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
           <div className="space-y-2">
             <Label htmlFor="adults_count" className={errors.occupancy ? 'text-red-600' : ''}>
               Adults (+16)
