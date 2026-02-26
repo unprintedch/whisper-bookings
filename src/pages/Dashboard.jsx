@@ -469,6 +469,7 @@ export default function Dashboard({
               onRoomEdit={handleRoomEdit}
               sites={sites}
               selectedSlots={selectedSlots}
+              refreshKey={Math.random()}
             />
           </CardContent>
         </Card>
