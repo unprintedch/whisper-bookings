@@ -92,8 +92,14 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
 
   const handleBedConfig = (id) => {
     setBedConfigId(id);
-    setRoomId('');
     const c = allBedConfigs.find(x => x.id === id);
+    
+    // Check if current room is compatible with new bed config
+    const currentRoom = rooms.find(r => r.id === roomId);
+    if (!currentRoom || !currentRoom.bed_configuration_ids?.includes(id)) {
+      setRoomId(''); // Clear room only if incompatible
+    }
+    
     if (c) { setAdults(c.max_occupancy); setChildren(0); setInfants(0); }
   };
 
