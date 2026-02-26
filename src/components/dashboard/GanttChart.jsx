@@ -407,15 +407,7 @@ export default function GanttChart({
                         );
                       })()}
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
-                            </div>
-                        }
-                        </div>
-                      )}
-                    </div>
+
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
