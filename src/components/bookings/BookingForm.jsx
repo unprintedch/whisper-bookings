@@ -110,14 +110,15 @@ export default function BookingForm({
   initialRoom = null,
   initialDates = null,
   existingBooking = null,
-  initialClient = null, // Added parameter
+  initialClient = null,
   rooms: allRooms = [],
   clients: allClients = [],
   sites: allSites = [],
   agencies: allAgencies = [],
   reservations = [],
   allBedConfigs = [],
-  selectedSiteName = "all"
+  selectedSiteName = "all",
+  onBookingEdit = null
 }) {
   const [formData, setFormData] = useState({
     client_id: '',
