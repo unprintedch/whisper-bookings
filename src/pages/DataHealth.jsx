@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle, Trash2, RefreshCw } from "lucide-react";
-import { Reservation, Room, Client, Agency } from "@/entities/all";
+import { Reservation, Room, Client, Agency } from "@/components/lib/entitiesWrapper";
 import { format } from "date-fns";
 
 export default function DataHealthPage() {

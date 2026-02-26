@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Group, Agency, Reservation, Room, Site } from "@/entities/all"; // Added Site entity
+import { Group, Agency, Reservation, Room, Site } from "@/components/lib/entitiesWrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

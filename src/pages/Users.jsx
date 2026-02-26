@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User } from "@/entities/User";
-import { Agency } from "@/entities/Agency";
+import { User, Agency } from "@/components/lib/entitiesWrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
