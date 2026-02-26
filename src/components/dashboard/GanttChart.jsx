@@ -6,9 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/components/lib/entitiesWrapper";
-import { FULL_DAY_MODE } from "./ganttRenderModes";
-import { createCellHandlers, createBookingHandlers } from "./ganttInteractions";
+import { User } from "@/entities/User";
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -187,38 +185,74 @@ export default function GanttChart({
     return clients.find((client) => client.id === reservation?.client_id);
   };
 
-  // Utilise le mode de rendu full-day pour calculer les positions
   const calculateBookingPosition = (reservation, dateColumns) => {
     if (!reservation.date_checkin || !reservation.date_checkout) {
-      console.warn("Skipping reservation with invalid dates:", reservation);
       return null;
     }
 
-    const renderMode = FULL_DAY_MODE;
-    const { left, width } = renderMode.calculatePixels(reservation, dateColumns);
-    
-    // Convertir en indices pour compatibilité avec le reste du code
     const COL_WIDTH = 120;
-    const startIndex = Math.round(left / COL_WIDTH);
-    const endIndex = startIndex + Math.round(width / COL_WIDTH) - 1;
+    const checkinDate = new Date(reservation.date_checkin + 'T00:00:00Z');
+    const checkoutDate = new Date(reservation.date_checkout + 'T00:00:00Z');
+
+    // Normalize all dates to UTC midnight
+    checkinDate.setUTCHours(0, 0, 0, 0);
+    checkoutDate.setUTCHours(0, 0, 0, 0);
+
+    const viewStart = new Date(dateColumns[0]);
+    viewStart.setUTCHours(0, 0, 0, 0);
+    const viewEnd = new Date(dateColumns[dateColumns.length - 1]);
+    viewEnd.setUTCHours(0, 0, 0, 0);
+
+    // Vérifier si la réservation est totalement en dehors de la vue
+    if (checkoutDate <= viewStart || checkinDate > viewEnd) {
+      return null;
+    }
+
+    // Trouver l'index de démarrage
+    let startIndex = 0;
+    for (let i = 0; i < dateColumns.length; i++) {
+      const colDate = new Date(dateColumns[i]);
+      colDate.setUTCHours(0, 0, 0, 0);
+      if (colDate.getTime() === checkinDate.getTime()) {
+        startIndex = i;
+        break;
+      }
+      if (colDate > checkinDate && (i === 0 || dateColumns[i-1] < checkinDate)) {
+        startIndex = 0; // Commence avant la vue
+        break;
+      }
+    }
+
+    // Trouver l'index de fin (checkout - 1 car checkout est le jour de départ)
+    const lastDay = new Date(checkoutDate);
+    lastDay.setUTCDate(lastDay.getUTCDate() - 1);
+    
+    let endIndex = dateColumns.length - 1;
+    for (let i = dateColumns.length - 1; i >= 0; i--) {
+      const colDate = new Date(dateColumns[i]);
+      colDate.setUTCHours(0, 0, 0, 0);
+      if (colDate.getTime() === lastDay.getTime()) {
+        endIndex = i;
+        break;
+      }
+    }
+
+    // Calculer les pixels
+    const left = startIndex * COL_WIDTH;
+    const width = Math.max((endIndex - startIndex + 1) * COL_WIDTH, COL_WIDTH / 2);
 
     return {
+      left,
+      width,
       startIndex,
       endIndex,
-      reservation,
-      // Flags pour le rendu
-      pixelLeft: left,
-      pixelWidth: width
+      reservation
     };
   };
 
-  // Handlers avec isolation de logique
-  const bookingHandlers = createBookingHandlers(onBookingEdit);
-  
   const handleBookingClick = (reservation, event) => {
     event.stopPropagation();
 
-    // Vérifier les droits d'accès (logique métier)
     if (currentUser?.custom_role === 'agency') {
       const client = clients.find((c) => c.id === reservation.client_id);
       if (client?.agency_id !== currentUser.agency_id) {
@@ -226,8 +260,9 @@ export default function GanttChart({
       }
     }
 
-    // Déléguer au handler isolé
-    bookingHandlers.handleBookingClick(reservation, { stopPropagation: () => {} });
+    if (onBookingEdit) {
+      onBookingEdit(reservation);
+    }
   };
 
   const handleRoomClick = (room) => {
@@ -381,9 +416,20 @@ export default function GanttChart({
                         const COL_WIDTH = 120;
                         const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        // Utiliser les pixels calculés par le mode de rendu
-                         const startPixel = position.pixelLeft !== undefined ? position.pixelLeft : position.startIndex * COL_WIDTH;
-                         const widthPixel = position.pixelWidth !== undefined ? position.pixelWidth : (position.endIndex - position.startIndex + 1) * COL_WIDTH;
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
