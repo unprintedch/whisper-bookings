@@ -7,6 +7,7 @@ import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X }
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
+import { getReservationPixels } from "./ganttChartUtils";
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -155,9 +156,7 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  onSlotToggle,
-  selectedSlots = {}
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -251,7 +250,6 @@ export default function GanttChart({
   }
 
   const ROOM_COLUMN_WIDTH = 230;
-  const COL_WIDTH = 120;
 
   const canSeeClientName = (reservation) => {
     if (isPublicView) return false;
@@ -349,27 +347,14 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView ? () => {
-                          if (onSlotToggle) {
-                            onSlotToggle(room.id, format(date, 'yyyy-MM-dd'));
-                          } else if (onCellClick) {
-                            onCellClick(room, date);
-                          }
-                        } : undefined}>
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
-                          {!isPublicView && (
-                            onSlotToggle ? (
-                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                <Plus className="w-4 h-4" />
-                                <span>Select</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                <Plus className="w-4 h-4" />
-                                <span>Book</span>
-                              </div>
-                            )
-                          )}
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                              <Plus className="w-4 h-4" />
+                              <span>Book</span>
+                            </div>
+                        }
                         </div>
                       )}
                     </div>
