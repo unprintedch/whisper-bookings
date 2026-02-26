@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import BookingForm from "./BookingForm";
 
 export default function ReservationsListAccordion({
   reservations = [],
@@ -17,6 +18,8 @@ export default function ReservationsListAccordion({
   onBookingEdit,
   onBookingDelete
 }) {
+  const [editingReservationId, setEditingReservationId] = useState(null);
+
   if (!selectedClient) return null;
 
   const clientReservations = reservations.filter(r => r.client_id === selectedClient.id);
@@ -51,6 +54,7 @@ export default function ReservationsListAccordion({
         {clientReservations.map((reservation) => {
           const room = getRoom(reservation.room_id);
           const site = getSite(room?.site_id);
+          const isEditing = editingReservationId === reservation.id;
 
           return (
             <AccordionItem key={reservation.id} value={reservation.id} className="border-b last:border-b-0">
@@ -74,47 +78,71 @@ export default function ReservationsListAccordion({
               </AccordionTrigger>
 
               <AccordionContent className="bg-slate-50 px-4 py-4">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-slate-500 text-xs">Check-in</p>
-                      <p className="font-medium">{format(new Date(reservation.date_checkin), 'dd/MM/yyyy')}</p>
+                {isEditing ? (
+                  <BookingForm
+                    existingBooking={reservation}
+                    initialClient={selectedClient}
+                    rooms={allRooms}
+                    clients={allClients}
+                    sites={allSites}
+                    agencies={agencies}
+                    reservations={reservations}
+                    allBedConfigs={allBedConfigs}
+                    selectedSiteName={selectedSiteName}
+                    onBookingEdit={onBookingEdit}
+                    onSave={(data) => {
+                      onBookingEdit?.(reservation.id, data);
+                      setEditingReservationId(null);
+                    }}
+                    onCancel={() => setEditingReservationId(null)}
+                    onDelete={(id) => {
+                      onBookingDelete?.(id);
+                      setEditingReservationId(null);
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-slate-500 text-xs">Check-in</p>
+                        <p className="font-medium">{format(new Date(reservation.date_checkin), 'dd/MM/yyyy')}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 text-xs">Check-out</p>
+                        <p className="font-medium">{format(new Date(reservation.date_checkout), 'dd/MM/yyyy')}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 text-xs">Bed Setup</p>
+                        <p className="font-medium">{reservation.bed_configuration || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 text-xs">Occupancy</p>
+                        <p className="font-medium">
+                          {reservation.adults_count + reservation.children_count + reservation.infants_count} people
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-slate-500 text-xs">Check-out</p>
-                      <p className="font-medium">{format(new Date(reservation.date_checkout), 'dd/MM/yyyy')}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500 text-xs">Bed Setup</p>
-                      <p className="font-medium">{reservation.bed_configuration || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500 text-xs">Occupancy</p>
-                      <p className="font-medium">
-                        {reservation.adults_count + reservation.children_count + reservation.infants_count} people
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {reservation.comment && (
-                    <div>
-                      <p className="text-slate-500 text-xs">Comments</p>
-                      <p className="text-sm">{reservation.comment}</p>
-                    </div>
-                  )}
+                    
+                    {reservation.comment && (
+                      <div>
+                        <p className="text-slate-500 text-xs">Comments</p>
+                        <p className="text-sm">{reservation.comment}</p>
+                      </div>
+                    )}
 
-                  <div className="flex gap-2 pt-3 border-t">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => onBookingDelete?.(reservation.id)}
-                      className="gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </Button>
+                    <div className="flex gap-2 pt-3 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingReservationId(reservation.id)}
+                        className="gap-2"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
               </AccordionContent>
             </AccordionItem>
           );
