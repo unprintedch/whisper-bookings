@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Room, Reservation, Group, Site, Agency, Client, BedConfiguration, NotificationSettings } from "@/components/lib/entitiesWrapper";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 
@@ -138,22 +137,22 @@ export default function Dashboard({
     setIsLoading(true);
     try {
       const [roomsData, reservationsData, groupsData, sitesData, agenciesData, clientsData, bedConfigsData] = await Promise.all([
-        Room.list('-name'), // Changed from Room.list() to Room.list('-name')
-        Reservation.list('-created_date'),
-        Group.list('-created_date'),
-        Site.list(),
-        Agency.list(), // Fetch agencies data
-        Client.list(), // Fetch clients data
-        BedConfiguration.list('sort_order'), // Fetch bed configurations sorted by sort_order
+        base44.entities.Room.list('-name'),
+        base44.entities.Reservation.list('-created_date'),
+        base44.entities.Group.list('-created_date'),
+        base44.entities.Site.list(),
+        base44.entities.Agency.list(),
+        base44.entities.Client.list(),
+        base44.entities.BedConfiguration.list('sort_order'),
       ]);
 
       setRooms(roomsData);
       setReservations(reservationsData);
-      setGroups(groupsData); // Setting groups
+      setGroups(groupsData);
       setSites(sitesData);
-      setAgencies(agenciesData); // Set agencies data
-      setClients(clientsData); // Set clients data
-      setAllBedConfigs(bedConfigsData); // Set bed configs data
+      setAgencies(agenciesData);
+      setClients(clientsData);
+      setAllBedConfigs(bedConfigsData);
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -161,20 +160,20 @@ export default function Dashboard({
   };
 
   const sendNotificationEmails = async (bookingDetails, bookingType = 'new') => {
-      const { notifications, ...bookingData } = bookingDetails;
-      if (!notifications || (!notifications.toAdmin && !notifications.toAgency && !notifications.toClient)) {
-          return;
-      }
+       const { notifications, ...bookingData } = bookingDetails;
+       if (!notifications || (!notifications.toAdmin && !notifications.toAgency && !notifications.toClient)) {
+           return;
+       }
 
-      const client = clients.find(c => c.id === bookingData.client_id);
-      const room = rooms.find(r => r.id === bookingData.room_id);
-      const agency = agencies.find(a => a.id === client?.agency_id);
+       const client = clients.find(c => c.id === bookingData.client_id);
+       const room = rooms.find(r => r.id === bookingData.room_id);
+       const agency = agencies.find(a => a.id === client?.agency_id);
 
-      if (!client || !room) return;
-      
-      try {
-        const settingsList = await NotificationSettings.list();
-        const settings = settingsList[0] || {};
+       if (!client || !room) return;
+
+       try {
+         const settingsList = await base44.entities.NotificationSettings.list();
+         const settings = settingsList[0] || {};
         
         let template = '';
         if (bookingType === 'new') {
@@ -250,12 +249,11 @@ export default function Dashboard({
   const handleCreateBooking = async (bookingDataWithNotifications) => {
     const { notifications, ...bookingData } = bookingDataWithNotifications;
     try {
-      const newBooking = await Reservation.create(bookingData); // Capture the new booking with its ID
+      const newBooking = await base44.entities.Reservation.create(bookingData);
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await loadData(); // await loadData to ensure client/room info is available
-      // Pass the new booking ID to sendNotificationEmails
+      await loadData();
       await sendNotificationEmails({ ...bookingDataWithNotifications, id: newBooking.id }, 'new');
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -273,35 +271,32 @@ export default function Dashboard({
     const { notifications, ...bookingData } = bookingDataWithNotifications;
     try {
       if (editingBooking) {
-        await Reservation.update(editingBooking.id, bookingData);
+        await base44.entities.Reservation.update(editingBooking.id, bookingData);
         setEditingBooking(null);
       }
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await loadData(); // await loadData
+      await loadData();
       await sendNotificationEmails(bookingDataWithNotifications, 'update');
     } catch (error) {
       console.error('Error updating booking:', error);
     }
   };
 
-  // NEW: Add a handler for deleting bookings
   const handleDeleteBooking = async (bookingId) => {
     try {
       const bookingToDelete = reservations.find(r => r.id === bookingId);
       if (bookingToDelete) {
-         // Send notification before deleting. Admin always gets cancellation, others can be configured.
-         // For simplicity, we are notifying admin for now. Extend as needed for agency/client.
          await sendNotificationEmails({ ...bookingToDelete, notifications: { toAdmin: true, toAgency: false, toClient: false }}, 'cancellation');
       }
 
-      await Reservation.delete(bookingId);
+      await base44.entities.Reservation.delete(bookingId);
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
       setEditingBooking(null);
-      loadData(); // Reload data after deletion
+      loadData();
     } catch (error) {
       console.error('Error deleting booking:', error);
     }
@@ -349,7 +344,7 @@ export default function Dashboard({
         const newCheckinDate = new Date(newStartDate);
         const newCheckoutDate = new Date(newCheckinDate.getTime() + duration);
 
-        await Reservation.update(bookingId, {
+        await base44.entities.Reservation.update(bookingId, {
           room_id: newRoomId,
           date_checkin: format(newCheckinDate, 'yyyy-MM-dd'),
           date_checkout: format(newCheckoutDate, 'yyyy-MM-dd')
@@ -363,7 +358,7 @@ export default function Dashboard({
 
   const handleBookingResize = async (bookingId, newStartDate, newEndDate) => {
     try {
-      await Reservation.update(bookingId, {
+      await base44.entities.Reservation.update(bookingId, {
         date_checkin: format(new Date(newStartDate), 'yyyy-MM-dd'),
         date_checkout: format(new Date(newEndDate), 'yyyy-MM-dd')
       });
@@ -424,24 +419,21 @@ export default function Dashboard({
     });
   }, [reservations, clients, currentUser]);
 
-  // New handler for room edit
   const handleRoomEdit = (room) => {
-    // This function should be implemented or redirect to rooms page
-    // For now, we'll just log it
-    console.log('Edit room:', room);
+    setEditingRoom(room);
+    setShowRoomForm(true);
   };
 
-  // New handler for creating/updating room
   const handleCreateUpdateRoom = async (roomData) => {
     try {
       if (editingRoom) {
-        await Room.update(editingRoom.id, roomData);
+        await base44.entities.Room.update(editingRoom.id, roomData);
       } else {
-        await Room.create(roomData);
+        await base44.entities.Room.create(roomData);
       }
       setShowRoomForm(false);
       setEditingRoom(null);
-      loadData(); // Reload all data after change
+      loadData();
     } catch (error) {
       console.error('Error saving room:', error);
     }
