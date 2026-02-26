@@ -212,49 +212,18 @@ export default function RelatedReservations({
                     </div>
                   </div>
 
-                  {/* Expanded content */}
+                  {/* Expanded content - always show form */}
                   {isExpanded && (
-                    <div className="border-t border-slate-100 bg-slate-50/30">
-                      {isEditing ? (
-                        <div className="p-3">
-                          <MiniReservationForm
-                            reservation={r}
-                            allRooms={allRooms}
-                            allSites={allSites}
-                            allBedConfigs={allBedConfigs || []}
-                            reservations={currentReservations}
-                            onSave={handleEditSave}
-                            onCancel={() => { setEditingId(null); setExpandedId(null); }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="px-4 py-3 space-y-2">
-                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-600">
-                            {r.bed_configuration && (
-                              <div><span className="text-slate-400">Bed:</span> <span className="font-medium">{r.bed_configuration}</span></div>
-                            )}
-                            {occupancySummary && (
-                              <div><span className="text-slate-400">Guests:</span> <span className="font-medium">{occupancySummary}</span></div>
-                            )}
-                            {r.comment && (
-                              <div className="col-span-2"><span className="text-slate-400">Comment:</span> <span className="font-medium">{r.comment}</span></div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400">Status:</span>
-                            <Select value={r.status} onValueChange={v => handleChangeStatus(r.id, v)}>
-                              <SelectTrigger className="h-7 w-28 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
-                                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      )}
+                    <div className="border-t border-slate-100 bg-slate-50/30 p-3">
+                      <MiniReservationForm
+                        reservation={r}
+                        allRooms={allRooms}
+                        allSites={allSites}
+                        allBedConfigs={allBedConfigs || []}
+                        reservations={currentReservations}
+                        onSave={(formData) => handleEditSave(r.id, formData)}
+                        onCancel={() => setExpandedId(null)}
+                      />
                     </div>
                   )}
                 </div>
