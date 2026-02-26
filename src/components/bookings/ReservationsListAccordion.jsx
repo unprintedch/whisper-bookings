@@ -195,8 +195,11 @@ export default function ReservationsListAccordion({
 
       <Accordion type="single" collapsible className="border rounded-lg">
         {clientReservations.map((reservation) => {
-          initEditingData(reservation);
-          const data = editingData[reservation.id];
+          // Initialize if not already done
+          if (!editingData[reservation.id]) {
+            initEditingData(reservation);
+          }
+          const data = editingData[reservation.id] || { ...reservation };
           const isDirty = dirtyLines.has(reservation.id);
           const lineErrors = errors[reservation.id] || {};
           const room = getRoom(data.room_id);
