@@ -7,6 +7,7 @@ import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X }
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { User } from "@/entities/User";
+import { getReservationPixels, getOccupancyDisplay } from "./ganttChartUtils";
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -407,8 +408,20 @@ export default function GanttChart({
                         const COL_WIDTH = 120;
                         const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        let startPixel = position.startIndex * COL_WIDTH;
-                        let widthPixel = (position.endIndex - position.startIndex) * COL_WIDTH;
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
