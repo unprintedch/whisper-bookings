@@ -106,9 +106,9 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
     if (c) { setAdults(c.max_occupancy); setChildren(0); setInfants(0); }
   };
 
-  // Auto-save immediately on every change (skip first mount)
+  // Auto-save immediately on every change (skip first mount and when disabled)
   useEffect(() => {
-    if (isInitialMount.current) {
+    if (isInitialMount.current || disabled) {
       isInitialMount.current = false;
       return;
     }
@@ -128,7 +128,7 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
         infants_count: infants,
       });
     }
-  }, [checkin, checkout, roomId, bedConfigId, adults, children, infants, allBedConfigs, reservation, onSave]);
+  }, [checkin, checkout, roomId, bedConfigId, adults, children, infants, allBedConfigs, reservation, onSave, disabled]);
 
   const selectedRoom = rooms.find(r => r.id === roomId);
 
