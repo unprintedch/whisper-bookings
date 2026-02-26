@@ -7,16 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Room } from "@/entities/Room";
-import { Reservation } from "@/entities/Reservation";
-import { Group } from "@/entities/Group";
-import { Site } from "@/entities/Site";
-import { Agency } from "@/entities/Agency";
-import { Client } from "@/entities/Client";
-import { BedConfiguration } from "@/entities/BedConfiguration"; // Import BedConfiguration
-import { NotificationSettings } from "@/entities/NotificationSettings"; // Import NotificationSettings
-import { SendEmail } from "@/integrations/Core"; // Import SendEmail integration
-import { createPageUrl } from "@/utils"; // Import createPageUrl
+import { Room, Reservation, Group, Site, Agency, Client, BedConfiguration, NotificationSettings } from "@/api/entities";
+import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 
 import GanttChart from "../components/dashboard/GanttChart";
 import AvailableRooms from "../components/dashboard/AvailableRooms";
@@ -220,29 +213,26 @@ export default function Dashboard({
         
         if (notifications.toAdmin) {
           const adminEmails = settings.admin_emails || [];
-          // Note: SendEmail can only send to users who are invited to the app
-          // External emails will fail silently
           adminEmails.forEach(email => {
             emailPromises.push(
-              SendEmail({ to: email, subject, body }).catch(err => {
+              base44.integrations.Core.SendEmail({ to: email, subject, body }).catch(err => {
                 console.warn(`Could not send email to ${email}:`, err.message);
-                // Don't throw - just log the warning
               })
             );
           });
         }
-        
+
         if (notifications.toAgency && agency?.email) {
           emailPromises.push(
-            SendEmail({ to: agency.email, subject, body }).catch(err => {
+            base44.integrations.Core.SendEmail({ to: agency.email, subject, body }).catch(err => {
               console.warn(`Could not send email to agency ${agency.email}:`, err.message);
             })
           );
         }
-        
+
         if (notifications.toClient && client.contact_email) {
           emailPromises.push(
-            SendEmail({ to: client.contact_email, subject, body }).catch(err => {
+            base44.integrations.Core.SendEmail({ to: client.contact_email, subject, body }).catch(err => {
               console.warn(`Could not send email to client ${client.contact_email}:`, err.message);
             })
           );
