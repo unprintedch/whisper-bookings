@@ -150,12 +150,14 @@ export default function GanttChart({
   highlightDate,
   isLoading,
   onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = [],
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
