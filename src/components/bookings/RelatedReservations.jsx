@@ -36,6 +36,7 @@ export default function RelatedReservations({
   const [isDeleting, setIsDeleting] = useState(false);
   const [localReservations, setLocalReservations] = useState(null);
   const [perDateStatus, setPerDateStatus] = useState({});
+  const [deletedReservationIds, setDeletedReservationIds] = useState(new Set());
 
   if (!existingBooking || !selectedClient) return null;
 
