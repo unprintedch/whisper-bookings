@@ -475,15 +475,13 @@ export default function Dashboard({
             <GanttChart
               rooms={filteredRooms}
               reservations={filteredReservations}
-              groups={groups}
               clients={clients}
               dateColumns={getDateColumns()}
               highlightDate={currentDate}
               isLoading={isLoading}
+              onCellClick={handleCalendarCellClick}
               onSlotToggle={handleSlotToggle}
               onBookingEdit={handleEditBooking}
-              onBookingMove={handleBookingMove}
-              onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
               selectedSlots={selectedSlots}
