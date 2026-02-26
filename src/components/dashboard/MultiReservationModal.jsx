@@ -342,6 +342,63 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
             </div>
           </div>
 
+          {/* New client creation panel */}
+          {isNewClient && clientSearch.trim() && (
+            <div className="border border-yellow-300 rounded-lg bg-yellow-50/50 p-4 space-y-3 text-sm">
+              <p className="font-medium text-yellow-800">Creating new client: "<span className="font-bold">{clientSearch}</span>"</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Agency</Label>
+                  <Select value={newClientData.agency_id || ""} onValueChange={v => {
+                    const id = v === "null-string" ? null : v;
+                    setNewClientData(prev => ({ ...prev, agency_id: id, agency_contact_id: null, client_number: generateNextClientNumber(id) }));
+                  }}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select agency" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null-string">No Agency</SelectItem>
+                      {agencies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {newClientAgency ? (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Agency Contact</Label>
+                    <Select value={newClientData.agency_contact_id || ""} onValueChange={v => setNewClientData(prev => ({ ...prev, agency_contact_id: v === "null-string" ? null : v }))}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="General" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="null-string">General Contact</SelectItem>
+                        {newClientAgency.contacts?.map((c, i) => <SelectItem key={i} value={String(i)}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-400">Agency Contact</Label>
+                    <Input className="h-8 text-xs" placeholder="Select agency first" disabled />
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <Label className="text-xs">Client #</Label>
+                  <Input className="h-8 text-xs" value={newClientData.client_number} onChange={e => setNewClientData(prev => ({ ...prev, client_number: e.target.value }))} placeholder="Auto" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Contact Name</Label>
+                  <Input className="h-8 text-xs" value={newClientData.contact_name} onChange={e => setNewClientData(prev => ({ ...prev, contact_name: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Contact Email</Label>
+                  <Input className="h-8 text-xs" type="email" value={newClientData.contact_email} onChange={e => setNewClientData(prev => ({ ...prev, contact_email: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Contact Phone</Label>
+                  <Input className="h-8 text-xs" value={newClientData.contact_phone} onChange={e => setNewClientData(prev => ({ ...prev, contact_phone: e.target.value }))} />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Agency + Client Contact block - always visible */}
           <div className="space-y-4 p-4 px-6 border rounded-lg bg-slate-50/70 text-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
