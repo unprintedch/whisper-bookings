@@ -212,9 +212,13 @@ export default function GanttChart({
     };
   };
 
+  // Handlers avec isolation de logique
+  const bookingHandlers = createBookingHandlers(onBookingEdit);
+  
   const handleBookingClick = (reservation, event) => {
     event.stopPropagation();
 
+    // Vérifier les droits d'accès (logique métier)
     if (currentUser?.custom_role === 'agency') {
       const client = clients.find((c) => c.id === reservation.client_id);
       if (client?.agency_id !== currentUser.agency_id) {
@@ -222,9 +226,8 @@ export default function GanttChart({
       }
     }
 
-    if (onBookingEdit) {
-      onBookingEdit(reservation);
-    }
+    // Déléguer au handler isolé
+    bookingHandlers.handleBookingClick(reservation, { stopPropagation: () => {} });
   };
 
   const handleRoomClick = (room) => {
