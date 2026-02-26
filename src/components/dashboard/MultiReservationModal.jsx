@@ -266,7 +266,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           </div>
 
           {/* Agency + Client Contact block (like BookingForm) */}
-          {selectedClient && !isNewClient && (
+          {selectedClient && (
             <div className="space-y-4 p-4 px-6 border rounded-lg bg-slate-50/70 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Agency Details - Now First */}
