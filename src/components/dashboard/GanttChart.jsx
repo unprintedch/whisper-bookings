@@ -392,12 +392,19 @@ export default function GanttChart({
                         }}
                         onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, format(date, 'yyyy-MM-dd')) : undefined}>
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="w-4 h-4" />
-                              <span>Book</span>
-                            </div>
-                        }
+                          {!isPublicView && (
+                            onSlotToggle ? (
+                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                                <Plus className="w-4 h-4" />
+                                <span>Select</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                                <Plus className="w-4 h-4" />
+                                <span>Book</span>
+                              </div>
+                            )
+                          )}
                         </div>
                       )}
                     </div>
