@@ -1350,6 +1350,10 @@ export default function BookingForm({
           allRooms={allRooms}
           allSites={allSites}
           onBookingEdit={onBookingEdit}
+          allClients={allClients}
+          allAgencies={allAgencies}
+          allBedConfigs={allBedConfigs}
+          selectedSiteName={selectedSiteName}
         />
 
         {/* New client fields */}
