@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, isSameDay, eachDayOfInterval } from "date-fns";
-import { Calendar as CalendarIcon, ChevronsUpDown, Check, X, Plus, Edit, User, Mail, Phone, Lock } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronsUpDown, Check, X, Plus, Edit, User, Mail, Phone, Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { Client, Agency } from "@/entities/all";
 import {
   AlertDialog,
