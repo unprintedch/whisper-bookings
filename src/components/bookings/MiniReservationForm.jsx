@@ -106,8 +106,13 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
     if (c) { setAdults(c.max_occupancy); setChildren(0); setInfants(0); }
   };
 
-  // Auto-save immediately on every change
+  // Auto-save immediately on every change (skip first mount)
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
     const config = bedConfigId ? allBedConfigs.find(c => c.id === bedConfigId) : null;
     const bedConfigName = config?.name || reservation.bed_configuration;
     
