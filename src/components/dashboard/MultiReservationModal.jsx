@@ -572,13 +572,30 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           <div className="space-y-4">
             {groupedByDate.map(([dateKey, group]) => (
               <div key={dateKey} className="border border-slate-200 rounded-lg overflow-hidden">
-                <div className="bg-slate-50 px-4 py-2 border-b">
-                  <span className="text-sm font-semibold text-slate-700">
-                    {format(group.checkin, 'd MMM yyyy')} → {format(group.checkout, 'd MMM yyyy')}
-                  </span>
-                  <span className="text-xs text-slate-500 ml-2">
-                    ({group.ranges.length} room{group.ranges.length > 1 ? 's' : ''})
-                  </span>
+                <div className="bg-slate-50 px-4 py-3 border-b">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-semibold text-slate-700">
+                        {format(group.checkin, 'd MMM yyyy')} → {format(group.checkout, 'd MMM yyyy')}
+                      </span>
+                      <span className="text-xs text-slate-500 ml-2">
+                        ({group.ranges.length} room{group.ranges.length > 1 ? 's' : ''})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs font-medium">Status:</Label>
+                      <Select value={perDateStatus[dateKey] || status} onValueChange={v => setPerDateStatus(prev => ({ ...prev, [dateKey]: v }))}>
+                        <SelectTrigger className="h-7 w-32 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
                 <div className="divide-y divide-slate-100">
                   {group.ranges.map(range => {
