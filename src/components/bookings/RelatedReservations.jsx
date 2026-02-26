@@ -72,7 +72,10 @@ export default function RelatedReservations({
     setDeleteDialogId(null);
     setIsDeleting(false);
     // Remove from local view
-    setLocalReservations((localReservations || reservations).filter(r => r.id !== reservationId));
+    const updated = (localReservations || reservations).filter(r => r.id !== reservationId);
+    setLocalReservations(updated);
+    // Notify parent (e.g., Dashboard) to refresh the Gantt
+    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const handleEditSave = async (reservationId, formData) => {
