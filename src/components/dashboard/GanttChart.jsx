@@ -149,8 +149,7 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onSlotToggle,
-  selectedSlots = [],
+  onCellClick,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
@@ -376,33 +375,28 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) => {
-                        const dateStr = format(date, 'yyyy-MM-dd');
-                        const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
-                        return (
-                        <div
-                          key={`${room.id}-${date.toISOString()}-${dateIndex}`}
-                          className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                          !isPublicView ? 'cursor-pointer' : ''} ${
-                          isSelected ? 'bg-yellow-100' : highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : 'hover:bg-blue-50'} ${
-                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
-                          }
-                          style={{ width: '120px', height: '100%' }}
-                          onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
+                      {dateColumns.map((date, dateIndex) =>
+                      <div
+                        key={`${room.id}-${date.toISOString()}-${dateIndex}`}
+                        className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
+                        }
+                        style={{
+                          width: '120px',
+                          height: '100%'
+                        }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
 
-                            {!isPublicView && !isSelected &&
-                          <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                                <Plus className="w-4 h-4" />
-                              </div>
-                          }
-                          {!isPublicView && isSelected &&
-                            <div className="flex items-center justify-center text-yellow-700">
-                              <Plus className="w-4 h-4 rotate-45" />
+                          {!isPublicView &&
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                              <Plus className="w-4 h-4" />
+                              <span>Book</span>
                             </div>
-                          }
-                          </div>
-                        );
-                      })}
+                        }
+                        </div>
+                      )}
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
@@ -411,22 +405,8 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                        const startPixel = position.startIndex * COL_WIDTH;
+                        const widthPixel = position.endIndex * COL_WIDTH - startPixel;
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
