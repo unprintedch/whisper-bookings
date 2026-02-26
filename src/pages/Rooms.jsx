@@ -1,8 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Room } from "@/entities/Room";
-import { Site } from "@/entities/Site";
-import { BedConfiguration } from "@/entities/BedConfiguration";
+import { Room, Site, BedConfiguration } from "@/components/lib/entitiesWrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
