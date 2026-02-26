@@ -241,35 +241,39 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setIsSubmitting(true);
 
     const reservationsToCreate = mergedRanges.map(range => {
-      const key = `${range.roomId}_${format(range.checkin, 'yyyy-MM-dd')}`;
-      const details = perRoomDetails[key] || {};
-      const checkinStr = format(range.checkin, 'yyyy-MM-dd');
-      const checkoutStr = format(range.checkout, 'yyyy-MM-dd');
-      
-      // Valider chaque plage
-      const rangeCheck = validateRangeWithinWindow(
-        { roomId: range.roomId, checkin: checkinStr, checkout: checkoutStr },
-        checkinStr,
-        checkoutStr
-      );
-      
-      if (!rangeCheck.valid) {
-        throw new Error(`Invalid range for room ${range.roomId}: ${rangeCheck.error}`);
-      }
-      
-      return {
-         client_id: finalClientId,
-         room_id: range.roomId,
-         date_checkin: checkinStr,
-         date_checkout: checkoutStr,
-         status,
-         bed_configuration: details.bed_configuration || '',
-         adults_count: parseInt(details.adults_count) || 0,
-         children_count: parseInt(details.children_count) || 0,
-         infants_count: parseInt(details.infants_count) || 0,
-         comment: groupPax ? `Group: ${groupPax} pax` : '',
-       };
-    });
+       const key = `${range.roomId}_${format(range.checkin, 'yyyy-MM-dd')}`;
+       const dateKey = `${format(range.checkin, 'yyyy-MM-dd')}_${format(range.checkout, 'yyyy-MM-dd')}`;
+       const details = perRoomDetails[key] || {};
+       const checkinStr = format(range.checkin, 'yyyy-MM-dd');
+       const checkoutStr = format(range.checkout, 'yyyy-MM-dd');
+
+       // Valider chaque plage
+       const rangeCheck = validateRangeWithinWindow(
+         { roomId: range.roomId, checkin: checkinStr, checkout: checkoutStr },
+         checkinStr,
+         checkoutStr
+       );
+
+       if (!rangeCheck.valid) {
+         throw new Error(`Invalid range for room ${range.roomId}: ${rangeCheck.error}`);
+       }
+
+       // Use per-date status if set, otherwise use global status
+       const reservationStatus = perDateStatus[dateKey] || status;
+
+       return {
+          client_id: finalClientId,
+          room_id: range.roomId,
+          date_checkin: checkinStr,
+          date_checkout: checkoutStr,
+          status: reservationStatus,
+          bed_configuration: details.bed_configuration || '',
+          adults_count: parseInt(details.adults_count) || 0,
+          children_count: parseInt(details.children_count) || 0,
+          infants_count: parseInt(details.infants_count) || 0,
+          comment: groupPax ? `Group: ${groupPax} pax` : '',
+        };
+     });
 
     try {
       await base44.entities.Reservation.bulkCreate(reservationsToCreate);
