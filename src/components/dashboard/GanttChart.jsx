@@ -381,22 +381,16 @@ export default function GanttChart({
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
                         !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''} ${
-                        selectedSlots?.some(s => s.roomId === room.id && s.date === format(date, 'yyyy-MM-dd')) ? 'bg-yellow-100' : ''}`
+                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
                         style={{
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={(e) => {
-                          if (!isPublicView) {
-                            if (e.shiftKey && onSlotToggle) {
-                              e.stopPropagation();
-                              const dateStr = format(date, 'yyyy-MM-dd');
-                              onSlotToggle(room.id, dateStr);
-                            } else if (onCellClick) {
-                              onCellClick(room, date);
-                            }
+                        onClick={() => {
+                          if (!isPublicView && onSlotToggle) {
+                            const dateStr = format(date, 'yyyy-MM-dd');
+                            onSlotToggle(room.id, dateStr);
                           }
                         }}>
 
@@ -416,9 +410,22 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const startPixel = position.startIndex * COL_WIDTH;
-                        const endPixel = position.endIndex * COL_WIDTH;
-                        const widthPixel = endPixel - startPixel;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
