@@ -480,12 +480,13 @@ export default function Dashboard({
               dateColumns={getDateColumns()}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onCellClick={handleCalendarCellClick}
+              onSlotToggle={handleSlotToggle}
               onBookingEdit={handleEditBooking}
               onBookingMove={handleBookingMove}
               onBookingResize={handleBookingResize}
               onRoomEdit={handleRoomEdit}
               sites={sites}
+              selectedSlots={selectedSlots}
             />
           </CardContent>
         </Card>
