@@ -534,6 +534,7 @@ export default function Dashboard({
                 reservations={reservations}
                 allBedConfigs={allBedConfigs}
                 selectedSiteName={selectedSiteName}
+                onReservationsUpdated={loadData}
               />
             </div>
           </div>
