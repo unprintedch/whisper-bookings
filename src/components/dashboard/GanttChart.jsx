@@ -235,9 +235,7 @@ export default function GanttChart({
     return {
       startIndex,
       endIndex,
-      reservation,
-      startsBefore: startsBefore,
-      endsAfter: endsAfter
+      reservation
     };
   };
 
