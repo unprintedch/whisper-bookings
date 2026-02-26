@@ -1543,11 +1543,12 @@ export default function BookingForm({
             </Popover>
           </div>
           </div>
+          </div>
           )}
 
           {/* NEW: Bed Configuration and Room Selection on same row */}
           {!existingBooking && (
-        <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="bed_configuration" className={errors.bed_configuration ? 'text-red-600' : ''}>
               Bed Setup {errors.bed_configuration && <span className="text-red-500">*</span>}
