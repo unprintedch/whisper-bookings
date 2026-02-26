@@ -150,7 +150,6 @@ export default function GanttChart({
   highlightDate,
   isLoading,
   onCellClick,
-  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
@@ -218,6 +217,8 @@ export default function GanttChart({
     }
 
     if (startIndex === -1) return null;
+
+    console.log(`Reservation ${reservation.id}: checkin=${reservation.date_checkin} startIndex=${startIndex}, checkinDate=${checkin.toISOString()}, viewStart=${viewStart.toISOString()}`);
 
     let endIndex;
     let endsAfter = false;
