@@ -1343,18 +1343,19 @@ export default function BookingForm({
         )}
 
         {/* Related reservations - edit mode only */}
-        <RelatedReservations
-          existingBooking={existingBooking}
-          selectedClient={selectedClient}
-          reservations={reservations}
-          allRooms={allRooms}
-          allSites={allSites}
-          onBookingEdit={onBookingEdit}
-          allClients={allClients}
-          allAgencies={allAgencies}
-          allBedConfigs={allBedConfigs}
-          selectedSiteName={selectedSiteName}
-        />
+         <RelatedReservations
+           existingBooking={existingBooking}
+           selectedClient={selectedClient}
+           reservations={reservations}
+           allRooms={allRooms}
+           allSites={allSites}
+           onBookingEdit={onBookingEdit}
+           allClients={allClients}
+           allAgencies={allAgencies}
+           allBedConfigs={allBedConfigs}
+           selectedSiteName={selectedSiteName}
+           onReservationsUpdated={onReservationsUpdated}
+         />
 
         {/* New client fields */}
         {isNewClient && (
