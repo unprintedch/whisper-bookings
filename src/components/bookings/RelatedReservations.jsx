@@ -56,10 +56,15 @@ export default function RelatedReservations({
 
   const handleDelete = async (reservationId) => {
     setIsDeleting(true);
-    await base44.entities.Reservation.delete(reservationId);
+    try {
+      await base44.entities.Reservation.delete(reservationId);
+      if (onReservationDeleted) onReservationDeleted(reservationId);
+    } catch (error) {
+      console.warn('Delete error:', error.message);
+      // Reservation may already be deleted, remove from local view anyway
+    }
     setDeleteDialogId(null);
     setIsDeleting(false);
-    if (onReservationDeleted) onReservationDeleted(reservationId);
     // Remove from local view
     setLocalReservations((localReservations || reservations).filter(r => r.id !== reservationId));
   };
