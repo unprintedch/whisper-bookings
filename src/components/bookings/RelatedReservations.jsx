@@ -172,27 +172,26 @@ export default function RelatedReservations({
                       )}
                     </div>
 
-                    {/* Right: Edit + Delete buttons + chevron */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs px-2 text-slate-600 hover:text-slate-800"
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (editingId === r.id) {
-                            setEditingId(null);
-                            setExpandedId(null);
-                          } else {
-                            setEditingId(r.id);
-                            setExpandedId(r.id);
-                          }
-                        }}
-                      >
-                        <Edit className="w-3 h-3 mr-1" /> Edit
-                      </Button>
-                      <Button
+                    {/* Right: Status + Delete buttons + chevron */}
+                     <div className="flex items-center gap-2">
+                       <div className="flex items-center gap-1">
+                         <Label className="text-xs font-medium text-slate-600">Status:</Label>
+                         <Select value={r.status} onValueChange={v => {
+                           const event = new MouseEvent('click', { bubbles: true });
+                           event.stopPropagation = () => {};
+                           handleChangeStatus(r.id, v);
+                         }}>
+                           <SelectTrigger className="h-7 w-24 text-xs" onClick={e => e.stopPropagation()}>
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
+                               <SelectItem key={s} value={s}>{s}</SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
