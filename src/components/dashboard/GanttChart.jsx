@@ -168,11 +168,16 @@ export default function GanttChart({
     return getClient(res.client_id)?.agency_id === currentUser.agency_id;
   };
 
+  const dateToString = (d) => {
+    if (d instanceof Date) return d.toISOString().split('T')[0];
+    return String(d).split('T')[0];
+  };
+
   const isDateInRange = (date, checkin, checkout) => {
-    const d = new Date(date);
-    const ci = new Date(checkin);
-    const co = new Date(checkout);
-    return d >= ci && d < co;
+    const ds = dateToString(date);
+    const cis = dateToString(checkin);
+    const cos = dateToString(checkout);
+    return ds >= cis && ds < cos;
   };
 
   return (
@@ -186,7 +191,7 @@ export default function GanttChart({
               </th>
               {dateColumns.map((date) => (
                 <th
-                  key={date.toISOString()}
+                  key={dateToString(date)}
                   className={`border-r border-slate-200 p-2 text-center font-semibold text-sm min-w-24 ${
                     highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100' : 'bg-slate-50'
                   } ${format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}>
@@ -223,7 +228,7 @@ export default function GanttChart({
 
                   return (
                     <td
-                      key={`${room.id}-${date.toISOString()}`}
+                      key={`${room.id}-${dateToString(date)}`}
                       className={`border-r border-b border-slate-200 p-1 align-top min-w-24 ${
                         !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''
                       } ${highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-50' : 'bg-white'} ${
