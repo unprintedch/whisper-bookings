@@ -84,6 +84,37 @@ export default function RelatedReservations({
     setExpandedId(null);
   };
 
+  const handleChangeStatus = async (reservationId, newStatus) => {
+    await base44.entities.Reservation.update(reservationId, { status: newStatus });
+    // Update local
+    const updated = (localReservations || reservations).map(r =>
+      r.id === reservationId ? { ...r, status: newStatus } : r
+    );
+    setLocalReservations(updated);
+  };
+
+  const handleChangeAllStatusInDateRange = async (dateRangeKey, newStatus) => {
+    setPerDateStatus(prev => ({ ...prev, [dateRangeKey]: newStatus }));
+    // Find all reservations in this date range and update them
+    const key = dateRangeKey;
+    const reservationsInRange = (localReservations || reservations).filter(r => {
+      return `${r.date_checkin}_${r.date_checkout}` === key;
+    });
+    
+    for (const res of reservationsInRange) {
+      await base44.entities.Reservation.update(res.id, { status: newStatus });
+    }
+    
+    // Update local
+    const updated = (localReservations || reservations).map(r => {
+      if (`${r.date_checkin}_${r.date_checkout}` === key) {
+        return { ...r, status: newStatus };
+      }
+      return r;
+    });
+    setLocalReservations(updated);
+  };
+
   const toggleExpand = (id) => {
     if (expandedId === id) {
       setExpandedId(null);
