@@ -1343,8 +1343,8 @@ export default function BookingForm({
           </div>
         )}
 
-        {/* Reservations List - Show accordion of reservations */}
-        {selectedClient && !isNewClient && (
+        {/* If existing client selected - show accordion with all reservations, NO booking form */}
+        {selectedClient && !isNewClient ? (
           <ReservationsListAccordion
             selectedClient={selectedClient}
             reservations={reservations}
@@ -1357,10 +1357,7 @@ export default function BookingForm({
             onBookingEdit={onBookingEdit}
             onBookingDelete={onDelete}
           />
-        )}
-
-        {/* New client fields */}
-        {isNewClient && (
+        ) : isNewClient ? (
           <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
             <h4 className="font-medium text-sm">Creating new client: "{clientSearchText}"</h4>
 
