@@ -59,6 +59,8 @@ export default function RelatedReservations({
 
   const handleDelete = async (reservationId) => {
     setIsDeleting(true);
+    // Mark as deleted immediately to prevent further updates
+    setDeletedReservationIds(prev => new Set([...prev, reservationId]));
     try {
       await base44.entities.Reservation.delete(reservationId);
       if (onReservationDeleted) onReservationDeleted(reservationId);
