@@ -32,7 +32,6 @@ export default function RelatedReservations({
   selectedSiteName,
 }) {
   const [expandedId, setExpandedId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
   const [deleteDialogId, setDeleteDialogId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [localReservations, setLocalReservations] = useState(null);
