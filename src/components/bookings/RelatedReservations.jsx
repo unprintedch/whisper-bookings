@@ -1,10 +1,23 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { ChevronDown, ChevronUp, Edit } from "lucide-react";
+import { ChevronDown, ChevronUp, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { base44 } from "@/api/base44Client";
 
-export default function RelatedReservations({ existingBooking, selectedClient, reservations, allRooms, allSites, onBookingEdit }) {
+export default function RelatedReservations({ existingBooking, selectedClient, reservations, allRooms, allSites, onBookingEdit, onReservationDeleted }) {
   const [expandedRelated, setExpandedRelated] = useState({});
+  const [deleteDialogId, setDeleteDialogId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!existingBooking || !selectedClient) return null;
 
@@ -23,6 +36,14 @@ export default function RelatedReservations({ existingBooking, selectedClient, r
     if (!groups[key]) groups[key] = { checkin: r.date_checkin, checkout: r.date_checkout, items: [] };
     groups[key].items.push(r);
   });
+
+  const handleDelete = async (reservationId) => {
+    setIsDeleting(true);
+    await base44.entities.Reservation.delete(reservationId);
+    setDeleteDialogId(null);
+    setIsDeleting(false);
+    if (onReservationDeleted) onReservationDeleted(reservationId);
+  };
 
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
@@ -68,26 +89,49 @@ export default function RelatedReservations({ existingBooking, selectedClient, r
                           {[occupancySummary, r.bed_configuration].filter(Boolean).join(' · ')}
                         </span>
                       )}
-                      {onBookingEdit && (
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="px-4 pb-3 pt-2 bg-slate-50/50 border-t border-slate-100 space-y-3">
+                      {/* Details grid */}
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-600">
+                        {r.bed_configuration && (
+                          <div><span className="text-slate-400">Bed:</span> <span className="font-medium">{r.bed_configuration}</span></div>
+                        )}
+                        {occupancySummary && (
+                          <div><span className="text-slate-400">Guests:</span> <span className="font-medium">{occupancySummary}</span></div>
+                        )}
+                        <div><span className="text-slate-400">Status:</span> <span className="font-medium">{r.status}</span></div>
+                        {r.comment && (
+                          <div className="col-span-2"><span className="text-slate-400">Comment:</span> <span className="font-medium">{r.comment}</span></div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 pt-1">
+                        {onBookingEdit && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs px-3"
+                            onClick={e => { e.stopPropagation(); onBookingEdit(r); }}
+                          >
+                            <Edit className="w-3 h-3 mr-1" /> Edit
+                          </Button>
+                        )}
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-6 text-xs px-2"
-                          onClick={e => { e.stopPropagation(); onBookingEdit(r); }}
+                          className="h-7 text-xs px-3 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                          onClick={e => { e.stopPropagation(); setDeleteDialogId(r.id); }}
                         >
-                          <Edit className="w-3 h-3 mr-1" /> Edit
+                          <Trash2 className="w-3 h-3 mr-1" /> Delete
                         </Button>
-                      )}
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-                    </div>
-                  </div>
-                  {isExpanded && (
-                    <div className="px-4 pb-3 pt-1 bg-slate-50/50 text-xs text-slate-600 space-y-1">
-                      {r.bed_configuration && <div>Bed: <span className="font-medium">{r.bed_configuration}</span></div>}
-                      {occupancySummary && <div>Guests: <span className="font-medium">{occupancySummary}</span></div>}
-                      {r.comment && <div>Comment: <span className="font-medium">{r.comment}</span></div>}
-                      <div>Status: <span className="font-medium">{r.status}</span></div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -96,6 +140,28 @@ export default function RelatedReservations({ existingBooking, selectedClient, r
           </div>
         ))}
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteDialogId} onOpenChange={(open) => { if (!open) setDeleteDialogId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this reservation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the reservation.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleDelete(deleteDialogId)}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Yes, delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
