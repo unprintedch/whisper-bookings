@@ -133,14 +133,14 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
   const selectedRoom = rooms.find(r => r.id === roomId);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 opacity-50 pointer-events-none" style={disabled ? { opacity: 0.5, pointerEvents: 'none' } : {}}>
       {/* Dates row */}
       <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1">
           <Label className="text-xs">Check-in</Label>
-          <Popover open={checkinOpen} onOpenChange={setCheckinOpen}>
+          <Popover open={!disabled && checkinOpen} onOpenChange={disabled ? () => {} : setCheckinOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start font-normal h-8 text-xs">
+              <Button variant="outline" className="w-full justify-start font-normal h-8 text-xs" disabled={disabled}>
                 <CalendarIcon className="mr-1 h-3 w-3" />
                 {checkin ? format(new Date(checkin + 'T12:00:00'), 'dd/MM/yyyy') : 'Date'}
               </Button>
