@@ -25,6 +25,18 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   const [localClients, setLocalClients] = useState(clients);
   const searchRef = useRef(null);
 
+  // New client creation state
+  const [isNewClient, setIsNewClient] = useState(false);
+  const [newClientData, setNewClientData] = useState({
+    name: "",
+    client_number: "",
+    agency_id: null,
+    agency_contact_id: null,
+    contact_name: "",
+    contact_email: "",
+    contact_phone: "",
+  });
+
   // Sync localClients when the clients prop updates
   useEffect(() => {
     setLocalClients(clients);
@@ -32,6 +44,28 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
 
   const selectedClient = localClients.find(c => c.id === clientId);
   const agencyForSelectedClient = selectedClient?.agency_id ? agencies.find(a => a.id === selectedClient.agency_id) : null;
+
+  // For new client agency display
+  const newClientAgency = newClientData.agency_id ? agencies.find(a => a.id === newClientData.agency_id) : null;
+
+  const generateNextClientNumber = (agencyId) => {
+    let agencyCode = 'XXX';
+    if (agencyId) {
+      const agency = agencies.find(a => a.id === agencyId);
+      if (agency?.code) agencyCode = agency.code;
+    }
+    let maxNum = 0;
+    localClients.forEach(c => {
+      if (c.client_number) {
+        const match = c.client_number.match(/^(\d{4})/);
+        if (match) {
+          const n = parseInt(match[1], 10);
+          if (!isNaN(n) && n > maxNum) maxNum = n;
+        }
+      }
+    });
+    return `${(maxNum + 1).toString().padStart(4, '0')}${agencyCode}`;
+  };
 
   let agencyContactDisplay = null;
   if (agencyForSelectedClient && selectedClient) {
