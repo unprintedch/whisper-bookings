@@ -24,6 +24,8 @@ const statusBackgrounds = {
   ANNULE: 'bg-slate-50'
 };
 
+const COL_WIDTH = 120;
+
 function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   const [user, setUser] = useState(null);
 
@@ -123,8 +125,10 @@ export default function GanttChart({
   isLoading,
   onCellClick,
   onBookingEdit,
+  onSlotToggle,
   onRoomEdit,
   sites = [],
+  selectedSlots = [],
   isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -180,32 +184,57 @@ export default function GanttChart({
     return ds >= cis && ds < cos;
   };
 
+  const getReservationPosition = (res) => {
+    const checkinStr = dateToString(res.date_checkin);
+    const checkoutStr = dateToString(res.date_checkout);
+    
+    const startIdx = dateColumns.findIndex(d => dateToString(d) === checkinStr);
+    const endIdx = dateColumns.findIndex(d => dateToString(d) === checkoutStr);
+    
+    if (startIdx === -1 || endIdx === -1) return null;
+    
+    return {
+      startIdx,
+      endIdx: endIdx === -1 ? dateColumns.length : endIdx,
+      width: (endIdx === -1 ? dateColumns.length : endIdx) - startIdx,
+    };
+  };
+
   return (
     <>
-      <div className="overflow-x-auto border border-slate-200 rounded-lg">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="bg-slate-50 border-r border-slate-200 p-3 text-left font-semibold text-slate-700" style={{ width: '220px', minWidth: '220px' }}>
-                Rooms
-              </th>
+      <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
+        <div className="inline-block min-w-full">
+          {/* Header */}
+          <div className="flex border-b border-slate-200">
+            <div
+              className="bg-slate-50 border-r border-slate-200 p-3 font-semibold text-slate-700 flex items-center"
+              style={{ width: '220px', minWidth: '220px' }}>
+              Rooms
+            </div>
+            <div className="flex">
               {dateColumns.map((date) => (
-                <th
+                <div
                   key={dateToString(date)}
-                  className={`border-r border-slate-200 p-2 text-center font-semibold text-sm min-w-24 ${
+                  className={`border-r border-slate-200 p-2 text-center font-semibold text-sm flex-shrink-0 ${
                     highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100' : 'bg-slate-50'
-                  } ${format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}>
+                  } ${format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
+                  style={{ width: `${COL_WIDTH}px` }}>
                   <div className="text-xs uppercase text-slate-600">{format(date, 'EEE', { locale: enUS })}</div>
                   <div className="text-sm">{format(date, 'd MMM', { locale: enUS })}</div>
-                </th>
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map((room) => (
-              <tr key={room.id}>
-                <td
-                  className={`border-r border-slate-200 border-b p-3 ${!isPublicView ? 'cursor-pointer hover:bg-blue-50/50' : ''}`}
+            </div>
+          </div>
+
+          {/* Rows */}
+          {rooms.map((room) => {
+            const roomReservations = reservations.filter(r => r.room_id === room.id);
+            
+            return (
+              <div key={room.id} className="flex border-b border-slate-200 relative" style={{ minHeight: '80px' }}>
+                {/* Room Label */}
+                <div
+                  className={`bg-white border-r border-slate-200 p-3 flex-shrink-0 ${!isPublicView ? 'cursor-pointer hover:bg-blue-50/50' : ''}`}
                   style={{ width: '220px', minWidth: '220px' }}
                   onClick={!isPublicView ? () => {
                     setSelectedRoom(room);
@@ -220,66 +249,87 @@ export default function GanttChart({
                       {room.type_label} · {room.capacity_max} people
                     </div>
                   </div>
-                </td>
-                {dateColumns.map((date) => {
-                  const dayReservations = reservations.filter(
-                    (r) => r.room_id === room.id && isDateInRange(date, r.date_checkin, r.date_checkout)
-                  );
+                </div>
 
-                  return (
-                    <td
-                      key={`${room.id}-${dateToString(date)}`}
-                      className={`border-r border-b border-slate-200 p-1 align-top min-w-24 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''
-                      } ${highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-50' : 'bg-white'} ${
-                        format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''
-                      }`}
-                      onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
-                      style={{ height: '60px' }}>
-                      {dayReservations.length > 0 ? (
-                        <div className="space-y-1">
-                          {dayReservations.map((res) => {
-                            const visible = canSeeClient(res);
-                            const client = getClient(res.client_id);
-                            const StatusIcon = statusIcons[res.status]?.icon || Clock;
-                            const statusColor = statusIcons[res.status]?.color || 'text-gray-500';
+                {/* Date Columns */}
+                <div className="flex relative flex-1">
+                  {dateColumns.map((date, idx) => {
+                    const dateStr = dateToString(date);
+                    const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
 
-                            return (
-                              <div
-                                key={res.id}
-                                className={`text-xs p-1 rounded border-l-4 cursor-pointer ${statusBackgrounds[res.status] || 'bg-slate-50'}`}
-                                style={{ borderLeftColor: visible ? client?.color_hex || '#3b82f6' : '#94a3b8' }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (visible && onBookingEdit) onBookingEdit(res);
-                                }}>
-                                <div className="flex items-center gap-1">
-                                  <StatusIcon className={`w-3 h-3 flex-shrink-0 ${statusColor}`} />
-                                  <span className="font-semibold truncate text-slate-800">
-                                    {visible ? client?.name || 'Client' : '•••'}
-                                  </span>
-                                </div>
-                                {visible && (res.adults_count || res.children_count || res.infants_count) && (
-                                  <div className="text-xs text-slate-600">
-                                    {[res.adults_count && `${res.adults_count}A`, res.children_count && `${res.children_count}C`, res.infants_count && `${res.infants_count}I`]
-                                      .filter(Boolean)
-                                      .join(' ')}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                    return (
+                      <div
+                        key={dateStr}
+                        className={`border-r border-slate-200 flex-shrink-0 relative group/cell ${
+                          !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''
+                        } ${isSelected ? 'bg-yellow-100' : highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-50' : 'bg-white'} ${
+                          format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''
+                        }`}
+                        style={{ width: `${COL_WIDTH}px` }}
+                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}
+                        onDoubleClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, dateStr) : undefined}>
+                        {!isPublicView && (
+                          <div className="text-yellow-700 text-center opacity-0 group-hover/cell:opacity-100 transition-opacity text-xs">
+                            <Plus className="w-3 h-3 mx-auto" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Reservations (absolute overlay) */}
+                <div className="absolute inset-0 pointer-events-none" style={{ paddingLeft: '220px' }}>
+                  {roomReservations.map((res) => {
+                    const pos = getReservationPosition(res);
+                    if (!pos) return null;
+
+                    const visible = canSeeClient(res);
+                    const client = getClient(res.client_id);
+                    const StatusIcon = statusIcons[res.status]?.icon || Clock;
+                    const statusColor = statusIcons[res.status]?.color || 'text-gray-500';
+
+                    return (
+                      <div
+                        key={res.id}
+                        className={`absolute top-1 pointer-events-auto transition-all duration-200 ${visible ? 'cursor-pointer' : 'cursor-default'}`}
+                        style={{
+                          left: `${pos.startIdx * COL_WIDTH}px`,
+                          width: `${Math.max(pos.width * COL_WIDTH - 4, COL_WIDTH / 2)}px`,
+                          height: 'calc(100% - 8px)',
+                          borderRadius: '4px',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (visible && onBookingEdit) onBookingEdit(res);
+                        }}>
+                        <div
+                          className={`h-full flex flex-col justify-center px-2 py-1 rounded ${statusBackgrounds[res.status] || 'bg-slate-50'}`}
+                          style={{
+                            borderLeft: `4px solid ${visible ? client?.color_hex || '#3b82f6' : '#94a3b8'}`,
+                          }}>
+                          <div className="flex items-center gap-1">
+                            <StatusIcon className={`w-3 h-3 flex-shrink-0 ${statusColor}`} />
+                            <span className="font-semibold truncate text-slate-800 text-xs">
+                              {visible ? client?.name || 'Client' : '•••'}
+                            </span>
+                          </div>
+                          {visible && (res.adults_count || res.children_count || res.infants_count) && (
+                            <div className="text-xs text-slate-600 truncate">
+                              {[res.adults_count && `${res.adults_count}A`, res.children_count && `${res.children_count}C`, res.infants_count && `${res.infants_count}I`]
+                                .filter(Boolean)
+                                .join(' ')}
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        !isPublicView && <div className="text-yellow-700 text-center opacity-0 hover:opacity-100 transition-opacity"><Plus className="w-3 h-3 mx-auto" /></div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <RoomDetailsModal
