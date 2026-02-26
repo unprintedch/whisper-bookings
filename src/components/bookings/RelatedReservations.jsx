@@ -95,6 +95,8 @@ export default function RelatedReservations({
       r.id === reservationId ? { ...r, status: newStatus } : r
     );
     setLocalReservations(updated);
+    // Notify parent (e.g., Dashboard) to refresh the Gantt
+    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const handleChangeAllStatusInDateRange = async (dateRangeKey, newStatus) => {
