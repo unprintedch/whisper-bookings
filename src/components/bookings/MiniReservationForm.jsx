@@ -106,11 +106,20 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
   };
 
   const handleSave = () => {
-    const config = allBedConfigs.find(c => c.id === bedConfigId);
+    // Ensure bed configuration is set - either from selected config or from reservation
+    const config = bedConfigId ? allBedConfigs.find(c => c.id === bedConfigId) : null;
+    const bedConfigName = config?.name || reservation.bed_configuration;
+    
+    // Validate that we have a bed configuration
+    if (!bedConfigName) {
+      alert('Please select a bed configuration');
+      return;
+    }
+    
     onSave({
       date_checkin: checkin,
       date_checkout: checkout,
-      bed_configuration: config?.name || reservation.bed_configuration,
+      bed_configuration: bedConfigName,
       room_id: roomId,
       adults_count: adults,
       children_count: children,
