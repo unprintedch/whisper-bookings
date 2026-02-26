@@ -1543,8 +1543,7 @@ export default function BookingForm({
             </Popover>
           </div>
           </div>
-          </div>
-          )}
+        )}
 
           {/* NEW: Bed Configuration and Room Selection on same row */}
           {!existingBooking && (
