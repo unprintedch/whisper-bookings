@@ -25,6 +25,11 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   const [localClients, setLocalClients] = useState(clients);
   const searchRef = useRef(null);
 
+  // Sync localClients when the clients prop updates
+  useEffect(() => {
+    setLocalClients(clients);
+  }, [clients]);
+
   const selectedClient = localClients.find(c => c.id === clientId) || clients.find(c => c.id === clientId);
   const agencyForSelectedClient = selectedClient?.agency_id ? agencies.find(a => a.id === selectedClient.agency_id) : null;
 
