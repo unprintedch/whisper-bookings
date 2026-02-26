@@ -164,7 +164,7 @@ export default function GanttChart({
   React.useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await User.me();
+        const user = await base44.auth.me();
         setCurrentUser(user);
       } catch (error) {
         console.error('Error loading user:', error);
