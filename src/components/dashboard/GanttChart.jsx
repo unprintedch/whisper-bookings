@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/entities/User";
+import { base44 } from "@/api/base44Client";
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -38,7 +38,7 @@ function RoomDetailsModal({ room, isOpen, onClose, onEdit }) {
   React.useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await User.me();
+        const currentUser = await base44.auth.me();
         setUser(currentUser);
       } catch (error) {
         console.error('Error loading user:', error);
@@ -155,7 +155,9 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = [],
+  onSlotToggle
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -194,7 +196,6 @@ export default function GanttChart({
     const checkinDate = new Date(reservation.date_checkin + 'T00:00:00Z');
     const checkoutDate = new Date(reservation.date_checkout + 'T00:00:00Z');
 
-    // Normalize all dates to UTC midnight
     checkinDate.setUTCHours(0, 0, 0, 0);
     checkoutDate.setUTCHours(0, 0, 0, 0);
 
@@ -203,12 +204,10 @@ export default function GanttChart({
     const viewEnd = new Date(dateColumns[dateColumns.length - 1]);
     viewEnd.setUTCHours(0, 0, 0, 0);
 
-    // Vérifier si la réservation est totalement en dehors de la vue
     if (checkoutDate <= viewStart || checkinDate > viewEnd) {
       return null;
     }
 
-    // Trouver l'index de démarrage
     let startIndex = 0;
     for (let i = 0; i < dateColumns.length; i++) {
       const colDate = new Date(dateColumns[i]);
@@ -217,16 +216,11 @@ export default function GanttChart({
         startIndex = i;
         break;
       }
-      if (colDate > checkinDate && (i === 0 || dateColumns[i-1] < checkinDate)) {
-        startIndex = 0; // Commence avant la vue
-        break;
-      }
     }
 
-    // Trouver l'index de fin (checkout - 1 car checkout est le jour de départ)
     const lastDay = new Date(checkoutDate);
     lastDay.setUTCDate(lastDay.getUTCDate() - 1);
-    
+
     let endIndex = dateColumns.length - 1;
     for (let i = dateColumns.length - 1; i >= 0; i--) {
       const colDate = new Date(dateColumns[i]);
@@ -237,7 +231,6 @@ export default function GanttChart({
       }
     }
 
-    // Calculer les pixels
     const left = startIndex * COL_WIDTH;
     const width = Math.max((endIndex - startIndex + 1) * COL_WIDTH, COL_WIDTH / 2);
 
@@ -384,11 +377,15 @@ export default function GanttChart({
 
                   <div className="relative flex-shrink-0 h-full">
                     <div className="flex h-full">
-                      {dateColumns.map((date, dateIndex) =>
+                      {dateColumns.map((date, dateIndex) => {
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+                        return (
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
                         !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        isSelected ? 'bg-yellow-100 border-l-4 border-l-yellow-700' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
@@ -396,7 +393,11 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={!isPublicView ? () => {
+                          const dateStr = format(date, 'yyyy-MM-dd');
+                          if (onSlotToggle) onSlotToggle(room.id, dateStr);
+                          else if (onCellClick) onCellClick(room, date);
+                        } : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -405,8 +406,9 @@ export default function GanttChart({
                             </div>
                         }
                         </div>
-                      )}
-                    </div>
+                        );
+                        })}
+                        </div>
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
@@ -414,8 +416,6 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
-
                         const startPixel = position.left;
                         const widthPixel = position.width;
 
