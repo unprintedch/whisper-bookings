@@ -27,9 +27,11 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
 
   // Init bed config from reservation
   useEffect(() => {
-    const bc = allBedConfigs.find(c => c.name === reservation.bed_configuration);
-    setBedConfigId(bc?.id || '');
-  }, []);
+    if (reservation.bed_configuration) {
+      const bc = allBedConfigs.find(c => c.name === reservation.bed_configuration);
+      setBedConfigId(bc?.id || '');
+    }
+  }, [reservation.bed_configuration, allBedConfigs]);
 
   // Sync nights
   useEffect(() => {
