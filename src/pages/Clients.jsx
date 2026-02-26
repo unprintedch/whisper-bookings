@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Client, Agency, Reservation, Room, Site, User, BedConfiguration } from "@/entities/all";
+import { Client, Agency, Reservation, Room, Site, User, BedConfiguration } from "@/components/lib/entitiesWrapper";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Mail, Phone, Calendar as CalendarIcon, Edit, Plus, Trash2, X } from "lucide-react";
