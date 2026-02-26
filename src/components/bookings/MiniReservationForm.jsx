@@ -177,7 +177,7 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs">Bed Setup</Label>
-          <Select value={bedConfigId} onValueChange={handleBedConfig}>
+          <Select value={bedConfigId} onValueChange={disabled ? () => {} : handleBedConfig} disabled={disabled}>
             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Choose..." /></SelectTrigger>
             <SelectContent>
               {allBedConfigs.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.max_occupancy} max)</SelectItem>)}
@@ -186,9 +186,9 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Room</Label>
-          <Popover open={roomComboOpen} onOpenChange={setRoomComboOpen}>
+          <Popover open={!disabled && roomComboOpen} onOpenChange={disabled ? () => {} : setRoomComboOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" role="combobox" className="w-full justify-between font-normal h-8 text-xs" disabled={!checkin || !bedConfigId}>
+              <Button variant="outline" role="combobox" className="w-full justify-between font-normal h-8 text-xs" disabled={disabled || !checkin || !bedConfigId}>
                 {selectedRoom ? `${getSiteName(selectedRoom.site_id)} – ${selectedRoom.number}` : 'Choose room...'}
                 <ChevronsUpDown className="ml-1 h-3 w-3 opacity-50" />
               </Button>
