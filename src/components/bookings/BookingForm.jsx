@@ -1154,9 +1154,9 @@ export default function BookingForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Client Field - Name and Number on Same Line */}
-        <div className="space-y-2">
+      <>
+      {/* Client Field - Name and Number on Same Line */}
+      <div className="space-y-2">
           <Label className={`text-sm font-medium ${errors.client_id ? 'text-red-600' : ''}`}>
             Client {errors.client_id && <span className="text-red-500">*</span>}
           </Label>
@@ -1257,10 +1257,10 @@ export default function BookingForm({
               </div>
             )}
           </div>
-        </div>
+          </div>
 
-        {/* Contact info display for existing client (new or existing booking) */}
-        {selectedClient && !isNewClient && (
+          {/* Contact info display for existing client (new or existing booking) */}
+          {selectedClient && !isNewClient && (
           <div className="space-y-4 p-4 px-6 border rounded-lg bg-slate-50/70 text-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Agency Details - Now First */}
@@ -1341,10 +1341,10 @@ export default function BookingForm({
               </div>
             </div>
           </div>
-        )}
+          )}
 
-        {/* If existing client selected - show accordion with all reservations, NO booking form */}
-        {selectedClient && !isNewClient ? (
+          {/* If existing client selected - show accordion with all reservations, NO booking form */}
+          {selectedClient && !isNewClient ? (
           <ReservationsListAccordion
             selectedClient={selectedClient}
             reservations={reservations}
@@ -1357,11 +1357,13 @@ export default function BookingForm({
             onBookingEdit={onBookingEdit}
             onBookingDelete={onDelete}
           />
-        ) : (
-          <>
+        ) : null}
+
+      {/* Only show form when creating new client */}
+      {isNewClient && (
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* New client fields */}
-        {isNewClient && (
-          <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
+        <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
             <h4 className="font-medium text-sm">Creating new client: "{clientSearchText}"</h4>
 
             {/* Agency, Agency Contact, Client Number on one line */}
@@ -1467,12 +1469,10 @@ export default function BookingForm({
                     </div>
                 </div>
             </div>
-          </div>
-        )}
+            </div>
 
-        {/* Dates Row - 3 columns (only for new client) */}
-        {isNewClient && (
-        <div className="grid grid-cols-3 gap-3">
+            {/* Dates Row - 3 columns (only for new client) */}
+            <div className="grid grid-cols-3 gap-3">
           <div className="space-y-2">
             <Label className={errors.date_checkin ? 'text-red-600' : ''}>
               Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
@@ -1547,10 +1547,8 @@ export default function BookingForm({
             </Popover>
           </div>
           </div>
-          )}
 
           {/* NEW: Bed Configuration and Room Selection on same row (only for new client) */}
-          {isNewClient && (
           <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="bed_configuration" className={errors.bed_configuration ? 'text-red-600' : ''}>
@@ -1628,10 +1626,8 @@ export default function BookingForm({
             </Popover>
           </div>
           </div>
-          )}
 
           {/* Guests Row - 3 input columns + 1 badge column (only for new client) */}
-          {isNewClient && (
           <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
           <div className="space-y-2">
             <Label htmlFor="adults_count" className={errors.occupancy ? 'text-red-600' : ''}>
@@ -1694,10 +1690,8 @@ export default function BookingForm({
             )}
           </div>
           </div>
-          )}
 
           {/* Comments and Notifications on same row (only for new client) */}
-          {isNewClient && (
           <div className="grid grid-cols-2 gap-4">
           {/* Comments */}
           <div className="space-y-2">
@@ -1750,10 +1744,8 @@ export default function BookingForm({
             </div>
           </div>
           </div>
-          )}
 
           {/* Actions Footer - Swapped positions (only for new client) */}
-          {isNewClient && (
           <div className="flex items-end justify-between gap-4 pt-4 border-t mt-4">
           {/* Left Part: Cancel/Delete Button */}
           <div className="flex items-center gap-2">
@@ -1853,10 +1845,11 @@ export default function BookingForm({
             </Button>
           </div>
           </div>
-          )}
           </form>
-          </>
           )}
+
+          </>
+
 
       {/* Inline Client Edit Modal */}
       <Dialog open={isClientEditOpen} onOpenChange={setIsClientEditOpen}>
