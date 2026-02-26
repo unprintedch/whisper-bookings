@@ -113,13 +113,7 @@ export default function RelatedReservations({
   };
 
   const toggleExpand = (id) => {
-    if (expandedId === id) {
-      setExpandedId(null);
-      setEditingId(null);
-    } else {
-      setExpandedId(id);
-      setEditingId(null);
-    }
+    setExpandedId(expandedId === id ? null : id);
   };
 
   return (
