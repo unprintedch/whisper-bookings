@@ -79,6 +79,8 @@ export default function RelatedReservations({
       r.id === reservationId ? { ...r, ...data } : r
     );
     setLocalReservations(updated);
+    // Auto-close on save
+    setExpandedId(null);
   };
 
   const handleChangeStatus = async (reservationId, newStatus) => {
