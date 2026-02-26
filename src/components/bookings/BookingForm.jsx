@@ -1468,11 +1468,11 @@ export default function BookingForm({
         )}
 
         {/* Dates Row - 3 columns */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-2">
-            <Label className={errors.date_checkin ? 'text-red-600' : ''}>
-              Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
-            </Label>
+         {!existingBooking && <div className="grid grid-cols-3 gap-3">
+           <div className="space-y-2">
+             <Label className={errors.date_checkin ? 'text-red-600' : ''}>
+               Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
+             </Label>
             <Popover open={checkinPopoverOpen} onOpenChange={setCheckinPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className={`w-full justify-start text-left font-normal h-9 ${errors.date_checkin ? 'border-red-300 focus-visible:ring-red-300' : ''}`}>
