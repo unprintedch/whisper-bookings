@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { base44 } from "@/api/base44Client";
 import { Client } from "@/entities/all";
 import ClientForm from "@/components/clients/ClientForm";
+import { validateNoOverlaps, validateRangeWithinWindow } from "./multiSelectLogic";
 
 export default function MultiReservationModal({ isOpen, onClose, mergedRanges, rooms, clients, sites, allBedConfigs, agencies = [], onSuccess }) {
   const [clientId, setClientId] = useState("");
