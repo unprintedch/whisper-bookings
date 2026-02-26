@@ -1468,8 +1468,9 @@ export default function BookingForm({
         )}
 
         {/* Dates Row - 3 columns */}
-         {!existingBooking && <div className="grid grid-cols-3 gap-3">
-           <div className="space-y-2">
+         {!existingBooking && (
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
              <Label className={errors.date_checkin ? 'text-red-600' : ''}>
                Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
              </Label>
