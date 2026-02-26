@@ -105,6 +105,38 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
     if (c) { setAdults(c.max_occupancy); setChildren(0); setInfants(0); }
   };
 
+  // Auto-save with debounce
+  const [isSaving, setIsSaving] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      // Only save if all required fields are filled and form has changed
+      const config = bedConfigId ? allBedConfigs.find(c => c.id === bedConfigId) : null;
+      const bedConfigName = config?.name || reservation.bed_configuration;
+      
+      if (checkin && checkout && roomId && bedConfigName) {
+        setIsSaving(true);
+        try {
+          await onSave({
+            date_checkin: checkin,
+            date_checkout: checkout,
+            bed_configuration: bedConfigName,
+            room_id: roomId,
+            adults_count: adults,
+            children_count: children,
+            infants_count: infants,
+          });
+        } catch (error) {
+          console.error('Auto-save error:', error);
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    }, 1000); // Auto-save 1 second after last change
+    
+    return () => clearTimeout(timer);
+  }, [checkin, checkout, roomId, bedConfigId, adults, children, infants, allBedConfigs, reservation, onSave]);
+
   const handleSave = () => {
     // Ensure bed configuration is set - either from selected config or from reservation
     const config = bedConfigId ? allBedConfigs.find(c => c.id === bedConfigId) : null;
@@ -116,6 +148,7 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
       return;
     }
     
+    // Trigger immediate save and close
     onSave({
       date_checkin: checkin,
       date_checkout: checkout,
