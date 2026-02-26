@@ -22,6 +22,7 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [roomComboOpen, setRoomComboOpen] = useState(false);
+  const isInitialMount = useRef(true);
 
   const rooms = allRooms.filter(r => r.is_active);
 
