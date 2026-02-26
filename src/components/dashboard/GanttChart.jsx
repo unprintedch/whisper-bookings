@@ -191,34 +191,36 @@ export default function GanttChart({
       return null;
     }
 
-    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
-    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
+    // Compare dates as YYYY-MM-DD strings to avoid timezone issues
+    const checkinStr = reservation.date_checkin;
+    const checkoutStr = reservation.date_checkout;
+    
+    // Convert dateColumns to YYYY-MM-DD strings
+    const dateColumnStrs = dateColumns.map((d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const date = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${date}`;
+    });
 
-    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+    const viewStart = dateColumnStrs[0];
+    const viewEnd = dateColumnStrs[dateColumnStrs.length - 1];
 
-    const viewStart = normalizedDateColumns[0];
-    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
-
-    if (checkin >= viewEnd || checkout <= viewStart) {
+    // Check if reservation is outside view range
+    if (checkinStr > viewEnd || checkoutStr <= viewStart) {
       return null;
     }
 
     let startIndex;
     let startsBefore = false;
-    if (checkin < viewStart) {
+    if (checkinStr < viewStart) {
       startIndex = 0;
       startsBefore = true;
     } else {
-      startIndex = normalizedDateColumns.findIndex((date) =>
-      date.getFullYear() === checkin.getFullYear() &&
-      date.getMonth() === checkin.getMonth() &&
-      date.getDate() === checkin.getDate()
-      );
+      startIndex = dateColumnStrs.findIndex((dateStr) => dateStr === checkinStr);
     }
 
     if (startIndex === -1) return null;
-
-    console.log(`Reservation ${reservation.id}: checkin=${reservation.date_checkin} startIndex=${startIndex}, checkinDate=${checkin.toISOString()}, viewStart=${viewStart.toISOString()}`);
 
     let endIndex;
     let endsAfter = false;
