@@ -1749,10 +1749,12 @@ export default function BookingForm({
               )}
             </div>
           </div>
-        </div>
+          </div>
+          )}
 
-        {/* Actions Footer - Swapped positions */}
-        <div className="flex items-end justify-between gap-4 pt-4 border-t mt-4">
+          {/* Actions Footer - Swapped positions (only for new client) */}
+          {isNewClient && (
+          <div className="flex items-end justify-between gap-4 pt-4 border-t mt-4">
           {/* Left Part: Cancel/Delete Button */}
           <div className="flex items-center gap-2">
             {existingBooking && onDelete ? (
