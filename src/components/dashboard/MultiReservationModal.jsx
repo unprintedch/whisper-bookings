@@ -542,7 +542,37 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   );
 }
 
-// Inline agency edit form (copied from BookingForm pattern)
+// Inline client contact edit form
+function ClientContactForm({ client, onSave, onCancel }) {
+  const [form, setForm] = useState({
+    contact_name: client?.contact_name || "",
+    contact_email: client?.contact_email || "",
+    contact_phone: client?.contact_phone || "",
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Contact Name</Label>
+        <Input value={form.contact_name} onChange={e => setForm(f => ({ ...f, contact_name: e.target.value }))} placeholder="Contact name" />
+      </div>
+      <div className="space-y-2">
+        <Label>Contact Email</Label>
+        <Input type="email" value={form.contact_email} onChange={e => setForm(f => ({ ...f, contact_email: e.target.value }))} placeholder="contact@example.com" />
+      </div>
+      <div className="space-y-2">
+        <Label>Contact Phone</Label>
+        <Input value={form.contact_phone} onChange={e => setForm(f => ({ ...f, contact_phone: e.target.value }))} placeholder="+1 234 567 890" />
+      </div>
+      <div className="flex justify-end gap-2 pt-4 border-t">
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button className="bg-yellow-700 hover:bg-yellow-800" onClick={() => onSave(form)}>Save Changes</Button>
+      </div>
+    </div>
+  );
+}
+
+// Inline agency edit form
 function AgencyEditForm({ client, agencies, onSave, onCancel }) {
   const [agencyId, setAgencyId] = useState(client?.agency_id || null);
   const [agencyContactId, setAgencyContactId] = useState(client?.agency_contact_id || null);
