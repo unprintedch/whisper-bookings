@@ -17,17 +17,17 @@ export function getReservationPixels(reservation, dateColumns, renderMode = 'ful
     return { left: 0, width: COL_WIDTH / 2 };
   }
 
-  // Modèle métier: dates réelles (checkin/checkout)
-  const checkinDate = new Date(reservation.date_checkin);
-  const checkoutDate = new Date(reservation.date_checkout);
+  // Normaliser checkin/checkout en UTC minuit uniquement
+  const checkinDate = new Date(reservation.date_checkin + 'T00:00:00Z');
+  const checkoutDate = new Date(reservation.date_checkout + 'T00:00:00Z');
 
-  // Trouver indices dans dateColumns
+  // Trouver indices dans dateColumns (normalisés identiquement)
   let startIndex = -1;
   let endIndex = -1;
 
   for (let i = 0; i < dateColumns.length; i++) {
     const col = new Date(dateColumns[i]);
-    col.setHours(0, 0, 0, 0);
+    col.setUTCHours(0, 0, 0, 0);
 
     if (startIndex === -1 && col.getTime() === checkinDate.getTime()) {
       startIndex = i;
@@ -37,44 +37,28 @@ export function getReservationPixels(reservation, dateColumns, renderMode = 'ful
     }
   }
 
-  // Cas: réservation avant/après la vue
-  const startsBeforeView = checkinDate < new Date(dateColumns[0]);
-  const endsAfterView = checkoutDate > new Date(dateColumns[dateColumns.length - 1]);
+  // Normaliser la première et dernière date colonne pour comparaison
+  const viewStartCol = new Date(dateColumns[0]);
+  viewStartCol.setUTCHours(0, 0, 0, 0);
+  const viewEndCol = new Date(dateColumns[dateColumns.length - 1]);
+  viewEndCol.setUTCHours(0, 0, 0, 0);
+
+  const startsBeforeView = checkinDate < viewStartCol;
+  const endsAfterView = checkoutDate > viewEndCol;
 
   if (startsBeforeView) startIndex = 0;
   if (endsAfterView) endIndex = dateColumns.length - 1;
 
-  // Par défaut si pas trouvé
   if (startIndex === -1) startIndex = 0;
   if (endIndex === -1) endIndex = dateColumns.length - 1;
 
-  // Conversion jours -> pixels selon renderMode
-  let left, width;
-
-  if (renderMode === 'half-day') {
-    // Ancien comportement: avec HALF_COL_WIDTH décalage
-    const HALF_COL_WIDTH = COL_WIDTH / 2;
-    if (startsBeforeView) {
-      left = startIndex * COL_WIDTH;
-    } else {
-      left = startIndex * COL_WIDTH + HALF_COL_WIDTH;
-    }
-
-    if (endsAfterView) {
-      width = endIndex * COL_WIDTH - left;
-    } else {
-      const endPixel = endIndex * COL_WIDTH + HALF_COL_WIDTH;
-      width = endPixel - left;
-    }
-  } else {
-    // renderMode === 'full-day' (par défaut): sans décalage
-    left = startIndex * COL_WIDTH;
-    width = (endIndex - startIndex) * COL_WIDTH;
-  }
+  // Conversion indices -> pixels
+  let left = startIndex * COL_WIDTH;
+  let width = (endIndex - startIndex) * COL_WIDTH;
 
   return {
     left: Math.max(0, left),
-    width: Math.max(COL_WIDTH / 2, width) // Min width pour visibilité
+    width: Math.max(COL_WIDTH / 2, width)
   };
 }
 
