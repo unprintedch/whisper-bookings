@@ -69,9 +69,9 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setIsEditingClientNumber(false);
   };
 
-  const handleSaveClientInModal = async (clientData) => {
+  const handleSaveClientInModal = async (contactData) => {
     if (!selectedClient) return;
-    const updated = await base44.entities.Client.update(selectedClient.id, clientData);
+    const updated = await base44.entities.Client.update(selectedClient.id, contactData);
     setLocalClients(prev => prev.map(c => c.id === updated.id ? updated : c));
     setIsClientEditOpen(false);
   };
