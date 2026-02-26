@@ -31,7 +31,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ClientForm from "../clients/ClientForm";
-import RelatedReservations from "./RelatedReservations";
 
 // A small component to manage agency selection in a modal
 const EditClientAgencyForm = ({ client, agencies, onSave, onCancel }) => {
@@ -1342,19 +1341,7 @@ export default function BookingForm({
           </div>
         )}
 
-        {/* Related reservations - edit mode only */}
-        <RelatedReservations
-          existingBooking={existingBooking}
-          selectedClient={selectedClient}
-          reservations={reservations}
-          allRooms={allRooms}
-          allSites={allSites}
-          onBookingEdit={onBookingEdit}
-          allClients={allClients}
-          allAgencies={allAgencies}
-          allBedConfigs={allBedConfigs}
-          selectedSiteName={selectedSiteName}
-        />
+
 
         {/* New client fields */}
         {isNewClient && (
