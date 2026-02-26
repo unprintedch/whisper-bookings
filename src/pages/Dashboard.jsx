@@ -543,6 +543,7 @@ export default function Dashboard({
                   setSelectedDateForBooking(null);
                   setEditingBooking(null);
                 }}
+                onBookingEdit={handleEditBooking}
                 initialRoom={selectedRoomForBooking}
                 initialDates={selectedDateForBooking ? {
                   checkin: format(selectedDateForBooking, 'yyyy-MM-dd'),
