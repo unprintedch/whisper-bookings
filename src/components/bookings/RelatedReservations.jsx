@@ -183,24 +183,14 @@ export default function RelatedReservations({
                     <div className="border-t border-slate-100 bg-slate-50/30">
                       {isEditing ? (
                         <div className="p-3">
-                          <BookingForm
-                            existingBooking={r}
-                            rooms={allRooms}
-                            clients={allClients || []}
-                            sites={allSites}
-                            agencies={allAgencies || []}
-                            reservations={currentReservations}
+                          <MiniReservationForm
+                            reservation={r}
+                            allRooms={allRooms}
+                            allSites={allSites}
                             allBedConfigs={allBedConfigs || []}
-                            selectedSiteName={selectedSiteName || "all"}
+                            reservations={currentReservations}
                             onSave={handleEditSave}
                             onCancel={() => { setEditingId(null); setExpandedId(null); }}
-                            onDelete={async (id) => {
-                              await base44.entities.Reservation.delete(id);
-                              setLocalReservations((localReservations || reservations).filter(rv => rv.id !== id));
-                              setEditingId(null);
-                              setExpandedId(null);
-                              if (onReservationDeleted) onReservationDeleted(id);
-                            }}
                           />
                         </div>
                       ) : (
