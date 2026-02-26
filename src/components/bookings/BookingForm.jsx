@@ -1359,8 +1359,8 @@ export default function BookingForm({
           />
         ) : null}
 
-      {/* Only show form when creating new client */}
-      {isNewClient && (
+      {/* Only show form when creating new client - NOT for editing existing bookings */}
+      {isNewClient && !existingBooking && (
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* New client fields */}
         <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
