@@ -1627,10 +1627,12 @@ export default function BookingForm({
               </PopoverContent>
             </Popover>
           </div>
-        </div>
+          </div>
+          )}
 
-        {/* Guests Row - 3 input columns + 1 badge column */}
-        <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
+          {/* Guests Row - 3 input columns + 1 badge column (only for new client) */}
+          {isNewClient && (
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
           <div className="space-y-2">
             <Label htmlFor="adults_count" className={errors.occupancy ? 'text-red-600' : ''}>
               Adults (+16)
