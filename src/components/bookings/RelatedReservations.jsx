@@ -71,16 +71,14 @@ export default function RelatedReservations({
     setLocalReservations((localReservations || reservations).filter(r => r.id !== reservationId));
   };
 
-  const handleEditSave = async (formData) => {
+  const handleEditSave = async (reservationId, formData) => {
     const { notifications, ...data } = formData;
-    await base44.entities.Reservation.update(editingId, data);
+    await base44.entities.Reservation.update(reservationId, data);
     // Update local
     const updated = (localReservations || reservations).map(r =>
-      r.id === editingId ? { ...r, ...data } : r
+      r.id === reservationId ? { ...r, ...data } : r
     );
     setLocalReservations(updated);
-    setEditingId(null);
-    setExpandedId(null);
   };
 
   const handleChangeStatus = async (reservationId, newStatus) => {
