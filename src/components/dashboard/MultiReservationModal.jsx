@@ -236,32 +236,32 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                   </div>
                 )}
               </div>
-              {/* Client number field - only when a client is selected */}
-              {selectedClient && (
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <Input
-                    value={editingClientNumber}
-                    onChange={e => setEditingClientNumber(e.target.value)}
-                    placeholder="Client #"
-                    className="w-32 h-10"
-                    readOnly={!isEditingClientNumber}
-                  />
-                  {!isEditingClientNumber ? (
-                    <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => setIsEditingClientNumber(true)}>
-                      <Lock className="w-4 h-4" />
+              {/* Client number field - always visible */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <Input
+                  value={editingClientNumber}
+                  onChange={e => setEditingClientNumber(e.target.value)}
+                  placeholder="Client #"
+                  className="w-32 h-10"
+                  readOnly={!isEditingClientNumber || !selectedClient}
+                  disabled={!selectedClient}
+                />
+                {selectedClient && !isEditingClientNumber && (
+                  <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => setIsEditingClientNumber(true)}>
+                    <Lock className="w-4 h-4" />
+                  </Button>
+                )}
+                {selectedClient && isEditingClientNumber && (
+                  <>
+                    <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => { setEditingClientNumber(selectedClient?.client_number || ""); setIsEditingClientNumber(false); }}>
+                      <X className="w-4 h-4" />
                     </Button>
-                  ) : (
-                    <>
-                      <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => { setEditingClientNumber(selectedClient?.client_number || ""); setIsEditingClientNumber(false); }}>
-                        <X className="w-4 h-4" />
-                      </Button>
-                      <Button type="button" size="icon" className="h-10 w-10 bg-yellow-700 hover:bg-yellow-800" onClick={handleSaveClientNumber}>
-                        <Check className="w-4 h-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              )}
+                    <Button type="button" size="icon" className="h-10 w-10 bg-yellow-700 hover:bg-yellow-800" onClick={handleSaveClientNumber}>
+                      <Check className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
