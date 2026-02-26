@@ -191,19 +191,10 @@ export default function GanttChart({
       return null;
     }
 
-    // Normalize dates consistently using UTC to avoid timezone issues
-    const [checkinYear, checkinMonth, checkinDate] = reservation.date_checkin.split('-').map(Number);
-    const checkin = new Date(Date.UTC(checkinYear, checkinMonth - 1, checkinDate));
-    
-    const [checkoutYear, checkoutMonth, checkoutDate] = reservation.date_checkout.split('-').map(Number);
-    const checkout = new Date(Date.UTC(checkoutYear, checkoutMonth - 1, checkoutDate));
+    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
+    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
 
-    const normalizedDateColumns = dateColumns.map((d) => {
-      const year = d.getFullYear();
-      const month = d.getMonth();
-      const date = d.getDate();
-      return new Date(Date.UTC(year, month, date));
-    });
+    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
 
     const viewStart = normalizedDateColumns[0];
     const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
@@ -226,6 +217,8 @@ export default function GanttChart({
     }
 
     if (startIndex === -1) return null;
+
+    console.log(`Reservation ${reservation.id}: checkin=${reservation.date_checkin} startIndex=${startIndex}, checkinDate=${checkin.toISOString()}, viewStart=${viewStart.toISOString()}`);
 
     let endIndex;
     let endsAfter = false;
