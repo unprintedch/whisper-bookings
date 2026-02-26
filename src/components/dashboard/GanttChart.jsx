@@ -149,13 +149,14 @@ export default function GanttChart({
   dateColumns,
   highlightDate,
   isLoading,
-  onCellClick,
+  onSlotToggle,
   onBookingEdit,
   onBookingMove,
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  selectedSlots = []
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -381,20 +382,25 @@ export default function GanttChart({
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
                         !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
+                        selectedSlots.some(s => s.roomId === room.id && s.date === format(date, 'yyyy-MM-dd')) ? 'bg-emerald-50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
                         }
                         style={{
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, format(date, 'yyyy-MM-dd')) : undefined}>
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                          {!isPublicView && (
+                            <div className={`flex items-center gap-1 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity ${
+                              selectedSlots.some(s => s.roomId === room.id && s.date === format(date, 'yyyy-MM-dd'))
+                                ? 'text-emerald-700'
+                                : 'text-yellow-700'
+                            }`}>
                               <Plus className="w-4 h-4" />
-                              <span>Book</span>
+                              <span>{selectedSlots.some(s => s.roomId === room.id && s.date === format(date, 'yyyy-MM-dd')) ? 'Selected' : 'Book'}</span>
                             </div>
-                        }
+                          )}
                         </div>
                       )}
                     </div>
@@ -405,22 +411,10 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
-                        const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        let startPixel;
-                        if (position.startsBefore) {
-                          startPixel = position.startIndex * COL_WIDTH;
-                        } else {
-                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
-                        }
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
-                          widthPixel = endPixel - startPixel;
-                        }
+                        const startPixel = position.startIndex * COL_WIDTH;
+                        const endPixel = position.endIndex * COL_WIDTH;
+                        const widthPixel = endPixel - startPixel;
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
