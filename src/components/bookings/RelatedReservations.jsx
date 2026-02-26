@@ -41,7 +41,6 @@ export default function RelatedReservations({
 
   const relatedReservations = currentReservations.filter(r =>
     r.client_id === selectedClient.id &&
-    r.id !== existingBooking.id &&
     r.status !== 'ANNULE'
   );
 
