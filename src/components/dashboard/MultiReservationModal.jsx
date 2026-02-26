@@ -631,7 +631,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
           <Button
             className="bg-yellow-700 hover:bg-yellow-800"
             onClick={handleSubmit}
-            disabled={!clientId || isSubmitting}
+            disabled={(!clientId && !isNewClient) || isSubmitting}
           >
             {isSubmitting ? 'Creating...' : `Create ${mergedRanges.length} reservation${mergedRanges.length > 1 ? 's' : ''}`}
           </Button>
