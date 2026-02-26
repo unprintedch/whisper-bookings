@@ -1357,7 +1357,10 @@ export default function BookingForm({
             onBookingEdit={onBookingEdit}
             onBookingDelete={onDelete}
           />
-        ) : isNewClient ? (
+        ) : (
+          <>
+        {/* New client fields */}
+        {isNewClient && (
           <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
             <h4 className="font-medium text-sm">Creating new client: "{clientSearchText}"</h4>
 
