@@ -227,6 +227,7 @@ export default function RelatedReservations({
                         reservations={currentReservations}
                         onSave={(formData) => handleEditSave(r.id, formData)}
                         onCancel={() => setExpandedId(null)}
+                        disabled={deletedReservationIds.has(r.id)}
                       />
                     </div>
                   )}
