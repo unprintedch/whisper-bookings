@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ClientForm from "../clients/ClientForm";
+import RelatedReservations from "./RelatedReservations";
 
 // A small component to manage agency selection in a modal
 const EditClientAgencyForm = ({ client, agencies, onSave, onCancel }) => {
