@@ -224,16 +224,43 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
       if (!finalClientId) return;
     }
     if (!finalClientId) return;
+    
+    // Valider les plages avant soumission
+    const overlapCheck = validateNoOverlaps(mergedRanges.map(r => ({
+      roomId: r.roomId,
+      checkin: format(r.checkin, 'yyyy-MM-dd'),
+      checkout: format(r.checkout, 'yyyy-MM-dd')
+    })));
+    
+    if (!overlapCheck.valid) {
+      alert(`Validation error: ${overlapCheck.error}`);
+      return;
+    }
+    
     setIsSubmitting(true);
 
     const reservationsToCreate = mergedRanges.map(range => {
       const key = `${range.roomId}_${format(range.checkin, 'yyyy-MM-dd')}`;
       const details = perRoomDetails[key] || {};
+      const checkinStr = format(range.checkin, 'yyyy-MM-dd');
+      const checkoutStr = format(range.checkout, 'yyyy-MM-dd');
+      
+      // Valider chaque plage
+      const rangeCheck = validateRangeWithinWindow(
+        { roomId: range.roomId, checkin: checkinStr, checkout: checkoutStr },
+        checkinStr,
+        checkoutStr
+      );
+      
+      if (!rangeCheck.valid) {
+        throw new Error(`Invalid range for room ${range.roomId}: ${rangeCheck.error}`);
+      }
+      
       return {
         client_id: finalClientId,
         room_id: range.roomId,
-        date_checkin: format(range.checkin, 'yyyy-MM-dd'),
-        date_checkout: format(range.checkout, 'yyyy-MM-dd'),
+        date_checkin: checkinStr,
+        date_checkout: checkoutStr,
         status,
         bed_configuration: details.bed_configuration || undefined,
         adults_count: details.adults_count ? parseInt(details.adults_count) : 0,
@@ -243,10 +270,15 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
       };
     });
 
-    await base44.entities.Reservation.bulkCreate(reservationsToCreate);
-    setIsSubmitting(false);
-    onSuccess();
-    onClose();
+    try {
+      await base44.entities.Reservation.bulkCreate(reservationsToCreate);
+      setIsSubmitting(false);
+      onSuccess();
+      onClose();
+    } catch (error) {
+      alert(`Error creating reservations: ${error.message}`);
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
