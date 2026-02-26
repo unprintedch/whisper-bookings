@@ -387,7 +387,7 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={!isPublicView && onSlotToggle ? () => onSlotToggle(room.id, format(date, 'yyyy-MM-dd')) : undefined}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -405,9 +405,22 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
 
-                        const startPixel = position.startIndex * COL_WIDTH;
-                        const widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
@@ -426,16 +439,24 @@ export default function GanttChart({
                         return (
                           <div
                             key={position.reservation.id}
-                            className={`absolute top-0 bottom-0 flex flex-col justify-center rounded pointer-events-auto transition-all duration-200 px-2 py-1 ${
+                            className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
                             isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
                             }
                             style={{
                               left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH)}px`,
-                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
-                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              height: '100%'
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
+
+                            <div className="absolute inset-y-1 w-full flex flex-col justify-center relative rounded px-2 py-1  h-full"
+
+
+
+                            style={{
+                              backgroundColor: isOwnAgency ? backgroundColor : '#cbd5e1',
+                              borderLeft: `5px solid ${isOwnAgency ? client?.color_hex || '#3b82f6' : '#94a3b8'}`
+                            }}>
 
                               <div className="flex items-center gap-2">
                                 <StatusIcon className={`w-4 h-4 ${isOwnAgency ? statusColor : 'text-slate-400'} flex-shrink-0`} />
@@ -461,6 +482,7 @@ export default function GanttChart({
                                   <Edit className="w-3 h-3 text-slate-500" />
                                 </div>
                               }
+                            </div>
                           </div>);
 
                       })}
