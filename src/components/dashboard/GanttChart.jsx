@@ -229,10 +229,15 @@ export default function GanttChart({
     if (foundEndIndex !== -1) {
       endIndex = foundEndIndex;
     } else {
-      endIndex = normalizedDateColumns.length;
-      if (checkout > viewEnd) {
-        endsAfter = true;
-      }
+     endIndex = dateColumnStrs.length;
+     if (checkoutStr > viewEnd) {
+       endsAfter = true;
+     }
+    }
+
+    // For single night stays (checkin + 1 day = checkout), show only the checkin night
+    if (endIndex === startIndex + 1) {
+     endIndex = startIndex + 1;
     }
 
     return {
