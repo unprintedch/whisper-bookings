@@ -149,28 +149,28 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
           </Popover>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Nights</Label>
-          <Select value={nights.toString()} onValueChange={handleNightsChange}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 50 }, (_, i) => i + 1).map(n => (
-                <SelectItem key={n} value={n.toString()}>{n} night{n > 1 ? 's' : ''}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Check-out</Label>
-          <Popover open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start font-normal h-8 text-xs">
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                {checkout ? format(new Date(checkout + 'T12:00:00'), 'dd/MM/yyyy') : 'Date'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={checkout ? new Date(checkout + 'T12:00:00') : undefined} onSelect={handleCheckout} disabled={(d) => !checkin || d <= new Date(checkin + 'T00:00:00')} /></PopoverContent>
-          </Popover>
-        </div>
+           <Label className="text-xs">Nights</Label>
+           <Select value={nights.toString()} onValueChange={disabled ? () => {} : handleNightsChange} disabled={disabled}>
+             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+             <SelectContent>
+               {Array.from({ length: 50 }, (_, i) => i + 1).map(n => (
+                 <SelectItem key={n} value={n.toString()}>{n} night{n > 1 ? 's' : ''}</SelectItem>
+               ))}
+             </SelectContent>
+           </Select>
+         </div>
+         <div className="space-y-1">
+           <Label className="text-xs">Check-out</Label>
+           <Popover open={!disabled && checkoutOpen} onOpenChange={disabled ? () => {} : setCheckoutOpen}>
+             <PopoverTrigger asChild>
+               <Button variant="outline" className="w-full justify-start font-normal h-8 text-xs" disabled={disabled}>
+                 <CalendarIcon className="mr-1 h-3 w-3" />
+                 {checkout ? format(new Date(checkout + 'T12:00:00'), 'dd/MM/yyyy') : 'Date'}
+               </Button>
+             </PopoverTrigger>
+             <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={checkout ? new Date(checkout + 'T12:00:00') : undefined} onSelect={handleCheckout} disabled={(d) => !checkin || d <= new Date(checkin + 'T00:00:00')} /></PopoverContent>
+           </Popover>
+         </div>
       </div>
 
       {/* Bed + Room */}
