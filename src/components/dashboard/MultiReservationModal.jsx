@@ -271,7 +271,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-medium text-slate-800">Agency</h4>
-                  {selectedClient && (
+                  {selectedClient && !isAgencyEditOpen && (
                     <Button type="button" variant="outline" size="sm" className="h-8 shadow-sm" onClick={() => setIsAgencyEditOpen(true)}>
                       <Edit className="w-3 h-3 mr-1" /> Edit
                     </Button>
@@ -279,6 +279,13 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                 </div>
                 {!selectedClient ? (
                   <p className="text-slate-400 italic">—</p>
+                ) : isAgencyEditOpen ? (
+                  <AgencyEditForm
+                    client={selectedClient}
+                    agencies={agencies}
+                    onSave={handleSaveAgencyInModal}
+                    onCancel={() => setIsAgencyEditOpen(false)}
+                  />
                 ) : agencyForSelectedClient ? (
                   <div className="space-y-2 text-slate-700">
                     <p className="font-semibold">{agencyForSelectedClient.name}</p>
@@ -317,7 +324,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-medium text-slate-800">Client Contact</h4>
-                  {selectedClient && (
+                  {selectedClient && !isClientEditOpen && (
                     <Button type="button" variant="outline" size="sm" className="h-8 shadow-sm" onClick={() => setIsClientEditOpen(true)}>
                       <Edit className="w-3 h-3 mr-1" /> Edit
                     </Button>
@@ -325,6 +332,12 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                 </div>
                 {!selectedClient ? (
                   <p className="text-slate-400 italic">—</p>
+                ) : isClientEditOpen ? (
+                  <ClientContactForm
+                    client={selectedClient}
+                    onSave={handleSaveClientInModal}
+                    onCancel={() => setIsClientEditOpen(false)}
+                  />
                 ) : selectedClient.contact_name || selectedClient.contact_email || selectedClient.contact_phone ? (
                   <div className="space-y-2 text-slate-700">
                     {selectedClient.contact_name && (
