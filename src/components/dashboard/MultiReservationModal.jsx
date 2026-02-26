@@ -257,17 +257,17 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
       }
       
       return {
-        client_id: finalClientId,
-        room_id: range.roomId,
-        date_checkin: checkinStr,
-        date_checkout: checkoutStr,
-        status,
-        bed_configuration: details.bed_configuration || undefined,
-        adults_count: details.adults_count ? parseInt(details.adults_count) : 0,
-        children_count: details.children_count ? parseInt(details.children_count) : 0,
-        infants_count: details.infants_count ? parseInt(details.infants_count) : 0,
-        comment: groupPax ? `Group: ${groupPax} pax` : undefined,
-      };
+         client_id: finalClientId,
+         room_id: range.roomId,
+         date_checkin: checkinStr,
+         date_checkout: checkoutStr,
+         status,
+         bed_configuration: details.bed_configuration || '',
+         adults_count: parseInt(details.adults_count) || 0,
+         children_count: parseInt(details.children_count) || 0,
+         infants_count: parseInt(details.infants_count) || 0,
+         comment: groupPax ? `Group: ${groupPax} pax` : '',
+       };
     });
 
     try {
