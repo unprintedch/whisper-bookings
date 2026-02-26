@@ -6,8 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/entities/User";
-import { getReservationPixels } from "./ganttChartUtils";
+import { User } from "@/components/lib/entitiesWrapper";
+import { FULL_DAY_MODE } from "./ganttRenderModes";
+import { createCellHandlers, createBookingHandlers } from "./ganttInteractions";
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -188,16 +189,57 @@ export default function GanttChart({
 
   const calculateBookingPosition = (reservation, dateColumns) => {
     if (!reservation.date_checkin || !reservation.date_checkout) {
+      console.warn("Skipping reservation with invalid dates:", reservation);
       return null;
     }
 
-    const pixels = getReservationPixels(reservation, dateColumns, 'full-day');
-    if (!pixels) return null;
+    const checkin = new Date(reservation.date_checkin + 'T00:00:00');
+    const checkout = new Date(reservation.date_checkout + 'T00:00:00');
+
+    const normalizedDateColumns = dateColumns.map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+
+    const viewStart = normalizedDateColumns[0];
+    const viewEnd = new Date(normalizedDateColumns[normalizedDateColumns.length - 1].getFullYear(), normalizedDateColumns[normalizedDateColumns.length - 1].getMonth(), normalizedDateColumns[normalizedDateColumns.length - 1].getDate() + 1, 0, 0, 0);
+
+    if (checkin >= viewEnd || checkout <= viewStart) {
+      return null;
+    }
+
+    let startIndex;
+    let startsBefore = false;
+    if (checkin < viewStart) {
+      startIndex = 0;
+      startsBefore = true;
+    } else {
+      startIndex = normalizedDateColumns.findIndex((date) =>
+      date.getFullYear() === checkin.getFullYear() &&
+      date.getMonth() === checkin.getMonth() &&
+      date.getDate() === checkin.getDate()
+      );
+    }
+
+    if (startIndex === -1) return null;
+
+    let endIndex;
+    let endsAfter = false;
+    const checkoutDateOnly = new Date(checkout.getFullYear(), checkout.getMonth(), checkout.getDate());
+    const foundEndIndex = normalizedDateColumns.findIndex((date) => date.getTime() === checkoutDateOnly.getTime());
+
+    if (foundEndIndex !== -1) {
+      endIndex = foundEndIndex;
+    } else {
+      endIndex = normalizedDateColumns.length;
+      if (checkout > viewEnd) {
+        endsAfter = true;
+      }
+    }
 
     return {
-      left: pixels.left,
-      width: pixels.width,
-      reservation
+      startIndex,
+      endIndex,
+      reservation,
+      startsBefore: startsBefore,
+      endsAfter: endsAfter
     };
   };
 
@@ -361,11 +403,26 @@ export default function GanttChart({
 
                     <div className="absolute inset-0 pointer-events-none">
                       {bookingPositions.map((position, posIndex) => {
-                         const client = getClientForReservation(position.reservation);
-                         const isOwnAgency = canSeeClientName(position.reservation);
+                        const client = getClientForReservation(position.reservation);
+                        const isOwnAgency = canSeeClientName(position.reservation);
 
-                         const startPixel = position.left;
-                         const widthPixel = position.width;
+                        const COL_WIDTH = 120;
+                        const HALF_COL_WIDTH = COL_WIDTH / 2;
+
+                        let startPixel;
+                        if (position.startsBefore) {
+                          startPixel = position.startIndex * COL_WIDTH;
+                        } else {
+                          startPixel = position.startIndex * COL_WIDTH + HALF_COL_WIDTH;
+                        }
+
+                        let widthPixel;
+                        if (position.endsAfter) {
+                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
+                        } else {
+                          const endPixel = position.endIndex * COL_WIDTH + HALF_COL_WIDTH;
+                          widthPixel = endPixel - startPixel;
+                        }
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
@@ -388,9 +445,9 @@ export default function GanttChart({
                             isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
                             }
                             style={{
-                               left: `${startPixel}px`,
-                               width: `${Math.max(widthPixel, 60)}px`,
-                               height: '100%'
+                              left: `${startPixel}px`,
+                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              height: '100%'
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
 
