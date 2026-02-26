@@ -1342,6 +1342,16 @@ export default function BookingForm({
           </div>
         )}
 
+        {/* Related reservations - edit mode only */}
+        <RelatedReservations
+          existingBooking={existingBooking}
+          selectedClient={selectedClient}
+          reservations={reservations}
+          allRooms={allRooms}
+          allSites={allSites}
+          onBookingEdit={onBookingEdit}
+        />
+
         {/* New client fields */}
         {isNewClient && (
           <div className="space-y-4 p-4 border rounded-lg bg-slate-50">
