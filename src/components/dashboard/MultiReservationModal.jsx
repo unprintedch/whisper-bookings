@@ -30,7 +30,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setLocalClients(clients);
   }, [clients]);
 
-  const selectedClient = localClients.find(c => c.id === clientId) || clients.find(c => c.id === clientId);
+  const selectedClient = localClients.find(c => c.id === clientId);
   const agencyForSelectedClient = selectedClient?.agency_id ? agencies.find(a => a.id === selectedClient.agency_id) : null;
 
   let agencyContactDisplay = null;
