@@ -1128,6 +1128,11 @@ export default function BookingForm({
 
   const submitButtonText = existingBooking ? "Save Booking" : "Create Booking";
 
+  // Don't show form when editing existing booking
+  if (existingBooking) {
+    return null;
+  }
+
   return (
     // Add px-2 for general padding fix, as requested in the outline.
     <div className="py-0 px-2 relative">
