@@ -1549,16 +1549,15 @@ export default function BookingForm({
           {!existingBooking && (
           <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="bed_configuration" className={errors.bed_configuration ? 'text-red-600' : ''}>
-              Bed Setup {errors.bed_configuration && <span className="text-red-500">*</span>}
+            <Label htmlFor="bed_configuration">
+              Bed Setup (optional)
             </Label>
             <Select
               value={selectedBedConfigId}
               onValueChange={handleBedConfigChange}
-              required
               disabled={allBedConfigs.length === 0}
             >
-              <SelectTrigger className={`h-9 ${errors.bed_configuration ? 'border-red-300 focus-visible:ring-red-300' : ''}`}>
+              <SelectTrigger className="h-9">
                 <SelectValue placeholder="Choose bed setup" />
               </SelectTrigger>
               <SelectContent>
