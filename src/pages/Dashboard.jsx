@@ -492,13 +492,7 @@ export default function Dashboard({
           </CardContent>
         </Card>
 
-        <AvailableRooms
-          rooms={filteredRooms}
-          reservations={filteredReservations} // Use filtered for available rooms
-          dateRange={{ startDate, endDate }}
-          onRoomSelect={handleRoomSelect}
-          sites={sites}
-        />
+
       </div>
 
       {showBookingForm && (
