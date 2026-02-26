@@ -229,7 +229,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
       const key = `${range.roomId}_${format(range.checkin, 'yyyy-MM-dd')}`;
       const details = perRoomDetails[key] || {};
       return {
-        client_id: clientId,
+        client_id: finalClientId,
         room_id: range.roomId,
         date_checkin: format(range.checkin, 'yyyy-MM-dd'),
         date_checkout: format(range.checkout, 'yyyy-MM-dd'),
