@@ -407,13 +407,7 @@ export default function GanttChart({
                         const COL_WIDTH = 120;
 
                         const startPixel = position.startIndex * COL_WIDTH;
-
-                        let widthPixel;
-                        if (position.endsAfter) {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        } else {
-                          widthPixel = position.endIndex * COL_WIDTH - startPixel;
-                        }
+                        const widthPixel = position.endIndex * COL_WIDTH - startPixel;
 
                         const adults = position.reservation.adults_count || 0;
                         const children = position.reservation.children_count || 0;
