@@ -1356,6 +1356,7 @@ export default function BookingForm({
            allBedConfigs={allBedConfigs}
            selectedSiteName={selectedSiteName}
            onReservationsUpdated={onReservationsUpdated}
+           onReservationStatusChanged={onReservationStatusChanged}
          />
 
         {/* New client fields */}
