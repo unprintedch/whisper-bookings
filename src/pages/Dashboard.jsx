@@ -159,6 +159,16 @@ export default function Dashboard({
     setIsLoading(false);
   };
 
+  // Lightweight refresh - only updates reservations without showing loading spinner
+  const refreshReservationsOnly = async () => {
+    try {
+      const reservationsData = await base44.entities.Reservation.list('-created_date');
+      setReservations(reservationsData);
+    } catch (error) {
+      console.error('Error refreshing reservations:', error);
+    }
+  };
+
   const sendNotificationEmails = async (bookingDetails, bookingType = 'new') => {
        const { notifications, ...bookingData } = bookingDetails;
        if (!notifications || (!notifications.toAdmin && !notifications.toAgency && !notifications.toClient)) {
