@@ -133,7 +133,7 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
   const selectedRoom = rooms.find(r => r.id === roomId);
 
   return (
-    <div className="space-y-3 opacity-50 pointer-events-none" style={disabled ? { opacity: 0.5, pointerEvents: 'none' } : {}}>
+    <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       {/* Dates row */}
       <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1">
