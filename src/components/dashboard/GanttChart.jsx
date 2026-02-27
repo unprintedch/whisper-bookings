@@ -143,11 +143,11 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false
+  isPublicView = false,
+  currentUser = null,
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
 
 
