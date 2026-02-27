@@ -93,11 +93,13 @@ export default function RelatedReservations({
 
   const handleChangeStatus = async (reservationId, newStatus) => {
     await base44.entities.Reservation.update(reservationId, { status: newStatus });
-    // Update local only - parent Gantt will pick up changes via its own refresh
+    // Update local state for immediate feedback in this form
     const updated = (localReservations || reservations).map(r =>
       r.id === reservationId ? { ...r, status: newStatus } : r
     );
     setLocalReservations(updated);
+    // Update the single reservation in the Gantt without triggering a full reload
+    if (onReservationStatusChanged) onReservationStatusChanged(reservationId, { status: newStatus });
   };
 
   const handleChangeAllStatusInDateRange = async (dateRangeKey, newStatus) => {
