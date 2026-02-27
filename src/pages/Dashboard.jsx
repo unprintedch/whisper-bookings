@@ -479,7 +479,7 @@ export default function Dashboard({
               onRoomEdit={handleRoomEdit}
               sites={sites}
               selectedSlots={selectedSlots}
-              refreshKey={reservations.length}
+              
             />
           </CardContent>
         </Card>
