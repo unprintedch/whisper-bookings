@@ -31,6 +31,7 @@ export default function RelatedReservations({
   allBedConfigs,
   selectedSiteName,
   onReservationsUpdated,
+  onReservationStatusChanged,
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [deleteDialogId, setDeleteDialogId] = useState(null);
