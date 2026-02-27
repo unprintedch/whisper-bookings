@@ -183,11 +183,7 @@ export default function RelatedReservations({
                      <div className="flex items-center gap-2">
                        <div className="flex items-center gap-1">
                          <Label className="text-xs font-medium text-slate-600">Status:</Label>
-                         <Select value={r.status} onValueChange={v => {
-                           const event = new MouseEvent('click', { bubbles: true });
-                           event.stopPropagation = () => {};
-                           handleChangeStatus(r.id, v);
-                         }}>
+                         <Select value={r.status} onValueChange={v => handleChangeStatus(r.id, v)}>
                            <SelectTrigger className="h-7 w-24 text-xs" onClick={e => e.stopPropagation()}>
                              <SelectValue />
                            </SelectTrigger>
