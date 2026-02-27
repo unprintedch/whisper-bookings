@@ -551,6 +551,7 @@ export default function Dashboard({
                 allBedConfigs={allBedConfigs}
                 selectedSiteName={selectedSiteName}
                 onReservationsUpdated={refreshReservationsOnly}
+                onReservationStatusChanged={updateSingleReservation}
               />
             </div>
           </div>
