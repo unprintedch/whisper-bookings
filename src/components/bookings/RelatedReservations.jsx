@@ -92,18 +92,15 @@ export default function RelatedReservations({
 
   const handleChangeStatus = async (reservationId, newStatus) => {
     await base44.entities.Reservation.update(reservationId, { status: newStatus });
-    // Update local
+    // Update local only - parent Gantt will pick up changes via its own refresh
     const updated = (localReservations || reservations).map(r =>
       r.id === reservationId ? { ...r, status: newStatus } : r
     );
     setLocalReservations(updated);
-    // Notify parent (e.g., Dashboard) to refresh the Gantt
-    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const handleChangeAllStatusInDateRange = async (dateRangeKey, newStatus) => {
     setPerDateStatus(prev => ({ ...prev, [dateRangeKey]: newStatus }));
-    // Find all reservations in this date range and update them
     const key = dateRangeKey;
     const reservationsInRange = (localReservations || reservations).filter(r => {
       return `${r.date_checkin}_${r.date_checkout}` === key;
@@ -113,7 +110,6 @@ export default function RelatedReservations({
       await base44.entities.Reservation.update(res.id, { status: newStatus });
     }
     
-    // Update local
     const updated = (localReservations || reservations).map(r => {
       if (`${r.date_checkin}_${r.date_checkout}` === key) {
         return { ...r, status: newStatus };
@@ -121,8 +117,6 @@ export default function RelatedReservations({
       return r;
     });
     setLocalReservations(updated);
-    // Notify parent (e.g., Dashboard) to refresh the Gantt
-    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const toggleExpand = (id) => {
