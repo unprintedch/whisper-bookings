@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
+import { User } from "@/entities/User";
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -33,11 +33,9 @@ const statusBackgrounds = {
 };
 
 function RoomDetailsModal({ room, isOpen, onClose, onEdit, currentUser }) {
-  const user = currentUser;
-
   if (!room) return null;
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -143,13 +141,23 @@ export default function GanttChart({
   onBookingResize,
   onRoomEdit,
   sites = [],
-  isPublicView = false,
-  currentUser = null,
+  isPublicView = false
 }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await User.me();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    };
+    loadUser();
+  }, []);
 
   const getReservationsForRoom = (roomId) => {
     return reservations.filter((reservation) => reservation.room_id === roomId);
@@ -477,8 +485,7 @@ export default function GanttChart({
         room={selectedRoom}
         isOpen={isRoomModalOpen}
         onClose={() => setIsRoomModalOpen(false)}
-        onEdit={handleRoomEdit}
-        currentUser={currentUser} />
+        onEdit={handleRoomEdit} />
 
     </>);
 
