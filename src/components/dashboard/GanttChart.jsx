@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Users, Plus, Edit, Eye, Clock, CheckCircle2, DollarSign, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/entities/User";
+
 
 const statusColors = {
   OPTION: "bg-amber-100 border-amber-300 text-amber-800",
@@ -149,17 +149,7 @@ export default function GanttChart({
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await User.me();
-        setCurrentUser(user);
-      } catch (error) {
-        console.error('Error loading user:', error);
-      }
-    };
-    loadUser();
-  }, []);
+
 
   const getReservationsForRoom = (roomId) => {
     return reservations.filter((reservation) => reservation.room_id === roomId);
