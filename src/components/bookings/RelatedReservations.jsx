@@ -81,13 +81,12 @@ export default function RelatedReservations({
   const handleEditSave = async (reservationId, formData) => {
     const { notifications, ...data } = formData;
     await base44.entities.Reservation.update(reservationId, data);
-    // Update local
+    // Update local only - do NOT call onReservationsUpdated here as it would
+    // cause the parent to re-render and reset local state (blinking effect)
     const updated = (localReservations || reservations).map(r =>
       r.id === reservationId ? { ...r, ...data } : r
     );
     setLocalReservations(updated);
-    // Notify parent (e.g., Dashboard) to refresh the Gantt
-    if (onReservationsUpdated) onReservationsUpdated(updated);
     // Don't auto-close - let user close manually
   };
 
