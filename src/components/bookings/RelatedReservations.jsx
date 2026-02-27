@@ -111,6 +111,7 @@ export default function RelatedReservations({
     
     for (const res of reservationsInRange) {
       await base44.entities.Reservation.update(res.id, { status: newStatus });
+      if (onReservationStatusChanged) onReservationStatusChanged(res.id, { status: newStatus });
     }
     
     const updated = (localReservations || reservations).map(r => {
