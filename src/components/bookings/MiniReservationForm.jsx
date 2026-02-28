@@ -106,7 +106,9 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
     if (c) { setAdults(c.max_occupancy); setChildren(0); setInfants(0); }
   };
 
-  // Auto-save immediately on every change (skip first mount and when disabled)
+  // Auto-save with debounce to avoid rate limiting
+  const saveTimeoutRef = useRef(null);
+  
   useEffect(() => {
     if (isInitialMount.current || disabled) {
       isInitialMount.current = false;
@@ -116,18 +118,22 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
     const config = bedConfigId ? allBedConfigs.find(c => c.id === bedConfigId) : null;
     const bedConfigName = config?.name || reservation.bed_configuration;
     
-    // Auto-save when all required fields are filled
     if (checkin && checkout && roomId && bedConfigName) {
-      onSave({
-        date_checkin: checkin,
-        date_checkout: checkout,
-        bed_configuration: bedConfigName,
-        room_id: roomId,
-        adults_count: adults,
-        children_count: children,
-        infants_count: infants,
-      });
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        onSave({
+          date_checkin: checkin,
+          date_checkout: checkout,
+          bed_configuration: bedConfigName,
+          room_id: roomId,
+          adults_count: adults,
+          children_count: children,
+          infants_count: infants,
+        });
+      }, 800);
     }
+    
+    return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
   }, [checkin, checkout, roomId, bedConfigId, adults, children, infants, allBedConfigs, reservation, onSave, disabled]);
 
   const selectedRoom = rooms.find(r => r.id === roomId);
