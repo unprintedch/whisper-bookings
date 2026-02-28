@@ -242,10 +242,7 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex justify-end pt-1 border-t">
-        <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onCancel}>Close</Button>
-      </div>
+
     </div>
   );
 }
