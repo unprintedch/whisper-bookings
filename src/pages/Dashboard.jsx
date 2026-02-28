@@ -296,7 +296,7 @@ export default function Dashboard({
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
       setEditingBooking(null);
-      loadData();
+      await loadData();
     } catch (error) {
       console.error('Error deleting booking:', error);
     }
