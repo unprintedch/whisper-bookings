@@ -188,12 +188,12 @@ export default function RelatedReservations({
                   {isExpanded && (
                     <div className="border-t border-slate-100 bg-slate-50/30 p-3">
                       <MiniReservationForm
-                        reservation={r}
-                        allRooms={allRooms}
-                        allSites={allSites}
-                        allBedConfigs={allBedConfigs || []}
-                        reservations={currentReservations}
-                        onSave={(formData) => handleEditSave(r.id, formData)}
+                       reservation={r}
+                       allRooms={allRooms}
+                       allSites={allSites}
+                       allBedConfigs={allBedConfigs || []}
+                       reservations={localReservations}
+                       onSave={(formData) => handleEditSave(r.id, formData)}
                         onCancel={() => setExpandedId(null)}
                         disabled={false}
                       />
