@@ -169,14 +169,14 @@ export default function RelatedReservations({
                          </Select>
                        </div>
                        <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs px-2 text-red-600 hover:bg-red-50 hover:text-red-700"
-                        onClick={e => { e.stopPropagation(); setDeleteDialogId(r.id); }}
-                      >
-                        <Trash2 className="w-3 h-3 mr-1" /> Delete
-                      </Button>
+                         type="button"
+                         variant="ghost"
+                         size="icon"
+                         className="h-7 w-7 text-red-600 hover:bg-red-50 hover:text-red-700"
+                         onClick={e => { e.stopPropagation(); setDeleteDialogId(r.id); }}
+                       >
+                         <Trash2 className="w-3.5 h-3.5" />
+                       </Button>
                       <div
                         className="cursor-pointer p-1"
                         onClick={() => toggleExpand(r.id)}
