@@ -117,20 +117,7 @@ export default function RelatedReservations({
               <span className="text-xs font-semibold text-slate-600">
                 {format(new Date(group.checkin + 'T00:00:00'), 'd MMM yyyy')} → {format(new Date(group.checkout + 'T00:00:00'), 'd MMM yyyy')}
               </span>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium">Status:</Label>
-                <Select value={perDateStatus[key] || ""} onValueChange={v => handleChangeAllStatusInDateRange(key, v)}>
-                  <SelectTrigger className="h-7 w-28 text-xs">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={null}>No change</SelectItem>
-                    {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
             </div>
             {group.items.map(r => {
                const room = allRooms.find(rm => rm.id === r.room_id);
