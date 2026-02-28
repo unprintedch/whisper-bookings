@@ -57,22 +57,17 @@ export default function RelatedReservations({
 
   const handleDelete = async (reservationId) => {
     setIsDeleting(true);
-    // Mark as deleted immediately to prevent further updates
-    setDeletedReservationIds(prev => new Set([...prev, reservationId]));
+    // Remove from view immediately
+    setDeletedIds(prev => new Set([...prev, reservationId]));
+    setDeleteDialogId(null);
+    setIsDeleting(false);
     try {
       await base44.entities.Reservation.delete(reservationId);
       if (onReservationDeleted) onReservationDeleted(reservationId);
+      if (onReservationsUpdated) onReservationsUpdated(reservations.filter(r => r.id !== reservationId));
     } catch (error) {
       console.warn('Delete error:', error.message);
-      // Reservation may already be deleted, remove from local view anyway
     }
-    setDeleteDialogId(null);
-    setIsDeleting(false);
-    // Remove from local view
-    const updated = (localReservations || reservations).filter(r => r.id !== reservationId);
-    setLocalReservations(updated);
-    // Notify parent (e.g., Dashboard) to refresh the Gantt
-    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const handleEditSave = async (reservationId, formData) => {
