@@ -73,25 +73,12 @@ export default function RelatedReservations({
   const handleEditSave = async (reservationId, formData) => {
     const { notifications, ...data } = formData;
     await base44.entities.Reservation.update(reservationId, data);
-    // Update local
-    const updated = (localReservations || reservations).map(r =>
-      r.id === reservationId ? { ...r, ...data } : r
-    );
-    setLocalReservations(updated);
-    // Notify parent (e.g., Dashboard) to refresh the Gantt
-    if (onReservationsUpdated) onReservationsUpdated(updated);
-    // Don't auto-close - let user close manually
+    if (onReservationsUpdated) onReservationsUpdated(reservations.map(r => r.id === reservationId ? { ...r, ...data } : r));
   };
 
   const handleChangeStatus = async (reservationId, newStatus) => {
     await base44.entities.Reservation.update(reservationId, { status: newStatus });
-    // Update local
-    const updated = (localReservations || reservations).map(r =>
-      r.id === reservationId ? { ...r, status: newStatus } : r
-    );
-    setLocalReservations(updated);
-    // Notify parent (e.g., Dashboard) to refresh the Gantt
-    if (onReservationsUpdated) onReservationsUpdated(updated);
+    if (onReservationsUpdated) onReservationsUpdated(reservations.map(r => r.id === reservationId ? { ...r, status: newStatus } : r));
   };
 
 
