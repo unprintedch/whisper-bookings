@@ -116,13 +116,13 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
     const config = bedConfigId ? allBedConfigs.find(c => c.id === bedConfigId) : null;
     const bedConfigName = config?.name || reservation.bed_configuration;
     
-    // Auto-save when all required fields are filled
-    if (checkin && checkout && roomId && bedConfigName) {
+    // Auto-save when required fields are filled (room can be empty if bed config changed)
+    if (checkin && checkout && bedConfigName) {
       onSave({
         date_checkin: checkin,
         date_checkout: checkout,
         bed_configuration: bedConfigName,
-        room_id: roomId,
+        room_id: roomId || null,
         adults_count: adults,
         children_count: children,
         infants_count: infants,
