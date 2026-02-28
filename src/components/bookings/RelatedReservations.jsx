@@ -81,26 +81,30 @@ export default function RelatedReservations({
   const handleEditSave = async (reservationId, formData) => {
     const { notifications, ...data } = formData;
     await base44.entities.Reservation.update(reservationId, data);
-    // Update local only - do NOT call onReservationsUpdated here as it would
-    // cause the parent to re-render and reset local state (blinking effect)
+    // Update local
     const updated = (localReservations || reservations).map(r =>
       r.id === reservationId ? { ...r, ...data } : r
     );
     setLocalReservations(updated);
+    // Notify parent (e.g., Dashboard) to refresh the Gantt
+    if (onReservationsUpdated) onReservationsUpdated(updated);
     // Don't auto-close - let user close manually
   };
 
   const handleChangeStatus = async (reservationId, newStatus) => {
     await base44.entities.Reservation.update(reservationId, { status: newStatus });
-    // Update local only - parent Gantt will pick up changes via its own refresh
+    // Update local
     const updated = (localReservations || reservations).map(r =>
       r.id === reservationId ? { ...r, status: newStatus } : r
     );
     setLocalReservations(updated);
+    // Notify parent (e.g., Dashboard) to refresh the Gantt
+    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const handleChangeAllStatusInDateRange = async (dateRangeKey, newStatus) => {
     setPerDateStatus(prev => ({ ...prev, [dateRangeKey]: newStatus }));
+    // Find all reservations in this date range and update them
     const key = dateRangeKey;
     const reservationsInRange = (localReservations || reservations).filter(r => {
       return `${r.date_checkin}_${r.date_checkout}` === key;
@@ -110,6 +114,7 @@ export default function RelatedReservations({
       await base44.entities.Reservation.update(res.id, { status: newStatus });
     }
     
+    // Update local
     const updated = (localReservations || reservations).map(r => {
       if (`${r.date_checkin}_${r.date_checkout}` === key) {
         return { ...r, status: newStatus };
@@ -117,6 +122,8 @@ export default function RelatedReservations({
       return r;
     });
     setLocalReservations(updated);
+    // Notify parent (e.g., Dashboard) to refresh the Gantt
+    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const toggleExpand = (id) => {
@@ -183,7 +190,11 @@ export default function RelatedReservations({
                      <div className="flex items-center gap-2">
                        <div className="flex items-center gap-1">
                          <Label className="text-xs font-medium text-slate-600">Status:</Label>
-                         <Select value={r.status} onValueChange={v => handleChangeStatus(r.id, v)}>
+                         <Select value={r.status} onValueChange={v => {
+                           const event = new MouseEvent('click', { bubbles: true });
+                           event.stopPropagation = () => {};
+                           handleChangeStatus(r.id, v);
+                         }}>
                            <SelectTrigger className="h-7 w-24 text-xs" onClick={e => e.stopPropagation()}>
                              <SelectValue />
                            </SelectTrigger>
