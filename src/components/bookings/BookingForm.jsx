@@ -116,12 +116,13 @@ export default function BookingForm({
   clients: allClients = [],
   sites: allSites = [],
   agencies: allAgencies = [],
-  reservations = [],
+  reservations: reservationsProp = [],
   allBedConfigs = [],
   selectedSiteName = "all",
   onBookingEdit = null,
   onReservationsUpdated = null
 }) {
+  const [reservations, setReservations] = useState(reservationsProp);
   const [formData, setFormData] = useState({
     client_id: '',
     room_id: '',
