@@ -49,7 +49,7 @@
  */
 import Agencies from './pages/Agencies';
 import BedConfigurations from './pages/BedConfigurations';
-import Dashboard from './pages/Dashboard';
+import Clients from './pages/Clients';
 import DataHealth from './pages/DataHealth';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
@@ -60,14 +60,14 @@ import Rooms from './pages/Rooms';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
 import index from './pages/index';
-import Clients from './pages/Clients';
+import Dashboard from './pages/Dashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Agencies": Agencies,
     "BedConfigurations": BedConfigurations,
-    "Dashboard": Dashboard,
+    "Clients": Clients,
     "DataHealth": DataHealth,
     "Groups": Groups,
     "Home": Home,
@@ -78,7 +78,7 @@ export const PAGES = {
     "Settings": Settings,
     "Users": Users,
     "index": index,
-    "Clients": Clients,
+    "Dashboard": Dashboard,
 }
 
 export const pagesConfig = {

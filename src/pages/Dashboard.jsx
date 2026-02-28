@@ -534,7 +534,24 @@ export default function Dashboard({
                 reservations={reservations}
                 allBedConfigs={allBedConfigs}
                 selectedSiteName={selectedSiteName}
-                onReservationsUpdated={loadData}
+                onReservationsUpdated={(updatedReservations) => {
+                  if (Array.isArray(updatedReservations)) {
+                    setReservations(prev => {
+                      const updatedIds = new Set(updatedReservations.map(r => r.id));
+                      // Remove reservations that no longer exist in the update
+                      const stillExisting = prev.filter(r => !updatedIds.has(r.id) || updatedReservations.some(u => u.id === r.id));
+                      // Merge: replace existing ones with updated, keep others
+                      return prev
+                        .filter(r => updatedReservations.some(u => u.id === r.id) || !updatedIds.has(r.id))
+                        .map(r => {
+                          const updated = updatedReservations.find(u => u.id === r.id);
+                          return updated || r;
+                        })
+                        // Add any new ones (shouldn't happen in edit but just in case)
+                        .concat(updatedReservations.filter(u => !prev.some(r => r.id === u.id)));
+                    });
+                  }
+                }}
               />
             </div>
           </div>
