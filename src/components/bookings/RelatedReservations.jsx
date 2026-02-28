@@ -35,12 +35,14 @@ export default function RelatedReservations({
   const [expandedId, setExpandedId] = useState(null);
   const [deleteDialogId, setDeleteDialogId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deletedIds, setDeletedIds] = useState(new Set());
+  const [localReservations, setLocalReservations] = useState(reservations);
 
-  // Filter out deleted reservations directly from the prop
-  const currentReservations = reservations.filter(r => !deletedIds.has(r.id));
+  // Keep local state in sync when prop changes (e.g. initial load)
+  React.useEffect(() => {
+    setLocalReservations(reservations);
+  }, [reservations]);
 
-  const relatedReservations = (!existingBooking || !selectedClient) ? [] : currentReservations.filter(r =>
+  const relatedReservations = (!existingBooking || !selectedClient) ? [] : localReservations.filter(r =>
     r.client_id === selectedClient.id &&
     r.status !== 'ANNULE'
   );
@@ -57,28 +59,35 @@ export default function RelatedReservations({
 
   const handleDelete = async (reservationId) => {
     setIsDeleting(true);
-    // Remove from view immediately
-    setDeletedIds(prev => new Set([...prev, reservationId]));
+    // Remove from local state immediately
+    const updated = localReservations.filter(r => r.id !== reservationId);
+    setLocalReservations(updated);
     setDeleteDialogId(null);
     setIsDeleting(false);
     try {
       await base44.entities.Reservation.delete(reservationId);
       if (onReservationDeleted) onReservationDeleted(reservationId);
-      if (onReservationsUpdated) onReservationsUpdated(reservations.filter(r => r.id !== reservationId));
+      if (onReservationsUpdated) onReservationsUpdated(updated);
     } catch (error) {
       console.warn('Delete error:', error.message);
+      // Revert on error
+      setLocalReservations(localReservations);
     }
   };
 
   const handleEditSave = async (reservationId, formData) => {
     const { notifications, ...data } = formData;
     await base44.entities.Reservation.update(reservationId, data);
-    if (onReservationsUpdated) onReservationsUpdated(reservations.map(r => r.id === reservationId ? { ...r, ...data } : r));
+    const updated = localReservations.map(r => r.id === reservationId ? { ...r, ...data } : r);
+    setLocalReservations(updated);
+    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
   const handleChangeStatus = async (reservationId, newStatus) => {
     await base44.entities.Reservation.update(reservationId, { status: newStatus });
-    if (onReservationsUpdated) onReservationsUpdated(reservations.map(r => r.id === reservationId ? { ...r, status: newStatus } : r));
+    const updated = localReservations.map(r => r.id === reservationId ? { ...r, status: newStatus } : r);
+    setLocalReservations(updated);
+    if (onReservationsUpdated) onReservationsUpdated(updated);
   };
 
 
