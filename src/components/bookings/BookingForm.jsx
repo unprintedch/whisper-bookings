@@ -120,8 +120,7 @@ export default function BookingForm({
   allBedConfigs = [],
   selectedSiteName = "all",
   onBookingEdit = null,
-  onReservationsUpdated = null,
-  onReservationStatusChanged = null,
+  onReservationsUpdated = null
 }) {
   const [formData, setFormData] = useState({
     client_id: '',
@@ -1356,7 +1355,6 @@ export default function BookingForm({
            allBedConfigs={allBedConfigs}
            selectedSiteName={selectedSiteName}
            onReservationsUpdated={onReservationsUpdated}
-           onReservationStatusChanged={onReservationStatusChanged}
          />
 
         {/* New client fields */}

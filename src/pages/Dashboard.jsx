@@ -169,11 +169,6 @@ export default function Dashboard({
     }
   };
 
-  // Update a single reservation in state without any API call
-  const updateSingleReservation = (reservationId, updates) => {
-    setReservations(prev => prev.map(r => r.id === reservationId ? { ...r, ...updates } : r));
-  };
-
   const sendNotificationEmails = async (bookingDetails, bookingType = 'new') => {
        const { notifications, ...bookingData } = bookingDetails;
        if (!notifications || (!notifications.toAdmin && !notifications.toAgency && !notifications.toClient)) {
@@ -551,7 +546,6 @@ export default function Dashboard({
                 allBedConfigs={allBedConfigs}
                 selectedSiteName={selectedSiteName}
                 onReservationsUpdated={refreshReservationsOnly}
-                onReservationStatusChanged={updateSingleReservation}
               />
             </div>
           </div>
