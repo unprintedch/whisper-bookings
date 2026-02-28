@@ -1356,7 +1356,10 @@ export default function BookingForm({
            allAgencies={allAgencies}
            allBedConfigs={allBedConfigs}
            selectedSiteName={selectedSiteName}
-           onReservationsUpdated={onReservationsUpdated}
+           onReservationsUpdated={(updated) => {
+             setReservations(updated);
+             if (onReservationsUpdated) onReservationsUpdated(updated);
+           }}
          />
 
         {/* New client fields */}
