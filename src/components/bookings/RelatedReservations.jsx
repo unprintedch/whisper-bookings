@@ -151,23 +151,28 @@ export default function RelatedReservations({
 
                     {/* Right: Status + Delete buttons + chevron */}
                      <div className="flex items-center gap-2">
-                       <div className="flex items-center gap-1">
-                         <Label className="text-xs font-medium text-slate-600">Status:</Label>
-                         <Select value={r.status} onValueChange={v => {
-                           const event = new MouseEvent('click', { bubbles: true });
-                           event.stopPropagation = () => {};
-                           handleChangeStatus(r.id, v);
-                         }}>
-                           <SelectTrigger className="h-7 w-24 text-xs" onClick={e => e.stopPropagation()}>
-                             <SelectValue />
-                           </SelectTrigger>
-                           <SelectContent>
-                             {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
-                               <SelectItem key={s} value={s}>{s}</SelectItem>
-                             ))}
-                           </SelectContent>
-                         </Select>
-                       </div>
+                       <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                       {[
+                         { value: 'REQUEST', label: 'Request', color: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200' },
+                         { value: 'OPTION', label: 'Option', color: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' },
+                         { value: 'RESERVE', label: 'Reserved', color: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' },
+                         { value: 'CONFIRME', label: 'Confirmed', color: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' },
+                         { value: 'PAYE', label: 'Paid', color: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' },
+                       ].map(s => (
+                         <button
+                           key={s.value}
+                           type="button"
+                           onClick={() => handleChangeStatus(r.id, s.value)}
+                           className={`px-2 py-0.5 rounded-full border text-xs font-medium transition-all ${
+                             r.status === s.value
+                               ? `${s.color} ring-1 ring-offset-1 ring-current`
+                               : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                           }`}
+                         >
+                           {s.label}
+                         </button>
+                       ))}
+                     </div>
                        <Button
                          type="button"
                          variant="ghost"
