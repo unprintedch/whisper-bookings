@@ -1747,106 +1747,82 @@ export default function BookingForm({
           </div>
         </div>
 
-        {/* Actions Footer - Swapped positions */}
-        <div className="flex items-end justify-between gap-4 pt-4 border-t mt-4">
-          {/* Left Part: Cancel/Delete Button */}
-          <div className="flex items-center gap-2">
-            {existingBooking && onDelete ? (
-              <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <Button type="button" variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
-                  Delete Booking
-                </Button>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the booking.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                      Yes, delete booking
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            ) : (
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-            )}
-          </div>
-
-          {/* Right Part: Status, Hold & Save */}
-          <div className="flex items-end gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <div className="flex items-center gap-2">
-                {[
-                  { value: 'OPTION', label: 'Option', color: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' },
-                  { value: 'RESERVE', label: 'Reserved', color: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' },
-                  { value: 'CONFIRME', label: 'Confirmed', color: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' },
-                  { value: 'PAYE', label: 'Paid', color: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' }
-                ].map((status) => (
-                  <button
-                    key={status.value}
-                    type="button"
-                    onClick={() => handleChange('status', status.value)}
-                    className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-all ${
-                      formData.status === status.value 
-                        ? `${status.color} ring-2 ring-offset-1 ring-current` 
-                        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                    }`}
-                  >
-                    {status.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {formData.status === 'OPTION' && (
-              <div className="space-y-2">
-                <Label>Hold Expires</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal h-9">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.hold_expires_at ? format(new Date(formData.hold_expires_at), 'dd/MM/yyyy') : 'Expires'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.hold_expires_at ? new Date(formData.hold_expires_at) : undefined}
-                      onSelect={(date) => handleChange('hold_expires_at', date?.toISOString())}
-                      disabled={(date) => {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const maxDate = getMaxExpiryDate();
-                        return date < today || (maxDate && date > maxDate);
-                      }}
-                      footer={
-                        formData.date_checkin && (
-                          <div className="p-3 border-t bg-slate-50">
-                            <p className="text-xs text-slate-600">
-                              Maximum: {format(getMaxExpiryDate() || new Date(), 'dd/MM/yyyy')}
-                              <span className="text-slate-500"> (check-in + 15 days)</span>
-                            </p>
-                          </div>
-                        )
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
-
-            <Button type="submit" className="bg-yellow-700 hover:bg-yellow-800">
-              {submitButtonText}
+        {/* Actions Footer */}
+        {!existingBooking && (
+          <div className="flex items-end justify-between gap-4 pt-4 border-t mt-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
             </Button>
+
+            <div className="flex items-end gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <div className="flex items-center gap-2">
+                  {[
+                    { value: 'OPTION', label: 'Option', color: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' },
+                    { value: 'RESERVE', label: 'Reserved', color: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' },
+                    { value: 'CONFIRME', label: 'Confirmed', color: 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' },
+                    { value: 'PAYE', label: 'Paid', color: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' }
+                  ].map((status) => (
+                    <button
+                      key={status.value}
+                      type="button"
+                      onClick={() => handleChange('status', status.value)}
+                      className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-all ${
+                        formData.status === status.value
+                          ? `${status.color} ring-2 ring-offset-1 ring-current`
+                          : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                      }`}
+                    >
+                      {status.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {formData.status === 'OPTION' && (
+                <div className="space-y-2">
+                  <Label>Hold Expires</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal h-9">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.hold_expires_at ? format(new Date(formData.hold_expires_at), 'dd/MM/yyyy') : 'Expires'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={formData.hold_expires_at ? new Date(formData.hold_expires_at) : undefined}
+                        onSelect={(date) => handleChange('hold_expires_at', date?.toISOString())}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const maxDate = getMaxExpiryDate();
+                          return date < today || (maxDate && date > maxDate);
+                        }}
+                        footer={
+                          formData.date_checkin && (
+                            <div className="p-3 border-t bg-slate-50">
+                              <p className="text-xs text-slate-600">
+                                Maximum: {format(getMaxExpiryDate() || new Date(), 'dd/MM/yyyy')}
+                                <span className="text-slate-500"> (check-in + 15 days)</span>
+                              </p>
+                            </div>
+                          )
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              <Button type="submit" className="bg-yellow-700 hover:bg-yellow-800">
+                {submitButtonText}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </form>
 
       {/* Inline Client Edit Modal */}
