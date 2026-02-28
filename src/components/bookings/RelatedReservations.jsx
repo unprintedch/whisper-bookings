@@ -39,16 +39,12 @@ export default function RelatedReservations({
 
   const [deletedReservationIds, setDeletedReservationIds] = useState(new Set());
 
-  if (!existingBooking || !selectedClient) return null;
-
   const currentReservations = localReservations || reservations;
 
-  const relatedReservations = currentReservations.filter(r =>
+  const relatedReservations = (!existingBooking || !selectedClient) ? [] : currentReservations.filter(r =>
     r.client_id === selectedClient.id &&
     r.status !== 'ANNULE'
   );
-
-  if (relatedReservations.length === 0) return null;
 
   // Group by date range
   const groups = {};
@@ -57,6 +53,8 @@ export default function RelatedReservations({
     if (!groups[key]) groups[key] = { checkin: r.date_checkin, checkout: r.date_checkout, items: [] };
     groups[key].items.push(r);
   });
+
+  if (!existingBooking || !selectedClient || relatedReservations.length === 0) return null;
 
   const handleDelete = async (reservationId) => {
     setIsDeleting(true);
