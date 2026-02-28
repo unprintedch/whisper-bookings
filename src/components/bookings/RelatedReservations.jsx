@@ -35,11 +35,10 @@ export default function RelatedReservations({
   const [expandedId, setExpandedId] = useState(null);
   const [deleteDialogId, setDeleteDialogId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [localReservations, setLocalReservations] = useState(null);
+  const [deletedIds, setDeletedIds] = useState(new Set());
 
-  const [deletedReservationIds, setDeletedReservationIds] = useState(new Set());
-
-  const currentReservations = localReservations || reservations;
+  // Filter out deleted reservations directly from the prop
+  const currentReservations = reservations.filter(r => !deletedIds.has(r.id));
 
   const relatedReservations = (!existingBooking || !selectedClient) ? [] : currentReservations.filter(r =>
     r.client_id === selectedClient.id &&
