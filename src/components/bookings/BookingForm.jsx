@@ -315,6 +315,7 @@ export default function BookingForm({
   useEffect(() => { setRooms(allRooms.filter(r => r.is_active)); }, [allRooms]);
   useEffect(() => { setAgencies(allAgencies); }, [allAgencies]);
   useEffect(() => { setSites(allSites); }, [allSites]);
+  useEffect(() => { setReservations(reservationsProp); }, [reservationsProp]);
 
   const selectedAgency = newClientData.agency_id ? agencies.find(a => a.id === newClientData.agency_id) : null;
   const selectedAgencyContacts = selectedAgency?.contacts || [];
