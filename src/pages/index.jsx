@@ -443,7 +443,7 @@ export default function HomePage() {
 
                   {hasAccess && allowPublicBooking && (
                     <Button
-                      onClick={() => { setSelectedRoomForBooking(null); setSelectedDateForBooking(null); setShowBookingForm(true); }}
+                      onClick={() => { setPublicMultiRanges([]); setShowBookingForm(true); }}
                       className="bg-yellow-700 hover:bg-yellow-800"
                     >
                       <CalendarCheck className="w-4 h-4 mr-2" />
