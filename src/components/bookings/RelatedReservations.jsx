@@ -84,8 +84,17 @@ export default function RelatedReservations({
   };
 
   const handleChangeStatus = async (reservationId, newStatus) => {
-    await base44.entities.Reservation.update(reservationId, { status: newStatus });
-    const updated = localReservations.map(r => r.id === reservationId ? { ...r, status: newStatus } : r);
+    const reservation = localReservations.find(r => r.id === reservationId);
+    let extraFields = {};
+    if (newStatus === 'OPTION' && reservation) {
+      // Default hold_expires_at: 2 weeks from created_date (or now if not available)
+      const baseDate = reservation.created_date ? new Date(reservation.created_date) : new Date();
+      extraFields.hold_expires_at = addDays(baseDate, 14).toISOString();
+    } else if (newStatus !== 'OPTION') {
+      extraFields.hold_expires_at = null;
+    }
+    await base44.entities.Reservation.update(reservationId, { status: newStatus, ...extraFields });
+    const updated = localReservations.map(r => r.id === reservationId ? { ...r, status: newStatus, ...extraFields } : r);
     setLocalReservations(updated);
     if (onReservationsUpdated) onReservationsUpdated(updated);
   };
