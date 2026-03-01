@@ -536,10 +536,10 @@ export default function PublicBookingForm({
               </PopoverContent>
             </Popover>
           </div>
-        </div>
+        </div>}
 
-        {/* Bed Setup and Room */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Bed Setup and Room (single mode only) */}
+        {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="bed_configuration" className={errors.bed_configuration ? 'text-red-600' : ''}>
               Bed Setup {errors.bed_configuration && <span className="text-red-500">*</span>}
