@@ -160,6 +160,15 @@ export default function PublicMultiReservationModal({
       let clientId;
       if (foundClient) {
         clientId = foundClient.id;
+        // Mettre à jour le nom si l'utilisateur l'a modifié
+        if (foundClient.name !== contactName || foundClient.contact_phone !== contactPhone) {
+          await dbClient.entities.Client.update(foundClient.id, {
+            name: contactName,
+            contact_phone: contactPhone || undefined,
+            agency_id: agencyId || undefined,
+            agency_contact_id: agencyContactId || undefined,
+          });
+        }
       } else {
         const newClient = await dbClient.entities.Client.create({
           name: contactName,
