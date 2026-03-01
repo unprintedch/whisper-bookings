@@ -151,55 +151,70 @@ export default function HomePage() {
     });
   };
 
-  const handleCellClick = (room, date) => {
-    setSelectedRoomForBooking(room);
-    setSelectedDateForBooking(date);
-    setShowBookingForm(true);
+  const handleSlotToggle = (roomId, dateStr) => {
+    setSelectedSlots(prev => {
+      const exists = prev.some(s => s.roomId === roomId && s.date === dateStr);
+      if (exists) return prev.filter(s => !(s.roomId === roomId && s.date === dateStr));
+      return [...prev, { roomId, date: dateStr }];
+    });
+  };
+
+  const handleRemoveRoomSlots = (roomId) => {
+    setSelectedSlots(prev => prev.filter(s => s.roomId !== roomId));
   };
 
   const handleBookingSubmit = async (formData) => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isTestMode = urlParams.get('base44_data_env') === 'dev';
-    const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTestMode = urlParams.get('base44_data_env') === 'dev';
+      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
 
-    let clientId = formData.existingClientId;
+      let clientId = formData.existingClientId;
+      if (!clientId) {
+        const newClient = await dbClient.entities.Client.create({
+          name: formData.contact_name,
+          contact_email: formData.contact_email,
+          contact_phone: formData.contact_phone,
+          agency_id: formData.agency_id || undefined,
+          notes: `Public booking request. ${formData.comment || ''}`
+        });
+        clientId = newClient.id;
+      }
 
-    if (!clientId) {
-      const clientData = {
-        name: formData.contact_name,
-        contact_email: formData.contact_email,
-        contact_phone: formData.contact_phone,
-        agency_id: formData.agency_id || undefined,
-        notes: `Public booking request from website. ${formData.comment || ''}`
-      };
-      const newClient = await dbClient.entities.Client.create(clientData);
-      clientId = newClient.id;
+      const rangesToBook = publicMultiRanges.length > 0
+        ? publicMultiRanges
+        : [{ roomId: formData.room_id, checkin: formData.date_checkin, checkout: formData.date_checkout }];
+
+      for (const range of rangesToBook) {
+        await dbClient.entities.Reservation.create({
+          client_id: clientId,
+          room_id: range.roomId,
+          date_checkin: typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd'),
+          date_checkout: typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd'),
+          bed_configuration: formData.bed_configuration || '',
+          adults_count: formData.adults_count,
+          children_count: formData.children_count,
+          infants_count: formData.infants_count,
+          comment: formData.comment || '',
+          status: 'REQUEST'
+        });
+      }
+
+      setSelectedSlots([]);
+      setPublicMultiRanges([]);
+      setShowBookingForm(false);
+      setBookingConfirmed({
+        clientName: formData.contact_name,
+        count: rangesToBook.length,
+        roomName: rangesToBook.length === 1 ? (rooms.find(r => r.id === rangesToBook[0].roomId)?.name || '') : null,
+        dateCheckin: typeof rangesToBook[0].checkin === 'string' ? rangesToBook[0].checkin : format(rangesToBook[0].checkin, 'yyyy-MM-dd'),
+        dateCheckout: typeof rangesToBook[rangesToBook.length - 1].checkout === 'string' ? rangesToBook[rangesToBook.length - 1].checkout : format(rangesToBook[rangesToBook.length - 1].checkout, 'yyyy-MM-dd'),
+      });
+      loadData();
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      alert('Error submitting request. Please try again.');
     }
-
-    const reservationData = {
-      client_id: clientId,
-      room_id: formData.room_id,
-      bed_configuration: formData.bed_configuration,
-      date_checkin: formData.date_checkin,
-      date_checkout: formData.date_checkout,
-      adults_count: formData.adults_count,
-      children_count: formData.children_count,
-      infants_count: formData.infants_count,
-      comment: formData.comment || '',
-      status: 'REQUEST'
-    };
-
-    await dbClient.entities.Reservation.create(reservationData);
-
-    const room = rooms.find(r => r.id === formData.room_id);
-    setShowBookingForm(false);
-    setBookingConfirmed({
-      clientName: formData.contact_name,
-      roomName: room ? room.name : formData.room_id,
-      dateCheckin: formData.date_checkin,
-      dateCheckout: formData.date_checkout,
-    });
-    loadData();
   };
 
 
