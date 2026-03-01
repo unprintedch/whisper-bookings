@@ -525,7 +525,7 @@ export default function PublicBookingForm({
               </PopoverContent>
             </Popover>
           </div>
-        </div>
+        </div>}
 
         {/* Bed Setup and Room */}
         {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
