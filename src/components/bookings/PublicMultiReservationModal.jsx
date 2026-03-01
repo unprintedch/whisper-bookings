@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 
 export default function PublicMultiReservationModal({
   isOpen,
@@ -23,11 +23,52 @@ export default function PublicMultiReservationModal({
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [agencyId, setAgencyId] = useState('');
+  const [agencyContactId, setAgencyContactId] = useState('');
   const [comment, setComment] = useState('');
+  const [foundClient, setFoundClient] = useState(null);
   const [perRoomDetails, setPerRoomDetails] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Reset all contact fields when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setContactName('');
+      setContactEmail('');
+      setContactPhone('');
+      setAgencyId('');
+      setAgencyContactId('');
+      setComment('');
+      setFoundClient(null);
+      setPerRoomDetails({});
+      setExpandedRows({});
+      setErrors({});
+    }
+  }, [isOpen]);
+
+  const selectedAgency = agencies.find(a => a.id === agencyId);
+
+  const handleEmailBlur = async () => {
+    if (!contactEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTestMode = urlParams.get('base44_data_env') === 'dev';
+      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
+      const allClients = await dbClient.entities.Client.list();
+      const match = allClients.find(c => c.contact_email?.toLowerCase() === contactEmail.toLowerCase());
+      if (match) {
+        setFoundClient(match);
+        setContactName(match.name || '');
+        if (match.agency_id) setAgencyId(match.agency_id);
+        if (match.agency_contact_id) setAgencyContactId(match.agency_contact_id);
+      } else {
+        setFoundClient(null);
+      }
+    } catch (e) {
+      // silent fail
+    }
+  };
 
   const getRoomName = (roomId) => {
     const room = rooms.find(r => r.id === roomId);
