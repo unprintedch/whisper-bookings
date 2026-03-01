@@ -528,7 +528,7 @@ export default function HomePage() {
         onClearAll={() => setSelectedSlots([])}
         onConfirm={(mergedRanges) => {
           setPublicMultiRanges(mergedRanges);
-          setShowBookingForm(true);
+          setShowMultiModal(true);
         }}
         rooms={rooms}
         sites={sites}
