@@ -267,6 +267,21 @@ export default function PublicBookingForm({
     return available;
   }, [rooms, selectedBedConfigId, formData.date_checkin, formData.date_checkout, isRoomAvailable, sites]);
 
+  const handleEmailBlur = async () => {
+    const email = formData.contact_email?.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTestMode = urlParams.get('base44_data_env') === 'dev';
+      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
+      const clients = await dbClient.entities.Client.list();
+      const found = clients.find(c => c.contact_email?.toLowerCase() === email.toLowerCase());
+      setExistingClient(found || null);
+    } catch (e) {
+      setExistingClient(null);
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -276,7 +291,6 @@ export default function PublicBookingForm({
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contact_email)) {
       newErrors.contact_email = "Invalid email format";
     }
-    if (!formData.request_type) newErrors.request_type = "Request type is required";
     if (!selectedBedConfigId) newErrors.bed_configuration = "Bed setup is required";
     if (!formData.room_id) newErrors.room_id = "Room is required";
     if (!formData.date_checkin) newErrors.date_checkin = "Check-in date is required";
