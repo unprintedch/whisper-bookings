@@ -31,12 +31,14 @@ export default function HomePage() {
   
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
+  const [allowPublicBooking, setAllowPublicBooking] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
   const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
+  const [bookingConfirmed, setBookingConfirmed] = useState(null);
 
 
   useEffect(() => {
