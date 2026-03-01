@@ -11,6 +11,7 @@ import { Shield, Check } from "lucide-react";
 export default function PublicAccessSettingsPage() {
   const [settings, setSettings] = useState(null);
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
+  const [allowPublicBooking, setAllowPublicBooking] = useState(false);
   const [password, setPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
