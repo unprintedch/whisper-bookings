@@ -29,6 +29,7 @@ export default function PublicAccessSettingsPage() {
         const existingSettings = settingsList[0];
         setSettings(existingSettings);
         setIsPasswordProtected(existingSettings.is_password_protected || false);
+        setAllowPublicBooking(existingSettings.allow_public_booking || false);
         setPassword(existingSettings.access_password || '');
       }
     } catch (error) {
