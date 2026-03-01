@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, Loader2, Lock } from "lucide-react";
 
 export default function PublicMultiReservationModal({
   isOpen,
@@ -29,6 +29,7 @@ export default function PublicMultiReservationModal({
   const [perRoomDetails, setPerRoomDetails] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLookingUp, setIsLookingUp] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Reset all contact fields when modal opens
@@ -41,6 +42,7 @@ export default function PublicMultiReservationModal({
       setAgencyContactId('');
       setComment('');
       setFoundClient(null);
+      setIsLookingUp(false);
       setPerRoomDetails({});
       setExpandedRows({});
       setErrors({});
@@ -51,6 +53,7 @@ export default function PublicMultiReservationModal({
 
   const handleEmailBlur = async () => {
     if (!contactEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) return;
+    setIsLookingUp(true);
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const isTestMode = urlParams.get('base44_data_env') === 'dev';
@@ -59,14 +62,17 @@ export default function PublicMultiReservationModal({
       const match = allClients.find(c => c.contact_email?.toLowerCase() === contactEmail.toLowerCase());
       if (match) {
         setFoundClient(match);
-        setContactName(match.name || '');
+        // Pre-fill name only if user hasn't typed anything yet
+        if (!contactName.trim()) setContactName(match.name || '');
         if (match.agency_id) setAgencyId(match.agency_id);
-        if (match.agency_contact_id) setAgencyContactId(match.agency_contact_id);
+        if (match.agency_contact_id !== undefined) setAgencyContactId(String(match.agency_contact_id));
       } else {
         setFoundClient(null);
       }
     } catch (e) {
       // silent fail
+    } finally {
+      setIsLookingUp(false);
     }
   };
 
@@ -172,10 +178,11 @@ export default function PublicMultiReservationModal({
       } else {
         const newClient = await dbClient.entities.Client.create({
           name: contactName,
+          contact_name: contactName,
           contact_email: contactEmail,
           contact_phone: contactPhone || undefined,
           agency_id: agencyId || undefined,
-          agency_contact_id: agencyContactId || undefined,
+          agency_contact_id: agencyContactId !== '' ? agencyContactId : undefined,
         });
         clientId = newClient.id;
       }
@@ -222,31 +229,39 @@ export default function PublicMultiReservationModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className={errors.contactName ? 'text-red-600' : ''}>
-                  Full Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={contactName}
-                  onChange={e => { setContactName(e.target.value); setErrors(prev => ({ ...prev, contactName: undefined })); }}
-                  placeholder="Your full name"
-                  className={errors.contactName ? 'border-red-300' : ''}
-                />
-                {errors.contactName && <p className="text-xs text-red-600">{errors.contactName}</p>}
-              </div>
-
-              <div className="space-y-1">
                 <Label className={errors.contactEmail ? 'text-red-600' : ''}>
                   Email <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  type="email"
-                  value={contactEmail}
-                  onChange={e => { setContactEmail(e.target.value); setErrors(prev => ({ ...prev, contactEmail: undefined })); setFoundClient(null); }}
-                  onBlur={handleEmailBlur}
-                  placeholder="you@example.com"
-                  className={errors.contactEmail ? 'border-red-300' : ''}
-                />
+                <div className="relative">
+                  <Input
+                    type="email"
+                    value={contactEmail}
+                    onChange={e => { setContactEmail(e.target.value); setErrors(prev => ({ ...prev, contactEmail: undefined })); setFoundClient(null); }}
+                    onBlur={handleEmailBlur}
+                    placeholder="you@example.com"
+                    className={errors.contactEmail ? 'border-red-300 pr-8' : 'pr-8'}
+                  />
+                  {isLookingUp && (
+                    <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />
+                  )}
+                </div>
                 {errors.contactEmail && <p className="text-xs text-red-600">{errors.contactEmail}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <Label className={errors.contactName ? 'text-red-600' : ''}>
+                  Full Name <span className="text-red-500">*</span>
+                  {foundClient && <span className="ml-1 text-xs font-normal text-slate-400">(pre-filled)</span>}
+                </Label>
+                <div className="relative">
+                  <Input
+                    value={contactName}
+                    onChange={e => { setContactName(e.target.value); setErrors(prev => ({ ...prev, contactName: undefined })); }}
+                    placeholder="Your full name"
+                    className={`${errors.contactName ? 'border-red-300' : ''} ${foundClient ? 'bg-emerald-50/50' : ''}`}
+                  />
+                </div>
+                {errors.contactName && <p className="text-xs text-red-600">{errors.contactName}</p>}
               </div>
 
               <div className="space-y-1">
@@ -258,16 +273,14 @@ export default function PublicMultiReservationModal({
                   placeholder="+1 234 567 890"
                 />
               </div>
-
-              <div className="flex items-end pb-0.5">
-                {foundClient && (
-                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2 w-full">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span className="text-sm text-emerald-800 font-medium">Returning guest – {foundClient.name}</span>
-                  </div>
-                )}
-              </div>
             </div>
+
+            {foundClient && (
+              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2 text-sm text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>We found your profile. Your booking request will be linked to your existing account.</span>
+              </div>
+            )}
 
             {/* Agency section */}
             {agencies.length > 0 && (
@@ -276,7 +289,7 @@ export default function PublicMultiReservationModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Agency (optional)</Label>
-                    <Select value={agencyId} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
+                    <Select value={agencyId || '__none__'} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
                       <SelectTrigger className="h-9">
                         <SelectValue placeholder="Select agency" />
                       </SelectTrigger>
@@ -292,7 +305,7 @@ export default function PublicMultiReservationModal({
                   {selectedAgency?.contacts?.length > 0 && (
                     <div className="space-y-1">
                       <Label className="text-xs">Agency Contact (optional)</Label>
-                      <Select value={agencyContactId} onValueChange={v => setAgencyContactId(v === '__none__' ? '' : v)}>
+                      <Select value={agencyContactId || '__none__'} onValueChange={v => setAgencyContactId(v === '__none__' ? '' : v)}>
                         <SelectTrigger className="h-9">
                           <SelectValue placeholder="General contact" />
                         </SelectTrigger>
