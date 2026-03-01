@@ -201,10 +201,10 @@ export default function PublicMultiReservationModal({
             {errors.clientName && <p className="text-xs text-red-600">{errors.clientName}</p>}
           </div>
 
-          {/* 2. Agency (optional) */}
+          {/* 2. Agency */}
           {agencies.length > 0 && (
             <div className="space-y-3 p-4 border rounded-lg bg-slate-50/70 text-sm">
-              <h4 className="font-medium text-slate-800">Agency <span className="text-xs font-normal text-slate-400">(optional)</span></h4>
+              <h4 className="font-medium text-slate-800">Agency</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Agency</Label>
@@ -241,40 +241,56 @@ export default function PublicMultiReservationModal({
             </div>
           )}
 
-          {/* 3. Contact details (optional) */}
-          <div className="space-y-3 p-4 border rounded-lg bg-slate-50/70 text-sm">
-            <h4 className="font-medium text-slate-800">Contact Details <span className="text-xs font-normal text-slate-400">(optional)</span></h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Contact Name</Label>
-                <Input
-                  value={contactName}
-                  onChange={e => setContactName(e.target.value)}
-                  placeholder="Contact person"
-                  className="h-9"
-                />
+          {/* 3. Contact details (accordion, optional) */}
+          <div className="border rounded-lg overflow-hidden text-sm">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-4 py-3 bg-slate-50/70 hover:bg-slate-100 text-left"
+              onClick={() => setContactExpanded(prev => !prev)}
+            >
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-slate-400" />
+                <span className="font-medium text-slate-800">Contact Details</span>
+                <span className="text-xs font-normal text-slate-400">(optional)</span>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Email</Label>
-                <Input
-                  type="email"
-                  value={contactEmail}
-                  onChange={e => setContactEmail(e.target.value)}
-                  placeholder="contact@example.com"
-                  className="h-9"
-                />
+              {contactExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+
+            {contactExpanded && (
+              <div className="p-4 space-y-3 bg-white">
+                <div className="space-y-1">
+                  <Label className="text-xs">Contact Name</Label>
+                  <Input
+                    value={contactName}
+                    onChange={e => setContactName(e.target.value)}
+                    placeholder="Contact person"
+                    className="h-9"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Email</Label>
+                    <Input
+                      type="email"
+                      value={contactEmail}
+                      onChange={e => setContactEmail(e.target.value)}
+                      placeholder="contact@example.com"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Phone</Label>
+                    <Input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={e => setContactPhone(e.target.value)}
+                      placeholder="+1 234 567 890"
+                      className="h-9"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Phone</Label>
-                <Input
-                  type="tel"
-                  value={contactPhone}
-                  onChange={e => setContactPhone(e.target.value)}
-                  placeholder="+1 234 567 890"
-                  className="h-9"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           {/* 4. Comment */}
