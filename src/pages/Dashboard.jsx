@@ -534,6 +534,9 @@ export default function Dashboard({
                 reservations={reservations}
                 allBedConfigs={allBedConfigs}
                 selectedSiteName={selectedSiteName}
+                onReservationDeleted={(reservationId) => {
+                  setReservations(prev => prev.filter(r => r.id !== reservationId));
+                }}
                 onReservationsUpdated={(updatedReservations) => {
                   if (Array.isArray(updatedReservations)) {
                     setReservations(prev => {

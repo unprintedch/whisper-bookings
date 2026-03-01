@@ -120,7 +120,8 @@ export default function BookingForm({
   allBedConfigs = [],
   selectedSiteName = "all",
   onBookingEdit = null,
-  onReservationsUpdated = null
+  onReservationsUpdated = null,
+  onReservationDeleted = null
 }) {
   const [reservations, setReservations] = useState(reservationsProp);
   const [formData, setFormData] = useState({
