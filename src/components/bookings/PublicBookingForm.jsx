@@ -469,7 +469,7 @@ export default function PublicBookingForm({
           </Card>
         )}
 
-        {/* Dates */}
+        {/* Dates + Bed/Room (single mode only) */}
         {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label className={errors.date_checkin ? 'text-red-600' : ''}>
