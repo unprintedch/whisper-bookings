@@ -57,6 +57,7 @@ export default function HomePage() {
       if (settingsList.length > 0) {
         const settings = settingsList[0];
         setIsPasswordProtected(settings.is_password_protected || false);
+        setAllowPublicBooking(settings.allow_public_booking || false);
         
         // If authenticated or not protected, grant access
         if (isAuth || !settings.is_password_protected) {
