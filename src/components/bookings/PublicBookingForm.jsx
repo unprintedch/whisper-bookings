@@ -20,8 +20,10 @@ export default function PublicBookingForm({
   agencies = [],
   onSubmit,
   initialRoom = null,
-  initialDate = null
+  initialDate = null,
+  initialRanges = []
 }) {
+  const isMultiMode = initialRanges.length > 0;
   const [formData, setFormData] = useState({
     contact_name: '',
     contact_email: '',
