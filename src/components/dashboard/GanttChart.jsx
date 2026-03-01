@@ -231,6 +231,9 @@ export default function GanttChart({
       }
     }
 
+    // IMPORTANT: Ne pas ajouter de décalage demi-colonne (HALF_COL_WIDTH) ici.
+    // Les barres doivent commencer au pixel exact du checkin, sans offset.
+    // Ce choix est intentionnel et ne doit pas être modifié.
     const left = startIndex * COL_WIDTH;
     const width = Math.max((endIndex - startIndex + 1) * COL_WIDTH, COL_WIDTH / 2);
 
@@ -420,6 +423,8 @@ export default function GanttChart({
                         const isOwnAgency = canSeeClientName(position.reservation);
 
                         const COL_WIDTH = 120;
+                        // IMPORTANT: Utiliser position.left et position.width tels quels.
+                        // Ne pas ajouter HALF_COL_WIDTH ou tout autre offset — décision intentionnelle.
                         const startPixel = position.left;
                         const widthPixel = position.width;
 
