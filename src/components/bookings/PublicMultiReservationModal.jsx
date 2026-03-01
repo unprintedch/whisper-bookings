@@ -157,17 +157,16 @@ export default function PublicMultiReservationModal({
       const isTestMode = urlParams.get('base44_data_env') === 'dev';
       const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
 
-      const allClients = await dbClient.entities.Client.list();
-      const existing = allClients.find(c => c.contact_email?.toLowerCase() === contactEmail.toLowerCase());
       let clientId;
-      if (existing) {
-        clientId = existing.id;
+      if (foundClient) {
+        clientId = foundClient.id;
       } else {
         const newClient = await dbClient.entities.Client.create({
           name: contactName,
           contact_email: contactEmail,
           contact_phone: contactPhone || undefined,
           agency_id: agencyId || undefined,
+          agency_contact_id: agencyContactId || undefined,
         });
         clientId = newClient.id;
       }
