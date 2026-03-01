@@ -37,9 +37,9 @@ export default function HomePage() {
   const [passwordError, setPasswordError] = useState(false);
   
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
-  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(null);
+  const [selectedSlots, setSelectedSlots] = useState([]);
+  const [publicMultiRanges, setPublicMultiRanges] = useState([]);
 
 
   useEffect(() => {
