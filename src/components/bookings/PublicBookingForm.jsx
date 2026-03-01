@@ -390,6 +390,7 @@ export default function PublicBookingForm({
                 type="email"
                 value={formData.contact_email}
                 onChange={(e) => handleChange('contact_email', e.target.value)}
+                onBlur={handleEmailBlur}
                 placeholder="john@example.com"
                 className={errors.contact_email ? 'border-red-300 focus-visible:ring-red-300' : ''}
               />
