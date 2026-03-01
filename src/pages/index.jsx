@@ -157,45 +157,48 @@ export default function HomePage() {
   };
 
   const handleBookingSubmit = async (formData) => {
-    try {
-      // Create a new client record for the public booking request
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTestMode = urlParams.get('base44_data_env') === 'dev';
+    const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
+
+    let clientId = formData.existingClientId;
+
+    if (!clientId) {
       const clientData = {
         name: formData.contact_name,
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
         agency_id: formData.agency_id || undefined,
-        notes: `Public booking request from website. Type: ${formData.request_type}. ${formData.comment || ''}`
+        notes: `Public booking request from website. ${formData.comment || ''}`
       };
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const isTestMode = urlParams.get('base44_data_env') === 'dev';
-      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
-
       const newClient = await dbClient.entities.Client.create(clientData);
-
-      // Create the reservation
-      const reservationData = {
-        client_id: newClient.id,
-        room_id: formData.room_id,
-        bed_configuration: formData.bed_configuration,
-        date_checkin: formData.date_checkin,
-        date_checkout: formData.date_checkout,
-        adults_count: formData.adults_count,
-        children_count: formData.children_count,
-        infants_count: formData.infants_count,
-        comment: `[${formData.request_type.toUpperCase()}] ${formData.comment || ''}`,
-        status: 'REQUEST'
-      };
-
-      await dbClient.entities.Reservation.create(reservationData);
-
-      setShowBookingForm(false);
-      alert('Booking request submitted successfully! We will contact you shortly.');
-      loadData(); // Reload data to show the new booking
-    } catch (error) {
-      console.error('Error submitting booking:', error);
-      alert('Error submitting booking request. Please try again.');
+      clientId = newClient.id;
     }
+
+    const reservationData = {
+      client_id: clientId,
+      room_id: formData.room_id,
+      bed_configuration: formData.bed_configuration,
+      date_checkin: formData.date_checkin,
+      date_checkout: formData.date_checkout,
+      adults_count: formData.adults_count,
+      children_count: formData.children_count,
+      infants_count: formData.infants_count,
+      comment: formData.comment || '',
+      status: 'REQUEST'
+    };
+
+    await dbClient.entities.Reservation.create(reservationData);
+
+    const room = rooms.find(r => r.id === formData.room_id);
+    setShowBookingForm(false);
+    setBookingConfirmed({
+      clientName: formData.contact_name,
+      roomName: room ? room.name : formData.room_id,
+      dateCheckin: formData.date_checkin,
+      dateCheckout: formData.date_checkout,
+    });
+    loadData();
   };
 
 
