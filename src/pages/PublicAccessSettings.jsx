@@ -127,6 +127,22 @@ export default function PublicAccessSettingsPage() {
             </div>
           )}
 
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="space-y-0.5">
+              <Label htmlFor="allow-public-booking" className="text-base">
+                Allow public booking requests
+              </Label>
+              <p className="text-sm text-slate-500">
+                When enabled, visitors can submit booking requests via the public page
+              </p>
+            </div>
+            <Switch
+              id="allow-public-booking"
+              checked={allowPublicBooking}
+              onCheckedChange={setAllowPublicBooking}
+            />
+          </div>
+
           {saveSuccess && (
             <Alert className="bg-green-50 border-green-200">
               <Check className="h-4 w-4 text-green-600" />
