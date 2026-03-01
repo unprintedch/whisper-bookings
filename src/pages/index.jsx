@@ -151,10 +151,16 @@ export default function HomePage() {
     });
   };
 
-  const handleCellClick = (room, date) => {
-    setSelectedRoomForBooking(room);
-    setSelectedDateForBooking(date);
-    setShowBookingForm(true);
+  const handleSlotToggle = (roomId, dateStr) => {
+    setSelectedSlots(prev => {
+      const exists = prev.some(s => s.roomId === roomId && s.date === dateStr);
+      if (exists) return prev.filter(s => !(s.roomId === roomId && s.date === dateStr));
+      return [...prev, { roomId, date: dateStr }];
+    });
+  };
+
+  const handleRemoveRoomSlots = (roomId) => {
+    setSelectedSlots(prev => prev.filter(s => s.roomId !== roomId));
   };
 
   const handleBookingSubmit = async (formData) => {
