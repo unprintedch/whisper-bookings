@@ -318,11 +318,23 @@ export default function PublicBookingForm({
     return newErrors;
   };
 
+  const validateFormMulti = () => {
+    const newErrors = {};
+    if (!formData.contact_name?.trim()) newErrors.contact_name = "Name is required";
+    if (!formData.contact_email?.trim()) {
+      newErrors.contact_email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contact_email)) {
+      newErrors.contact_email = "Invalid email format";
+    }
+    if (currentOccupancy === 0) newErrors.occupancy = "At least one guest is required";
+    return newErrors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setHasAttemptedSubmit(true);
 
-    const validationErrors = validateForm();
+    const validationErrors = isMultiMode ? validateFormMulti() : validateForm();
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -330,7 +342,7 @@ export default function PublicBookingForm({
       return;
     }
 
-    onSubmit({ ...formData, existingClientId: existingClient?.id || null });
+    onSubmit({ ...formData, existingClientId: existingClient?.id || null, initialRanges });
   };
 
   const getSiteName = (siteId) => {
