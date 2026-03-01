@@ -175,8 +175,7 @@ export default function HomePage() {
           name: formData.contact_name,
           contact_email: formData.contact_email,
           contact_phone: formData.contact_phone,
-          agency_id: formData.agency_id || undefined,
-          notes: `Public booking request. ${formData.comment || ''}`
+          agency_id: formData.agency_id || undefined
         });
         clientId = newClient.id;
       }

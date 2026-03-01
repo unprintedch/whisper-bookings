@@ -540,12 +540,11 @@ export default function PublicBookingForm({
         </div>
         )}
 
-        {/* Bed Setup and Room (single mode only) */}
-        {!isMultiMode && (
+        {/* Bed Setup and Room (optional in multi mode) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="bed_configuration" className={errors.bed_configuration ? 'text-red-600' : ''}>
-              Bed Setup {errors.bed_configuration && <span className="text-red-500">*</span>}
+              Bed Setup {isMultiMode ? '(Optional)' : ''}{errors.bed_configuration && <span className="text-red-500">*</span>}
             </Label>
             <Select
               value={selectedBedConfigId}
@@ -566,7 +565,7 @@ export default function PublicBookingForm({
 
           <div className="space-y-2">
             <Label htmlFor="room_id" className={errors.room_id ? 'text-red-600' : ''}>
-              Room {errors.room_id && <span className="text-red-500">*</span>}
+              Room {isMultiMode ? '(Optional)' : ''}{errors.room_id && <span className="text-red-500">*</span>}
             </Label>
             <Select
               value={formData.room_id}
@@ -595,7 +594,6 @@ export default function PublicBookingForm({
             )}
           </div>
         </div>
-        )}
 
         {/* Guests */}
         <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">
