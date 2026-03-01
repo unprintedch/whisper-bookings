@@ -304,8 +304,8 @@ export default function HomePage() {
             <div className="bg-slate-50 rounded-lg p-4 text-left space-y-2 mb-8 text-sm">
               <div><span className="text-slate-500">Name:</span> <span className="font-medium text-slate-800">{bookingConfirmed.clientName}</span></div>
               <div><span className="text-slate-500">Room:</span> <span className="font-medium text-slate-800">{bookingConfirmed.count > 1 ? `${bookingConfirmed.count} rooms requested` : bookingConfirmed.roomName}</span></div>
-              <div><span className="text-slate-500">Check-in:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckin + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
-              <div><span className="text-slate-500">Check-out:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckout + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
+              {bookingConfirmed.dateCheckin && <div><span className="text-slate-500">Check-in:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckin + 'T12:00:00'), 'dd MMM yyyy')}</span></div>}
+              {bookingConfirmed.dateCheckout && <div><span className="text-slate-500">Check-out:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckout + 'T12:00:00'), 'dd MMM yyyy')}</span></div>}
             </div>
             <Button
               onClick={() => { setBookingConfirmed(null); loadData(); }}
