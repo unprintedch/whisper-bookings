@@ -580,7 +580,7 @@ export default function PublicBookingForm({
               <p className="text-sm text-amber-600">No rooms available for selected dates and bed setup.</p>
             )}
           </div>
-        </div>
+        </div>}
 
         {/* Guests */}
         <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">
