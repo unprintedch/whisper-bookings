@@ -328,7 +328,7 @@ export default function PublicBookingForm({
       return;
     }
 
-    onSubmit(formData);
+    onSubmit({ ...formData, existingClientId: existingClient?.id || null });
   };
 
   const getSiteName = (siteId) => {
