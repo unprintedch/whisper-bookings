@@ -470,7 +470,8 @@ export default function PublicBookingForm({
         )}
 
         {/* Dates + Bed/Room (single mode only) */}
-        {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {!isMultiMode && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label className={errors.date_checkin ? 'text-red-600' : ''}>
               Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
