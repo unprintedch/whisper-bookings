@@ -507,14 +507,7 @@ export default function HomePage() {
       <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              Request a Booking
-              {selectedRoomForBooking && selectedDateForBooking && (
-                <span className="text-sm font-normal text-slate-600 ml-2">
-                  – {selectedRoomForBooking.name} from {format(selectedDateForBooking, 'dd MMM yyyy')}
-                </span>
-              )}
-            </DialogTitle>
+            <DialogTitle>Request a Booking</DialogTitle>
           </DialogHeader>
           <PublicBookingForm
             rooms={rooms}
@@ -523,11 +516,22 @@ export default function HomePage() {
             reservations={reservations}
             agencies={agencies}
             onSubmit={handleBookingSubmit}
-            initialRoom={selectedRoomForBooking}
-            initialDate={selectedDateForBooking}
+            initialRanges={publicMultiRanges}
           />
         </DialogContent>
       </Dialog>
+
+      <MultiSelectionPanel
+        selectedSlots={selectedSlots}
+        onRemoveSlot={handleRemoveRoomSlots}
+        onClearAll={() => setSelectedSlots([])}
+        onConfirm={(mergedRanges) => {
+          setPublicMultiRanges(mergedRanges);
+          setShowBookingForm(true);
+        }}
+        rooms={rooms}
+        sites={sites}
+      />
     </div>
   );
 }
