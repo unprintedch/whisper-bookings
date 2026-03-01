@@ -435,8 +435,31 @@ export default function PublicBookingForm({
           )}
         </Card>
 
+        {/* Multi-mode: show selected ranges summary instead of date/room fields */}
+        {isMultiMode ? (
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-semibold">Selected rooms & dates</Label>
+            <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 bg-slate-50">
+              {initialRanges.map((range, i) => {
+                const room = rooms.find(r => r.id === range.roomId);
+                const site = room ? sites.find(s => s.id === room.site_id) : null;
+                const checkinStr = typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd');
+                const checkoutStr = typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd');
+                return (
+                  <div key={i} className="px-4 py-3 text-sm">
+                    <span className="font-medium text-slate-800">{site?.name} – {room?.number ? room.number + ' – ' : ''}{room?.name}</span>
+                    <span className="text-slate-500 ml-2">
+                      {format(new Date(checkinStr + 'T12:00:00'), 'dd MMM')} → {format(new Date(checkoutStr + 'T12:00:00'), 'dd MMM yyyy')}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         {/* Dates */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label className={errors.date_checkin ? 'text-red-600' : ''}>
               Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
