@@ -419,7 +419,7 @@ export default function GanttChart({
                             }
                             style={{
                               left: `${startPixel}px`,
-                              width: `${Math.max(widthPixel, COL_WIDTH / 2)}px`,
+                              width: `${Math.max(widthPixel, COL_WIDTH)}px`,
                               height: '100%'
                             }}
                             onClick={(e) => handleBookingClick(position.reservation, e)}>
