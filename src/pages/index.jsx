@@ -533,6 +533,23 @@ export default function HomePage() {
         rooms={rooms}
         sites={sites}
       />
+
+      <PublicMultiReservationModal
+        isOpen={showMultiModal}
+        onClose={() => { setShowMultiModal(false); setPublicMultiRanges([]); }}
+        mergedRanges={publicMultiRanges}
+        rooms={rooms}
+        sites={sites}
+        allBedConfigs={bedConfigurations}
+        agencies={agencies}
+        onSuccess={({ clientName, count }) => {
+          setSelectedSlots([]);
+          setPublicMultiRanges([]);
+          setShowMultiModal(false);
+          setBookingConfirmed({ clientName, count, roomName: null, dateCheckin: null, dateCheckout: null });
+          loadData();
+        }}
+      />
     </div>
   );
 }
