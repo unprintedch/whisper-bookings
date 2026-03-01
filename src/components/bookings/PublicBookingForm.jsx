@@ -293,10 +293,12 @@ export default function PublicBookingForm({
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contact_email)) {
       newErrors.contact_email = "Invalid email format";
     }
-    if (!selectedBedConfigId) newErrors.bed_configuration = "Bed setup is required";
-    if (!formData.room_id) newErrors.room_id = "Room is required";
-    if (!formData.date_checkin) newErrors.date_checkin = "Check-in date is required";
-    if (!formData.date_checkout) newErrors.date_checkout = "Check-out date is required";
+    if (!isMultiMode) {
+      if (!selectedBedConfigId) newErrors.bed_configuration = "Bed setup is required";
+      if (!formData.room_id) newErrors.room_id = "Room is required";
+      if (!formData.date_checkin) newErrors.date_checkin = "Check-in date is required";
+      if (!formData.date_checkout) newErrors.date_checkout = "Check-out date is required";
+    }
 
     if (formData.date_checkin && formData.date_checkout) {
       const checkin = new Date(formData.date_checkin + 'T00:00:00');
