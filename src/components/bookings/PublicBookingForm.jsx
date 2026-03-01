@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { format, addDays, isSameDay, eachDayOfInterval } from "date-fns";
+import { format, addDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { base44 } from "@/api/base44Client";
 
 export default function PublicBookingForm({
   rooms = [],
@@ -26,7 +27,6 @@ export default function PublicBookingForm({
     contact_email: '',
     contact_phone: '',
     agency_id: '',
-    request_type: 'provisoire',
     room_id: initialRoom?.id || '',
     bed_configuration: '',
     date_checkin: initialDate ? format(initialDate, 'yyyy-MM-dd') : '',
@@ -37,6 +37,8 @@ export default function PublicBookingForm({
     comment: '',
     notes: ''
   });
+
+  const [existingClient, setExistingClient] = useState(null);
 
   const [selectedBedConfigId, setSelectedBedConfigId] = useState('');
   const [nights, setNights] = useState(1);
