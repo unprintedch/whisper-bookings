@@ -409,22 +409,34 @@ export default function HomePage() {
                   </Button>
                 </div>
 
-                <Select 
-                  value={filters.bedConfigId} 
-                  onValueChange={(value) => setFilters(prev => ({ ...prev, bedConfigId: value }))}
-                >
-                  <SelectTrigger className="w-52">
-                    <SelectValue placeholder="Bed configuration" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All bed configurations</SelectItem>
-                    {bedConfigurations.map(config => (
-                      <SelectItem key={config.id} value={config.id}>
-                        {config.name} ({config.max_occupancy} max)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-3">
+                  <Select 
+                    value={filters.bedConfigId} 
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, bedConfigId: value }))}
+                  >
+                    <SelectTrigger className="w-52">
+                      <SelectValue placeholder="Bed configuration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All bed configurations</SelectItem>
+                      {bedConfigurations.map(config => (
+                        <SelectItem key={config.id} value={config.id}>
+                          {config.name} ({config.max_occupancy} max)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {hasAccess && allowPublicBooking && (
+                    <Button
+                      onClick={() => { setSelectedRoomForBooking(null); setSelectedDateForBooking(null); setShowBookingForm(true); }}
+                      className="bg-yellow-700 hover:bg-yellow-800"
+                    >
+                      <CalendarCheck className="w-4 h-4 mr-2" />
+                      Request a Booking
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
