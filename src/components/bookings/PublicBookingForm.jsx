@@ -445,8 +445,32 @@ export default function PublicBookingForm({
           )}
         </Card>
 
+        {/* Multi-mode summary */}
+        {isMultiMode && (
+          <Card className="p-4 bg-blue-50/60 border-blue-200">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Selected rooms</h3>
+            <div className="space-y-2">
+              {initialRanges.map((range, i) => {
+                const room = rooms.find(r => r.id === range.roomId);
+                const site = room ? sites.find(s => s.id === room.site_id) : null;
+                const checkinStr = typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd');
+                const checkoutStr = typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd');
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm text-slate-700">
+                    <span className="font-medium">{site?.name || ''} – {room?.name || range.roomId}</span>
+                    <span className="text-slate-400">→</span>
+                    <span>{format(new Date(checkinStr + 'T12:00:00'), 'dd MMM yyyy')}</span>
+                    <span className="text-slate-400">→</span>
+                    <span>{format(new Date(checkoutStr + 'T12:00:00'), 'dd MMM yyyy')}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
         {/* Dates */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label className={errors.date_checkin ? 'text-red-600' : ''}>
               Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
