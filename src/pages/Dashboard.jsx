@@ -273,12 +273,13 @@ export default function Dashboard({
     try {
       if (editingBooking) {
         await base44.entities.Reservation.update(editingBooking.id, bookingData);
+        // Optimistic update: replace the updated reservation in state
+        setReservations(prev => prev.map(r => r.id === editingBooking.id ? { ...r, ...bookingData } : r));
         setEditingBooking(null);
       }
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await loadData();
       await sendNotificationEmails(bookingDataWithNotifications, 'update');
     } catch (error) {
       console.error('Error updating booking:', error);
