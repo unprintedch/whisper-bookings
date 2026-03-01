@@ -38,6 +38,7 @@ export default function HomePage() {
   const [passwordError, setPasswordError] = useState(false);
   
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showMultiModal, setShowMultiModal] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(null);
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [publicMultiRanges, setPublicMultiRanges] = useState([]);
