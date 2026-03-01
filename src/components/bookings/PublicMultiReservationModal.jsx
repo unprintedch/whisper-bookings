@@ -208,8 +208,8 @@ export default function PublicMultiReservationModal({
 
         <div className="space-y-5 py-2">
           {/* Contact section */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-700">Your Information</h3>
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-slate-700">Contact Information</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -232,7 +232,8 @@ export default function PublicMultiReservationModal({
                 <Input
                   type="email"
                   value={contactEmail}
-                  onChange={e => { setContactEmail(e.target.value); setErrors(prev => ({ ...prev, contactEmail: undefined })); }}
+                  onChange={e => { setContactEmail(e.target.value); setErrors(prev => ({ ...prev, contactEmail: undefined })); setFoundClient(null); }}
+                  onBlur={handleEmailBlur}
                   placeholder="you@example.com"
                   className={errors.contactEmail ? 'border-red-300' : ''}
                 />
@@ -249,23 +250,55 @@ export default function PublicMultiReservationModal({
                 />
               </div>
 
-              {agencies.length > 0 && (
-                <div className="space-y-1">
-                  <Label>Agency (optional)</Label>
-                  <Select value={agencyId} onValueChange={setAgencyId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select agency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={null}>No Agency</SelectItem>
-                      {agencies.map(a => (
-                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              <div className="flex items-end pb-0.5">
+                {foundClient && (
+                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2 w-full">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span className="text-sm text-emerald-800 font-medium">Returning guest – {foundClient.name}</span>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Agency section */}
+            {agencies.length > 0 && (
+              <div className="space-y-4 p-4 border rounded-lg bg-slate-50/70 text-sm">
+                <h4 className="font-medium text-slate-800">Agency</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Agency (optional)</Label>
+                    <Select value={agencyId} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Select agency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">No Agency</SelectItem>
+                        {agencies.map(a => (
+                          <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedAgency?.contacts?.length > 0 && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Agency Contact (optional)</Label>
+                      <Select value={agencyContactId} onValueChange={v => setAgencyContactId(v === '__none__' ? '' : v)}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="General contact" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">General Contact</SelectItem>
+                          {selectedAgency.contacts.map((c, i) => (
+                            <SelectItem key={i} value={String(i)}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-1">
               <Label>Special Requests or Comments (optional)</Label>
