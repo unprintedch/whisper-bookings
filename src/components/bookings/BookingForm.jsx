@@ -1357,6 +1357,7 @@ export default function BookingForm({
            allAgencies={allAgencies}
            allBedConfigs={allBedConfigs}
            selectedSiteName={selectedSiteName}
+           onReservationDeleted={onReservationDeleted}
            onReservationsUpdated={(updated) => {
              setReservations(updated);
              if (onReservationsUpdated) onReservationsUpdated(updated);
