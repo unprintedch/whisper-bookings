@@ -384,7 +384,7 @@ export default function GanttChart({
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
-                        !isPublicView ? 'cursor-pointer hover:bg-blue-50' : ''} ${
+                        (!isPublicView || onCellClick) ? 'cursor-pointer hover:bg-blue-50' : ''} ${
                         isSelected ? 'bg-yellow-100 border-l-4 border-l-yellow-700' : ''} ${
                         highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100/50' : ''} ${
                         format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`
@@ -393,11 +393,15 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView ? () => {
-                          const dateStr = format(date, 'yyyy-MM-dd');
-                          if (onSlotToggle) onSlotToggle(room.id, dateStr);
-                          else if (onCellClick) onCellClick(room, date);
-                        } : undefined}>
+                        onClick={() => {
+                          if (!isPublicView) {
+                            const dateStr = format(date, 'yyyy-MM-dd');
+                            if (onSlotToggle) onSlotToggle(room.id, dateStr);
+                            else if (onCellClick) onCellClick(room, date);
+                          } else if (onCellClick) {
+                            onCellClick(room, date);
+                          }
+                        }}>
 
                           {!isPublicView &&
                         <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
