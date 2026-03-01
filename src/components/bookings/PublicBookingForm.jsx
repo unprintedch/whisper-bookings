@@ -408,7 +408,7 @@ export default function PublicBookingForm({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {agencies.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="agency_id">Agency (Optional)</Label>
               <Select
@@ -428,25 +428,7 @@ export default function PublicBookingForm({
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="request_type" className={errors.request_type ? 'text-red-600' : ''}>
-                Request Type {errors.request_type && <span className="text-red-500">*</span>}
-              </Label>
-              <Select
-                value={formData.request_type}
-                onValueChange={(value) => handleChange('request_type', value)}
-              >
-                <SelectTrigger className={`h-11 ${errors.request_type ? 'border-red-300 focus-visible:ring-red-300' : ''}`}>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="provisoire">Provisoire</SelectItem>
-                  <SelectItem value="ferme">Ferme</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          )}
         </Card>
 
         {/* Dates */}
