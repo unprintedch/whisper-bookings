@@ -44,7 +44,8 @@ export default function PublicAccessSettingsPage() {
     try {
       const data = {
         is_password_protected: isPasswordProtected,
-        access_password: password
+        access_password: password,
+        allow_public_booking: allowPublicBooking
       };
 
       if (settings) {
