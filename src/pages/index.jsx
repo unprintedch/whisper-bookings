@@ -14,6 +14,7 @@ import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
 import PublicBookingForm from "../components/bookings/PublicBookingForm";
 import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
+import PublicMultiReservationModal from "../components/bookings/PublicMultiReservationModal";
 
 export default function HomePage() {
   const navigate = useNavigate();
