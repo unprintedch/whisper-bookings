@@ -492,7 +492,8 @@ export default function HomePage() {
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onCellClick={hasAccess ? handleCellClick : null}
+              onSlotToggle={hasAccess && allowPublicBooking ? handleSlotToggle : null}
+              selectedSlots={selectedSlots}
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
