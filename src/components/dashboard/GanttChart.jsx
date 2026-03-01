@@ -389,14 +389,35 @@ export default function GanttChart({
                           width: '120px',
                           height: '100%'
                         }}
-                        onClick={!isPublicView && onCellClick ? () => onCellClick(room, date) : undefined}>
+                        onClick={() => {
+                          const dateStr = format(date, 'yyyy-MM-dd');
+                          if (onSlotToggle) {
+                            onSlotToggle(room.id, dateStr);
+                          } else if (!isPublicView && onCellClick) {
+                            onCellClick(room, date);
+                          }
+                        }}>
 
-                          {!isPublicView &&
-                        <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                          {onSlotToggle ? (
+                            (() => {
+                              const dateStr = format(date, 'yyyy-MM-dd');
+                              const isSelected = selectedSlots.some(s => s.roomId === room.id && s.date === dateStr);
+                              return isSelected ? (
+                                <div className="w-full h-full bg-yellow-200/70 flex items-center justify-center">
+                                  <div className="w-3 h-3 rounded-full bg-yellow-600" />
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-yellow-700 text-xs opacity-0 group-hover/cell:opacity-60 transition-opacity">
+                                  <Plus className="w-3 h-3" />
+                                </div>
+                              );
+                            })()
+                          ) : (!isPublicView &&
+                            <div className="flex items-center gap-1 text-yellow-700 text-sm opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="w-4 h-4" />
                               <span>Book</span>
                             </div>
-                        }
+                          )}
                         </div>
                       )}
                     </div>
