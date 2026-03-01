@@ -13,6 +13,7 @@ import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
 import PublicBookingForm from "../components/bookings/PublicBookingForm";
+import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
 
 export default function HomePage() {
   const navigate = useNavigate();
