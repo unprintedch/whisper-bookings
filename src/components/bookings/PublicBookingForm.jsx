@@ -20,10 +20,8 @@ export default function PublicBookingForm({
   agencies = [],
   onSubmit,
   initialRoom = null,
-  initialDate = null,
-  initialRanges = []
+  initialDate = null
 }) {
-  const isMultiMode = initialRanges.length > 0;
   const [formData, setFormData] = useState({
     contact_name: '',
     contact_email: '',
@@ -293,12 +291,10 @@ export default function PublicBookingForm({
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contact_email)) {
       newErrors.contact_email = "Invalid email format";
     }
-    if (!isMultiMode) {
-      if (!selectedBedConfigId) newErrors.bed_configuration = "Bed setup is required";
-      if (!formData.room_id) newErrors.room_id = "Room is required";
-      if (!formData.date_checkin) newErrors.date_checkin = "Check-in date is required";
-      if (!formData.date_checkout) newErrors.date_checkout = "Check-out date is required";
-    }
+    if (!selectedBedConfigId) newErrors.bed_configuration = "Bed setup is required";
+    if (!formData.room_id) newErrors.room_id = "Room is required";
+    if (!formData.date_checkin) newErrors.date_checkin = "Check-in date is required";
+    if (!formData.date_checkout) newErrors.date_checkout = "Check-out date is required";
 
     if (formData.date_checkin && formData.date_checkout) {
       const checkin = new Date(formData.date_checkin + 'T00:00:00');
@@ -435,100 +431,77 @@ export default function PublicBookingForm({
           )}
         </Card>
 
-        {/* Multi-mode: show selected ranges summary instead of date/room fields */}
-        {isMultiMode ? (
+        {/* Dates */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold">Selected rooms & dates</Label>
-            <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 bg-slate-50">
-              {initialRanges.map((range, i) => {
-                const room = rooms.find(r => r.id === range.roomId);
-                const site = room ? sites.find(s => s.id === room.site_id) : null;
-                const checkinStr = typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd');
-                const checkoutStr = typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd');
-                return (
-                  <div key={i} className="px-4 py-3 text-sm">
-                    <span className="font-medium text-slate-800">{site?.name} – {room?.number ? room.number + ' – ' : ''}{room?.name}</span>
-                    <span className="text-slate-500 ml-2">
-                      {format(new Date(checkinStr + 'T12:00:00'), 'dd MMM')} → {format(new Date(checkoutStr + 'T12:00:00'), 'dd MMM yyyy')}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+            <Label className={errors.date_checkin ? 'text-red-600' : ''}>
+              Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
+            </Label>
+            <Popover open={checkinPopoverOpen} onOpenChange={setCheckinPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkin ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.date_checkin ? format(new Date(formData.date_checkin + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={formData.date_checkin ? new Date(formData.date_checkin + 'T12:00:00') : undefined}
+                  onSelect={handleCheckinChange}
+                  disabled={isDateDisabledForCheckin}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
-        ) : null}
 
-        {!isMultiMode && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label className={errors.date_checkin ? 'text-red-600' : ''}>
-                  Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
-                </Label>
-                <Popover open={checkinPopoverOpen} onOpenChange={setCheckinPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkin ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.date_checkin ? format(new Date(formData.date_checkin + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.date_checkin ? new Date(formData.date_checkin + 'T12:00:00') : undefined}
-                      onSelect={handleCheckinChange}
-                      disabled={isDateDisabledForCheckin}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="nights">Nights</Label>
+            <Select value={nights.toString()} onValueChange={handleNightsChange}>
+              <SelectTrigger className="h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 30 }, (_, i) => i + 1).map(night => (
+                  <SelectItem key={night} value={night.toString()}>
+                    {night} {night === 1 ? 'night' : 'nights'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="nights">Nights</Label>
-                <Select value={nights.toString()} onValueChange={handleNightsChange}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 30 }, (_, i) => i + 1).map(night => (
-                      <SelectItem key={night} value={night.toString()}>
-                        {night} {night === 1 ? 'night' : 'nights'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="space-y-2">
+            <Label className={errors.date_checkout ? 'text-red-600' : ''}>
+              Check-out {errors.date_checkout && <span className="text-red-500">*</span>}
+            </Label>
+            <Popover open={checkoutPopoverOpen} onOpenChange={setCheckoutPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkout ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.date_checkout ? format(new Date(formData.date_checkout + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={formData.date_checkout ? new Date(formData.date_checkout + 'T12:00:00') : undefined}
+                  onSelect={handleCheckoutChange}
+                  disabled={isDateDisabledForCheckout}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
 
-              <div className="space-y-2">
-                <Label className={errors.date_checkout ? 'text-red-600' : ''}>
-                  Check-out {errors.date_checkout && <span className="text-red-500">*</span>}
-                </Label>
-                <Popover open={checkoutPopoverOpen} onOpenChange={setCheckoutPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkout ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.date_checkout ? format(new Date(formData.date_checkout + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.date_checkout ? new Date(formData.date_checkout + 'T12:00:00') : undefined}
-                      onSelect={handleCheckoutChange}
-                      disabled={isDateDisabledForCheckout}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Bed Setup and Room */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="bed_configuration" className={errors.bed_configuration ? 'text-red-600' : ''}>
               Bed Setup {errors.bed_configuration && <span className="text-red-500">*</span>}
@@ -580,9 +553,7 @@ export default function PublicBookingForm({
               <p className="text-sm text-amber-600">No rooms available for selected dates and bed setup.</p>
             )}
           </div>
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Guests */}
         <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">

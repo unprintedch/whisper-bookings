@@ -13,7 +13,6 @@ import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
 import PublicBookingForm from "../components/bookings/PublicBookingForm";
-import MultiSelectionPanel from "../components/dashboard/MultiSelectionPanel";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -37,8 +36,8 @@ export default function HomePage() {
   const [passwordError, setPasswordError] = useState(false);
   
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [selectedSlots, setSelectedSlots] = useState([]);
-  const [publicMultiRanges, setPublicMultiRanges] = useState([]);
+  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
+  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(null);
 
 
@@ -151,16 +150,10 @@ export default function HomePage() {
     });
   };
 
-  const handleSlotToggle = (roomId, dateStr) => {
-    setSelectedSlots(prev => {
-      const exists = prev.some(s => s.roomId === roomId && s.date === dateStr);
-      if (exists) return prev.filter(s => !(s.roomId === roomId && s.date === dateStr));
-      return [...prev, { roomId, date: dateStr }];
-    });
-  };
-
-  const handleRemoveRoomSlots = (roomId) => {
-    setSelectedSlots(prev => prev.filter(s => s.roomId !== roomId));
+  const handleCellClick = (room, date) => {
+    setSelectedRoomForBooking(room);
+    setSelectedDateForBooking(date);
+    setShowBookingForm(true);
   };
 
   const handleBookingSubmit = async (formData) => {
@@ -182,33 +175,28 @@ export default function HomePage() {
       clientId = newClient.id;
     }
 
-    const rangesToBook = publicMultiRanges.length > 0
-      ? publicMultiRanges
-      : [{ roomId: formData.room_id, checkin: formData.date_checkin, checkout: formData.date_checkout }];
+    const reservationData = {
+      client_id: clientId,
+      room_id: formData.room_id,
+      bed_configuration: formData.bed_configuration,
+      date_checkin: formData.date_checkin,
+      date_checkout: formData.date_checkout,
+      adults_count: formData.adults_count,
+      children_count: formData.children_count,
+      infants_count: formData.infants_count,
+      comment: formData.comment || '',
+      status: 'REQUEST'
+    };
 
-    for (const range of rangesToBook) {
-      await dbClient.entities.Reservation.create({
-        client_id: clientId,
-        room_id: range.roomId,
-        date_checkin: typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd'),
-        date_checkout: typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd'),
-        bed_configuration: formData.bed_configuration || '',
-        adults_count: formData.adults_count,
-        children_count: formData.children_count,
-        infants_count: formData.infants_count,
-        comment: formData.comment || '',
-        status: 'REQUEST'
-      });
-    }
+    await dbClient.entities.Reservation.create(reservationData);
 
-    setSelectedSlots([]);
-    setPublicMultiRanges([]);
+    const room = rooms.find(r => r.id === formData.room_id);
     setShowBookingForm(false);
     setBookingConfirmed({
       clientName: formData.contact_name,
-      count: rangesToBook.length,
-      dateCheckin: typeof rangesToBook[0].checkin === 'string' ? rangesToBook[0].checkin : format(rangesToBook[0].checkin, 'yyyy-MM-dd'),
-      dateCheckout: typeof rangesToBook[rangesToBook.length - 1].checkout === 'string' ? rangesToBook[rangesToBook.length - 1].checkout : format(rangesToBook[rangesToBook.length - 1].checkout, 'yyyy-MM-dd'),
+      roomName: room ? room.name : formData.room_id,
+      dateCheckin: formData.date_checkin,
+      dateCheckout: formData.date_checkout,
     });
     loadData();
   };
@@ -298,9 +286,7 @@ export default function HomePage() {
             <p className="text-slate-600 mb-6">We will get back to you shortly.</p>
             <div className="bg-slate-50 rounded-lg p-4 text-left space-y-2 mb-8 text-sm">
               <div><span className="text-slate-500">Name:</span> <span className="font-medium text-slate-800">{bookingConfirmed.clientName}</span></div>
-              {bookingConfirmed.count > 1 ? (
-                <div><span className="text-slate-500">Rooms:</span> <span className="font-medium text-slate-800">{bookingConfirmed.count} rooms requested</span></div>
-              ) : null}
+              <div><span className="text-slate-500">Room:</span> <span className="font-medium text-slate-800">{bookingConfirmed.roomName}</span></div>
               <div><span className="text-slate-500">Check-in:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckin + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
               <div><span className="text-slate-500">Check-out:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckout + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
             </div>
@@ -443,7 +429,7 @@ export default function HomePage() {
 
                   {hasAccess && allowPublicBooking && (
                     <Button
-                      onClick={() => { setPublicMultiRanges([]); setShowBookingForm(true); }}
+                      onClick={() => { setSelectedRoomForBooking(null); setSelectedDateForBooking(null); setShowBookingForm(true); }}
                       className="bg-yellow-700 hover:bg-yellow-800"
                     >
                       <CalendarCheck className="w-4 h-4 mr-2" />
@@ -492,8 +478,7 @@ export default function HomePage() {
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onSlotToggle={hasAccess && allowPublicBooking ? handleSlotToggle : null}
-              selectedSlots={selectedSlots}
+              onCellClick={hasAccess ? handleCellClick : null}
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
@@ -502,22 +487,17 @@ export default function HomePage() {
         </Card>
       </div>
 
-      <MultiSelectionPanel
-        selectedSlots={selectedSlots}
-        onRemoveSlot={handleRemoveRoomSlots}
-        onClearAll={() => setSelectedSlots([])}
-        onConfirm={(mergedRanges) => {
-          setPublicMultiRanges(mergedRanges);
-          setShowBookingForm(true);
-        }}
-        rooms={rooms}
-        sites={sites}
-      />
-
       <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Request a Booking</DialogTitle>
+            <DialogTitle>
+              Request a Booking
+              {selectedRoomForBooking && selectedDateForBooking && (
+                <span className="text-sm font-normal text-slate-600 ml-2">
+                  – {selectedRoomForBooking.name} from {format(selectedDateForBooking, 'dd MMM yyyy')}
+                </span>
+              )}
+            </DialogTitle>
           </DialogHeader>
           <PublicBookingForm
             rooms={rooms}
@@ -526,7 +506,8 @@ export default function HomePage() {
             reservations={reservations}
             agencies={agencies}
             onSubmit={handleBookingSubmit}
-            initialRanges={publicMultiRanges}
+            initialRoom={selectedRoomForBooking}
+            initialDate={selectedDateForBooking}
           />
         </DialogContent>
       </Dialog>
