@@ -298,7 +298,9 @@ export default function HomePage() {
             <p className="text-slate-600 mb-6">We will get back to you shortly.</p>
             <div className="bg-slate-50 rounded-lg p-4 text-left space-y-2 mb-8 text-sm">
               <div><span className="text-slate-500">Name:</span> <span className="font-medium text-slate-800">{bookingConfirmed.clientName}</span></div>
-              <div><span className="text-slate-500">Room:</span> <span className="font-medium text-slate-800">{bookingConfirmed.roomName}</span></div>
+              {bookingConfirmed.count > 1 ? (
+                <div><span className="text-slate-500">Rooms:</span> <span className="font-medium text-slate-800">{bookingConfirmed.count} rooms requested</span></div>
+              ) : null}
               <div><span className="text-slate-500">Check-in:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckin + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
               <div><span className="text-slate-500">Check-out:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckout + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
             </div>
