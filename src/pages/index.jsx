@@ -274,6 +274,34 @@ export default function HomePage() {
 
 
 
+  if (bookingConfirmed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center shadow-lg">
+          <CardContent className="pt-10 pb-8 px-8">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <CalendarCheck className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Request received</h2>
+            <p className="text-slate-600 mb-6">We will get back to you shortly.</p>
+            <div className="bg-slate-50 rounded-lg p-4 text-left space-y-2 mb-8 text-sm">
+              <div><span className="text-slate-500">Name:</span> <span className="font-medium text-slate-800">{bookingConfirmed.clientName}</span></div>
+              <div><span className="text-slate-500">Room:</span> <span className="font-medium text-slate-800">{bookingConfirmed.roomName}</span></div>
+              <div><span className="text-slate-500">Check-in:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckin + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
+              <div><span className="text-slate-500">Check-out:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckout + 'T12:00:00'), 'dd MMM yyyy')}</span></div>
+            </div>
+            <Button
+              onClick={() => { setBookingConfirmed(null); loadData(); }}
+              className="bg-yellow-700 hover:bg-yellow-800 w-full"
+            >
+              New request
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -314,7 +342,7 @@ export default function HomePage() {
             <div className="mb-4">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">Room Availability Calendar</h2>
               
-              <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-4 flex-wrap justify-between">
                 <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl">
                   <Button
                     size="sm"
