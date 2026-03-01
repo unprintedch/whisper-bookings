@@ -150,7 +150,7 @@ export default function RelatedReservations({
 
                     {/* Right: Status + Delete buttons + chevron */}
                      <div className="flex items-center gap-2">
-                       <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                       <div className="flex items-center gap-1 flex-wrap" onClick={e => e.stopPropagation()}>
                        {[
                          { value: 'REQUEST', label: 'Request', color: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200' },
                          { value: 'OPTION', label: 'Option', color: 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' },
@@ -171,6 +171,22 @@ export default function RelatedReservations({
                            {s.label}
                          </button>
                        ))}
+                       {/* Option expiry date - editable */}
+                       {r.status === 'OPTION' && (
+                         <input
+                           type="date"
+                           value={r.hold_expires_at ? r.hold_expires_at.slice(0, 10) : ''}
+                           onChange={async (e) => {
+                             const newVal = e.target.value ? new Date(e.target.value).toISOString() : null;
+                             await base44.entities.Reservation.update(r.id, { hold_expires_at: newVal });
+                             const updated = localReservations.map(res => res.id === r.id ? { ...res, hold_expires_at: newVal } : res);
+                             setLocalReservations(updated);
+                             if (onReservationsUpdated) onReservationsUpdated(updated);
+                           }}
+                           className="ml-1 text-xs border border-amber-300 rounded px-1 py-0.5 text-amber-800 bg-amber-50 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                           title="Date d'expiration de l'option"
+                         />
+                       )}
                      </div>
                        <Button
                          type="button"
