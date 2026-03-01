@@ -458,77 +458,77 @@ export default function PublicBookingForm({
           </div>
         ) : null}
 
-        {/* Dates */}
-        {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label className={errors.date_checkin ? 'text-red-600' : ''}>
-              Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
-            </Label>
-            <Popover open={checkinPopoverOpen} onOpenChange={setCheckinPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkin ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date_checkin ? format(new Date(formData.date_checkin + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.date_checkin ? new Date(formData.date_checkin + 'T12:00:00') : undefined}
-                  onSelect={handleCheckinChange}
-                  disabled={isDateDisabledForCheckin}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+        {!isMultiMode && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className={errors.date_checkin ? 'text-red-600' : ''}>
+                  Check-in {errors.date_checkin && <span className="text-red-500">*</span>}
+                </Label>
+                <Popover open={checkinPopoverOpen} onOpenChange={setCheckinPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkin ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.date_checkin ? format(new Date(formData.date_checkin + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date_checkin ? new Date(formData.date_checkin + 'T12:00:00') : undefined}
+                      onSelect={handleCheckinChange}
+                      disabled={isDateDisabledForCheckin}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="nights">Nights</Label>
-            <Select value={nights.toString()} onValueChange={handleNightsChange}>
-              <SelectTrigger className="h-11">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 30 }, (_, i) => i + 1).map(night => (
-                  <SelectItem key={night} value={night.toString()}>
-                    {night} {night === 1 ? 'night' : 'nights'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="nights">Nights</Label>
+                <Select value={nights.toString()} onValueChange={handleNightsChange}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map(night => (
+                      <SelectItem key={night} value={night.toString()}>
+                        {night} {night === 1 ? 'night' : 'nights'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="space-y-2">
-            <Label className={errors.date_checkout ? 'text-red-600' : ''}>
-              Check-out {errors.date_checkout && <span className="text-red-500">*</span>}
-            </Label>
-            <Popover open={checkoutPopoverOpen} onOpenChange={setCheckoutPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkout ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date_checkout ? format(new Date(formData.date_checkout + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.date_checkout ? new Date(formData.date_checkout + 'T12:00:00') : undefined}
-                  onSelect={handleCheckoutChange}
-                  disabled={isDateDisabledForCheckout}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>}
+              <div className="space-y-2">
+                <Label className={errors.date_checkout ? 'text-red-600' : ''}>
+                  Check-out {errors.date_checkout && <span className="text-red-500">*</span>}
+                </Label>
+                <Popover open={checkoutPopoverOpen} onOpenChange={setCheckoutPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className={`w-full justify-start text-left font-normal h-11 ${errors.date_checkout ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.date_checkout ? format(new Date(formData.date_checkout + 'T12:00:00'), 'dd/MM/yyyy') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date_checkout ? new Date(formData.date_checkout + 'T12:00:00') : undefined}
+                      onSelect={handleCheckoutChange}
+                      disabled={isDateDisabledForCheckout}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
 
-        {/* Bed Setup and Room */}
-        {!isMultiMode && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="bed_configuration" className={errors.bed_configuration ? 'text-red-600' : ''}>
               Bed Setup {errors.bed_configuration && <span className="text-red-500">*</span>}
