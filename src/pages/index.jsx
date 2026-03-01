@@ -478,7 +478,7 @@ export default function HomePage() {
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onCellClick={handleCellClick}
+              onCellClick={hasAccess && allowPublicBooking ? handleCellClick : null}
               onBookingEdit={null}
               onRoomEdit={null}
               isPublicView={true}
