@@ -36,6 +36,7 @@ export default function PublicMultiReservationModal({
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [contactExpanded, setContactExpanded] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
