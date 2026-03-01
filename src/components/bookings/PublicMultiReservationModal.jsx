@@ -50,6 +50,7 @@ export default function PublicMultiReservationModal({
       setPerRoomDetails({});
       setExpandedRows({});
       setErrors({});
+      setContactExpanded(false);
     }
   }, [isOpen]);
 
