@@ -248,6 +248,7 @@ export default function BookingForm({
         adults_count: existingBooking.adults_count || 2,
         children_count: existingBooking.children_count || 0,
         infants_count: existingBooking.infants_count || 0,
+        group_pax: existingBooking.group_pax || '',
         comment: existingBooking.comment || ''
       });
       if (existingClient) {
