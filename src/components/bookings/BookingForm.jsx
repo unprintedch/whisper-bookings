@@ -1856,7 +1856,6 @@ export default function BookingForm({
           </div>
         )}
       </form>
-    </div>
 
       {/* Inline Client Edit Modal */}
       <Dialog open={isClientEditOpen} onOpenChange={setIsClientEditOpen}>
