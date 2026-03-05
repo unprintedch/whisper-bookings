@@ -1706,33 +1706,27 @@ export default function BookingForm({
           {/* Comments + Notifications */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <div className="flex items-end gap-3">
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor="comment">Comments</Label>
-                  <Textarea
-                    id="comment"
-                    className="h-20"
-                    value={formData.comment}
-                    onChange={(e) => handleChange('comment', e.target.value)}
-                    placeholder="Special requests, notes..."
-                  />
-                </div>
-                <div className="space-y-2 w-24">
-                  <Label htmlFor="group_pax" className="flex items-center gap-1 whitespace-nowrap">
-                    <Users className="w-3.5 h-3.5" /> Group Pax
-                  </Label>
-                  <Input
-                    id="group_pax"
-                    type="number"
-                    min="0"
-                    placeholder="ex: 12"
-                    className="h-9"
-                    value={formData.group_pax}
-                    onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
-                  />
-                </div>
-              </div>
+              <Label htmlFor="comment">Comments</Label>
+              <Textarea
+                id="comment"
+                className="h-20"
+                value={formData.comment}
+                onChange={(e) => handleChange('comment', e.target.value)}
+                placeholder="Special requests, notes..."
+              />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="group_pax" className="flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" /> Group Pax
+              </Label>
+              <Input
+                id="group_pax"
+                type="number"
+                min="0"
+                placeholder="ex: 12"
+                value={formData.group_pax}
+                onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
+              />
             {!existingBooking && (
             <div className="space-y-2">
               <Label className="font-medium">Notifications</Label>
