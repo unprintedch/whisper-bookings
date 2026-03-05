@@ -1712,15 +1712,11 @@ export default function BookingForm({
             />
           </div>
 
-          {/* Comments and Notifications on same row - create mode only */}
-          <div className="grid grid-cols-2 gap-4" style={{display: existingBooking ? 'none' : undefined}}>
-          {/* Empty placeholder to keep grid structure */}
-          <div></div>
-
-          {/* Notifications */}
+          {/* Notifications - create mode only */}
+          {!existingBooking && (
           <div className="space-y-2">
             <Label className="font-medium">Notifications</Label>
-            <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-4 border h-20 justify-center">
+            <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-4 border justify-center">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="toAdmin"
@@ -1755,7 +1751,7 @@ export default function BookingForm({
               )}
             </div>
           </div>
-        </div>
+          )}
 
         {/* Actions Footer - Edit mode */}
         {existingBooking && (
