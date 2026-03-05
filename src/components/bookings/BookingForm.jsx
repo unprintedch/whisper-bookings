@@ -1700,9 +1700,7 @@ export default function BookingForm({
           </div>
           )}
 
-          {/* Comments and Notifications on same row */}
-          <div className="grid grid-cols-2 gap-4">
-          {/* Comments */}
+          {/* Comments - always visible */}
           <div className="space-y-2">
             <Label htmlFor="comment">Comments</Label>
             <Textarea
@@ -1713,6 +1711,11 @@ export default function BookingForm({
               placeholder="Special requests, notes..."
             />
           </div>
+
+          {/* Comments and Notifications on same row - create mode only */}
+          <div className="grid grid-cols-2 gap-4" style={{display: existingBooking ? 'none' : undefined}}>
+          {/* Empty placeholder to keep grid structure */}
+          <div></div>
 
           {/* Notifications */}
           <div className="space-y-2">
