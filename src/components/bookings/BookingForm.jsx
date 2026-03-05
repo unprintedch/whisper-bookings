@@ -1727,7 +1727,10 @@ export default function BookingForm({
                 value={formData.group_pax}
                 onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
               />
-            {!existingBooking && (
+            </div>
+          </div>
+
+          {!existingBooking && (
             <div className="space-y-2">
               <Label className="font-medium">Notifications</Label>
               <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-4 border justify-center">
@@ -1762,8 +1765,7 @@ export default function BookingForm({
                 )}
               </div>
             </div>
-            )}
-          </div>
+          )}
 
         {/* Actions Footer - Edit mode */}
         {existingBooking && (
