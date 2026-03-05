@@ -270,6 +270,7 @@ export default function BookingForm({
         adults_count: 2,
         children_count: 0,
         infants_count: 0,
+        group_pax: '',
         comment: ''
       };
 
