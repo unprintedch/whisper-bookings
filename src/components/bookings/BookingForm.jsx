@@ -1737,11 +1737,11 @@ export default function BookingForm({
                 const groupPaxVal = formData.group_pax ? parseInt(formData.group_pax, 10) : null;
                 if (related.length === 0) return null;
                 return (
-                  <div className="text-xs text-slate-500 mt-1 space-y-0.5">
-                    <div>{totalAdults}A · {totalChildren}C · {totalInfants}I</div>
-                    <div className={`font-semibold ${groupPaxVal && total > groupPaxVal ? 'text-red-600' : 'text-slate-700'}`}>
+                  <div className={`text-xs mt-1 flex items-center gap-2 ${groupPaxVal && total > groupPaxVal ? 'text-red-600' : 'text-slate-500'}`}>
+                    <span>{totalAdults}A · {totalChildren}C · {totalInfants}I</span>
+                    <span className="font-semibold">
                       {groupPaxVal ? `${total} / ${groupPaxVal} beds assigned` : `${total} beds assigned`}
-                    </div>
+                    </span>
                   </div>
                 );
               })()}
