@@ -1700,63 +1700,55 @@ export default function BookingForm({
           </div>
           )}
 
-          {/* Comments and Notifications - create mode */}
-          {!existingBooking && (
+          {/* Comments + Notifications */}
           <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="comment">Comments</Label>
-            <Textarea
-              id="comment"
-              className="h-20"
-              value={formData.comment}
-              onChange={(e) => handleChange('comment', e.target.value)}
-              placeholder="Special requests, notes..."
-            />
-          </div>
-          <div></div>
-          </div>
-          )}
-
-          {/* Notifications - create mode only */}
-          {!existingBooking && (
-          <div className="space-y-2">
-            <Label className="font-medium">Notifications</Label>
-            <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-4 border justify-center">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="toAdmin"
-                  checked={notificationOptions.toAdmin}
-                  onCheckedChange={(checked) => setNotificationOptions(p => ({...p, toAdmin: checked}))}
-                />
-                <Label htmlFor="toAdmin" className="font-normal cursor-pointer text-sm">To admin</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="toAgency"
-                  checked={notificationOptions.toAgency}
-                  onCheckedChange={(checked) => setNotificationOptions(p => ({...p, toAgency: checked}))}
-                  disabled={!agencyForSelectedClient?.email}
-                />
-                <Label
-                  htmlFor="toAgency"
-                  className={`font-normal cursor-pointer text-sm ${!agencyForSelectedClient?.email ? 'text-slate-400' : ''}`}
-                >
-                  To agency
-                </Label>
-              </div>
-              {selectedClient?.contact_email && (
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comments</Label>
+              <Textarea
+                id="comment"
+                className="h-20"
+                value={formData.comment}
+                onChange={(e) => handleChange('comment', e.target.value)}
+                placeholder="Special requests, notes..."
+              />
+            </div>
+            {!existingBooking && (
+            <div className="space-y-2">
+              <Label className="font-medium">Notifications</Label>
+              <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-4 border justify-center">
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="toClient"
-                    checked={notificationOptions.toClient}
-                    onCheckedChange={(checked) => setNotificationOptions(p => ({...p, toClient: checked}))}
+                    id="toAdmin"
+                    checked={notificationOptions.toAdmin}
+                    onCheckedChange={(checked) => setNotificationOptions(p => ({...p, toAdmin: checked}))}
                   />
-                  <Label htmlFor="toClient" className="font-normal cursor-pointer text-sm">To client</Label>
+                  <Label htmlFor="toAdmin" className="font-normal cursor-pointer text-sm">To admin</Label>
                 </div>
-              )}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="toAgency"
+                    checked={notificationOptions.toAgency}
+                    onCheckedChange={(checked) => setNotificationOptions(p => ({...p, toAgency: checked}))}
+                    disabled={!agencyForSelectedClient?.email}
+                  />
+                  <Label htmlFor="toAgency" className={`font-normal cursor-pointer text-sm ${!agencyForSelectedClient?.email ? 'text-slate-400' : ''}`}>
+                    To agency
+                  </Label>
+                </div>
+                {selectedClient?.contact_email && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="toClient"
+                      checked={notificationOptions.toClient}
+                      onCheckedChange={(checked) => setNotificationOptions(p => ({...p, toClient: checked}))}
+                    />
+                    <Label htmlFor="toClient" className="font-normal cursor-pointer text-sm">To client</Label>
+                  </div>
+                )}
+              </div>
             </div>
+            )}
           </div>
-          )}
 
         {/* Actions Footer - Edit mode */}
         {existingBooking && (
