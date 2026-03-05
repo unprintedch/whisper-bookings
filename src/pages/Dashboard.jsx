@@ -174,7 +174,15 @@ export default function Dashboard({
        try {
          const settingsList = await base44.entities.NotificationSettings.list();
          const settings = settingsList[0] || {};
-        
+
+         // Determine which site this room belongs to
+         const roomSite = sites.find(s => s.id === room.site_id);
+         const siteName = roomSite?.name || '';
+
+         // Find site-specific config
+         const siteConfig = (settings.site_configs || []).find(sc => sc.site_name === siteName);
+         const hotelName = siteConfig?.hotel_name || siteName || 'Whisper B.';
+
         let template = '';
         if (bookingType === 'new') {
           template = settings.template_new_booking || 'A new booking has been created for [CLIENT_NAME].';
@@ -187,6 +195,7 @@ export default function Dashboard({
         const bookingUrl = bookingData.id ? `${window.location.origin}${createPageUrl('Clients')}?bookingId=${bookingData.id}` : '';
 
         const placeholders = {
+          '[HOTEL_NAME]': hotelName,
           '[CLIENT_NAME]': client.name,
           '[ROOM_NAME]': room.name,
           '[CHECKIN_DATE]': format(new Date(bookingData.date_checkin + 'T00:00:00'), 'dd MMM yyyy'),
@@ -202,17 +211,20 @@ export default function Dashboard({
         }
         
         const subject = bookingType === 'cancellation'
-            ? `Booking Cancellation: ${client.name} - ${room.name}`
+            ? `Booking Cancellation: ${client.name} - ${room.name} (${hotelName})`
             : (bookingType === 'update' 
-                ? `Booking Update: ${client.name} - ${room.name}`
-                : `New Booking Confirmation: ${client.name} - ${room.name}`);
+                ? `Booking Update: ${client.name} - ${room.name} (${hotelName})`
+                : `New Booking Confirmation: ${client.name} - ${room.name} (${hotelName})`);
 
         // Send emails with proper error handling
         const emailPromises = [];
         
         if (notifications.toAdmin) {
-          const adminEmails = settings.admin_emails || [];
-          adminEmails.forEach(email => {
+          // Use site-specific emails if available, otherwise fallback to global list
+          const siteAdminEmails = siteConfig?.admin_emails?.length > 0
+            ? siteConfig.admin_emails
+            : (settings.admin_emails || []);
+          siteAdminEmails.forEach(email => {
             emailPromises.push(
               base44.integrations.Core.SendEmail({ to: email, subject, body }).catch(err => {
                 console.warn(`Could not send email to ${email}:`, err.message);
