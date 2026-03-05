@@ -11,7 +11,6 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
-  Plus,
   CircleUser, // Added for dropdown
   LogOut, // Added for dropdown
   Briefcase, // Added for Agencies
