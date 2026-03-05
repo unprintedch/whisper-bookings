@@ -1703,7 +1703,7 @@ export default function BookingForm({
           </div>
           )}
 
-          {/* Comments + Notifications */}
+          {/* Comments + Group Pax */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="comment">Comments</Label>
@@ -1727,6 +1727,22 @@ export default function BookingForm({
                 value={formData.group_pax}
                 onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
               />
+              {/* Occupancy summary across all related reservations */}
+              {existingBooking && selectedClient && (() => {
+                const related = reservations.filter(r => r.client_id === selectedClient.id && r.status !== 'ANNULE');
+                const totalAdults = related.reduce((s, r) => s + (r.adults_count || 0), 0);
+                const totalChildren = related.reduce((s, r) => s + (r.children_count || 0), 0);
+                const totalInfants = related.reduce((s, r) => s + (r.infants_count || 0), 0);
+                if (related.length === 0) return null;
+                return (
+                  <div className="flex gap-2 mt-1 flex-wrap">
+                    <Badge variant="secondary" className="text-xs">{totalAdults} Adults</Badge>
+                    <Badge variant="secondary" className="text-xs">{totalChildren} Children</Badge>
+                    <Badge variant="secondary" className="text-xs">{totalInfants} Infants</Badge>
+                    <Badge variant="outline" className="text-xs font-semibold">{totalAdults + totalChildren + totalInfants} total</Badge>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
