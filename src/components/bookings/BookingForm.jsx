@@ -428,16 +428,7 @@ export default function BookingForm({
       }
     }
 
-    // Capacity validation (Adults + Children + Infants) - only for new bookings
-    if (!existingBooking) {
-      if (selectedConfig && currentOccupancy > maxOccupancyForConfig) {
-        newErrors.occupancy = `Too many guests (${currentOccupancy} total) for selected bed configuration (max ${maxOccupancyForConfig})`;
-      }
-
-      if (currentOccupancy === 0) {
-        newErrors.occupancy = "At least one guest is required";
-      }
-    }
+    // No occupancy blocking validation - only shown visually via badge
 
     // Availability validation
     const availability = validateAvailability(currentFormData);
