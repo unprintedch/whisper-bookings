@@ -262,18 +262,22 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
        // Use per-date status if set, otherwise use global status
        const reservationStatus = perDateStatus[dateKey] || status;
 
+       const commentParts = [];
+       if (groupPax) commentParts.push(`Group: ${groupPax} pax`);
+       if (comment.trim()) commentParts.push(comment.trim());
+
        return {
-          client_id: finalClientId,
-          room_id: range.roomId,
-          date_checkin: checkinStr,
-          date_checkout: checkoutStr,
-          status: reservationStatus,
-          bed_configuration: details.bed_configuration || '',
-          adults_count: parseInt(details.adults_count) || 0,
-          children_count: parseInt(details.children_count) || 0,
-          infants_count: parseInt(details.infants_count) || 0,
-          comment: groupPax ? `Group: ${groupPax} pax` : '',
-        };
+           client_id: finalClientId,
+           room_id: range.roomId,
+           date_checkin: checkinStr,
+           date_checkout: checkoutStr,
+           status: reservationStatus,
+           bed_configuration: details.bed_configuration || '',
+           adults_count: parseInt(details.adults_count) || 0,
+           children_count: parseInt(details.children_count) || 0,
+           infants_count: parseInt(details.infants_count) || 0,
+           comment: commentParts.join(' – '),
+         };
      });
 
     try {
