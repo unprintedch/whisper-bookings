@@ -575,13 +575,19 @@ export default function BookingForm({
       setFormData(prev => ({
         ...prev,
         bed_configuration: config.name,
-        ...(existingBooking ? {} : { adults_count: config.max_occupancy, children_count: 0, infants_count: 0, room_id: '' })
+        adults_count: config.max_occupancy,
+        children_count: 0,
+        infants_count: 0,
+        ...(!existingBooking ? { room_id: '' } : {})
       }));
     } else {
       setFormData(prev => ({
         ...prev,
         bed_configuration: '',
-        ...(existingBooking ? {} : { adults_count: 2, children_count: 0, infants_count: 0, room_id: '' })
+        adults_count: 2,
+        children_count: 0,
+        infants_count: 0,
+        ...(!existingBooking ? { room_id: '' } : {})
       }));
     }
   };
