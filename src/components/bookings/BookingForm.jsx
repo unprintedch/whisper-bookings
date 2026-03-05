@@ -1272,7 +1272,7 @@ export default function BookingForm({
 
         {/* Contact info display for existing client (new or existing booking) */}
         {selectedClient && !isNewClient && (
-          <div className="space-y-4 p-4 px-6 border rounded-lg bg-slate-50/70 text-sm">
+          <div className="space-y-4 p-4 border rounded-lg bg-slate-50/70 text-sm overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Agency Details - Now First */}
               <div>
