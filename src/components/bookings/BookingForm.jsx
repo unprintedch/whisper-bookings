@@ -574,20 +574,14 @@ export default function BookingForm({
     if (config) {
       setFormData(prev => ({
         ...prev,
-        bed_configuration: config.name, // Store the name for the booking
-        adults_count: config.max_occupancy,
-        children_count: 0,
-        infants_count: 0,
-        room_id: '' // Reset room selection when bed config changes
+        bed_configuration: config.name,
+        ...(existingBooking ? {} : { adults_count: config.max_occupancy, children_count: 0, infants_count: 0, room_id: '' })
       }));
     } else {
       setFormData(prev => ({
         ...prev,
         bed_configuration: '',
-        adults_count: 2, // Default to 2 if no config selected
-        children_count: 0,
-        infants_count: 0,
-        room_id: '' // Reset room selection
+        ...(existingBooking ? {} : { adults_count: 2, children_count: 0, infants_count: 0, room_id: '' })
       }));
     }
   };
