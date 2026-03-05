@@ -1478,30 +1478,6 @@ export default function BookingForm({
           </div>
         )}
 
-        {/* Dates Row - Read-only in edit mode */}
-        {existingBooking && (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-2">
-              <Label>Check-in</Label>
-              <div className="h-9 px-3 flex items-center border rounded-md bg-slate-50 text-sm text-slate-700">
-                {formData.date_checkin ? format(new Date(formData.date_checkin + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Nights</Label>
-              <div className="h-9 px-3 flex items-center border rounded-md bg-slate-50 text-sm text-slate-700">
-                {nights} {nights === 1 ? 'night' : 'nights'}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Check-out</Label>
-              <div className="h-9 px-3 flex items-center border rounded-md bg-slate-50 text-sm text-slate-700">
-                {formData.date_checkout ? format(new Date(formData.date_checkout + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Dates Row - 3 columns */}
          {!existingBooking && (
           <div className="grid grid-cols-3 gap-3">
