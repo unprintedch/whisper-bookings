@@ -140,44 +140,6 @@ export default function MiniReservationForm({ reservation, allRooms, allSites, a
 
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
-      {/* Dates row */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Check-in</Label>
-          <Popover open={!disabled && checkinOpen} onOpenChange={disabled ? () => {} : setCheckinOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start font-normal h-8 text-xs" disabled={disabled}>
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                {checkin ? format(new Date(checkin + 'T12:00:00'), 'dd/MM/yyyy') : 'Date'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={checkin ? new Date(checkin + 'T12:00:00') : undefined} onSelect={handleCheckin} /></PopoverContent>
-          </Popover>
-        </div>
-        <div className="space-y-1">
-           <Label className="text-xs">Nights</Label>
-           <Select value={nights.toString()} onValueChange={disabled ? () => {} : handleNightsChange} disabled={disabled}>
-             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-             <SelectContent>
-               {Array.from({ length: 50 }, (_, i) => i + 1).map(n => (
-                 <SelectItem key={n} value={n.toString()}>{n} night{n > 1 ? 's' : ''}</SelectItem>
-               ))}
-             </SelectContent>
-           </Select>
-         </div>
-         <div className="space-y-1">
-           <Label className="text-xs">Check-out</Label>
-           <Popover open={!disabled && checkoutOpen} onOpenChange={disabled ? () => {} : setCheckoutOpen}>
-             <PopoverTrigger asChild>
-               <Button variant="outline" className="w-full justify-start font-normal h-8 text-xs" disabled={disabled}>
-                 <CalendarIcon className="mr-1 h-3 w-3" />
-                 {checkout ? format(new Date(checkout + 'T12:00:00'), 'dd/MM/yyyy') : 'Date'}
-               </Button>
-             </PopoverTrigger>
-             <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={checkout ? new Date(checkout + 'T12:00:00') : undefined} onSelect={handleCheckout} disabled={(d) => !checkin || d <= new Date(checkin + 'T00:00:00')} /></PopoverContent>
-           </Popover>
-         </div>
-      </div>
 
       {/* Bed + Room */}
       <div className="grid grid-cols-2 gap-2">
