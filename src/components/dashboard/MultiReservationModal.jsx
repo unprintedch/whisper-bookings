@@ -14,6 +14,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
   const [clientId, setClientId] = useState("");
   const [status, setStatus] = useState("REQUEST");
   const [groupPax, setGroupPax] = useState("");
+  const [comment, setComment] = useState("");
   const [perRoomDetails, setPerRoomDetails] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
   const [perDateStatus, setPerDateStatus] = useState({});
