@@ -1704,48 +1704,47 @@ export default function BookingForm({
           )}
 
           {/* Comments + Group Pax */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="comment">Comments</Label>
-              <Textarea
-                id="comment"
-                className="h-20"
-                value={formData.comment}
-                onChange={(e) => handleChange('comment', e.target.value)}
-                placeholder="Special requests, notes..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="group_pax" className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" /> Group Pax
-              </Label>
-              <Input
-                id="group_pax"
-                type="number"
-                min="0"
-                placeholder="ex: 12"
-                value={formData.group_pax}
-                onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
-              />
-              {/* Occupancy summary across all related reservations */}
-              {existingBooking && selectedClient && (() => {
-                const related = reservations.filter(r => r.client_id === selectedClient.id && r.status !== 'ANNULE');
-                const totalAdults = related.reduce((s, r) => s + (r.adults_count || 0), 0);
-                const totalChildren = related.reduce((s, r) => s + (r.children_count || 0), 0);
-                const totalInfants = related.reduce((s, r) => s + (r.infants_count || 0), 0);
-                const total = totalAdults + totalChildren + totalInfants;
-                const groupPaxVal = formData.group_pax ? parseInt(formData.group_pax, 10) : null;
-                if (related.length === 0) return null;
-                return (
-                  <div className={`text-xs mt-1 flex items-center gap-2 ${groupPaxVal && total > groupPaxVal ? 'text-red-600' : 'text-slate-500'}`}>
-                    <span>{totalAdults}A · {totalChildren}C · {totalInfants}I</span>
-                    <span className="font-semibold">
-                      {groupPaxVal ? `${total} / ${groupPaxVal} beds assigned` : `${total} beds assigned`}
-                    </span>
-                  </div>
-                );
-              })()}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="comment">Comments</Label>
+            <Textarea
+              id="comment"
+              className="h-20"
+              value={formData.comment}
+              onChange={(e) => handleChange('comment', e.target.value)}
+              placeholder="Special requests, notes..."
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <Label htmlFor="group_pax" className="flex items-center gap-1 whitespace-nowrap text-sm font-medium shrink-0">
+              <Users className="w-3.5 h-3.5" /> Group Pax
+            </Label>
+            <Input
+              id="group_pax"
+              type="number"
+              min="0"
+              placeholder="ex: 12"
+              className="w-24 h-8"
+              value={formData.group_pax}
+              onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
+            />
+            {/* Occupancy summary across all related reservations */}
+            {existingBooking && selectedClient && (() => {
+              const related = reservations.filter(r => r.client_id === selectedClient.id && r.status !== 'ANNULE');
+              const totalAdults = related.reduce((s, r) => s + (r.adults_count || 0), 0);
+              const totalChildren = related.reduce((s, r) => s + (r.children_count || 0), 0);
+              const totalInfants = related.reduce((s, r) => s + (r.infants_count || 0), 0);
+              const total = totalAdults + totalChildren + totalInfants;
+              const groupPaxVal = formData.group_pax ? parseInt(formData.group_pax, 10) : null;
+              if (related.length === 0) return null;
+              return (
+                <div className={`text-xs flex items-center gap-2 ${groupPaxVal && total > groupPaxVal ? 'text-red-600' : 'text-slate-500'}`}>
+                  <span>{totalAdults}A · {totalChildren}C · {totalInfants}I</span>
+                  <span className="font-semibold">
+                    {groupPaxVal ? `${total} / ${groupPaxVal} beds assigned` : `${total} beds assigned`}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
 
           {!existingBooking && (
