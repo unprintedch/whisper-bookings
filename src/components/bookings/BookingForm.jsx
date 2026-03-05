@@ -1700,7 +1700,9 @@ export default function BookingForm({
           </div>
           )}
 
-          {/* Comments - always visible */}
+          {/* Comments and Notifications - create mode */}
+          {!existingBooking && (
+          <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="comment">Comments</Label>
             <Textarea
@@ -1711,6 +1713,9 @@ export default function BookingForm({
               placeholder="Special requests, notes..."
             />
           </div>
+          <div></div>
+          </div>
+          )}
 
           {/* Notifications - create mode only */}
           {!existingBooking && (
