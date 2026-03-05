@@ -428,13 +428,15 @@ export default function BookingForm({
       }
     }
 
-    // Capacity validation (Adults + Children + Infants)
-    if (selectedConfig && currentOccupancy > maxOccupancyForConfig) {
-      newErrors.occupancy = `Too many guests (${currentOccupancy} total) for selected bed configuration (max ${maxOccupancyForConfig})`;
-    }
+    // Capacity validation (Adults + Children + Infants) - only for new bookings
+    if (!existingBooking) {
+      if (selectedConfig && currentOccupancy > maxOccupancyForConfig) {
+        newErrors.occupancy = `Too many guests (${currentOccupancy} total) for selected bed configuration (max ${maxOccupancyForConfig})`;
+      }
 
-    if (currentOccupancy === 0) {
-      newErrors.occupancy = "At least one guest is required";
+      if (currentOccupancy === 0) {
+        newErrors.occupancy = "At least one guest is required";
+      }
     }
 
     // Availability validation
