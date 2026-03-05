@@ -1733,13 +1733,15 @@ export default function BookingForm({
                 const totalAdults = related.reduce((s, r) => s + (r.adults_count || 0), 0);
                 const totalChildren = related.reduce((s, r) => s + (r.children_count || 0), 0);
                 const totalInfants = related.reduce((s, r) => s + (r.infants_count || 0), 0);
+                const total = totalAdults + totalChildren + totalInfants;
+                const groupPaxVal = formData.group_pax ? parseInt(formData.group_pax, 10) : null;
                 if (related.length === 0) return null;
                 return (
-                  <div className="flex gap-2 mt-1 flex-wrap">
-                    <Badge variant="secondary" className="text-xs">{totalAdults} Adults</Badge>
-                    <Badge variant="secondary" className="text-xs">{totalChildren} Children</Badge>
-                    <Badge variant="secondary" className="text-xs">{totalInfants} Infants</Badge>
-                    <Badge variant="outline" className="text-xs font-semibold">{totalAdults + totalChildren + totalInfants} total</Badge>
+                  <div className="text-xs text-slate-500 mt-1 space-y-0.5">
+                    <div>{totalAdults}A · {totalChildren}C · {totalInfants}I</div>
+                    <div className={`font-semibold ${groupPaxVal && total > groupPaxVal ? 'text-red-600' : 'text-slate-700'}`}>
+                      {groupPaxVal ? `${total} / ${groupPaxVal} beds assigned` : `${total} beds assigned`}
+                    </div>
                   </div>
                 );
               })()}
