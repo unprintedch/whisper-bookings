@@ -1944,5 +1944,6 @@ export default function BookingForm({
             </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
   );
 }
