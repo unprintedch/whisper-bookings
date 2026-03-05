@@ -971,8 +971,14 @@ export default function BookingForm({
       return;
     }
 
+    // Clean up optional numeric fields before saving
+    const cleanedData = {
+      ...dataToValidate,
+      group_pax: dataToValidate.group_pax === '' || dataToValidate.group_pax === null ? undefined : dataToValidate.group_pax,
+    };
+
     // Ensure the onSave callback receives the final client_id
-    onSave({ ...dataToValidate, notifications: notificationOptions });
+    onSave({ ...cleanedData, notifications: notificationOptions });
   };
 
   const handleDelete = () => {
