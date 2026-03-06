@@ -357,44 +357,39 @@ export default function HomePage() {
         <Card className="max-w-7xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="mb-4">
-              <h2 className="text-2xl font-bold text-slate-800 mb-4">Room Availability Calendar</h2>
-              
               <div className="flex items-center gap-4 flex-wrap justify-between">
                 <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl">
                   <Button
-                    size="sm"
+                    size="default"
                     variant="ghost"
                     onClick={() => setSelectedSiteName('all')}
-                    className={`transition-all ${
+                    className={`transition-all text-base px-5 ${
                     selectedSiteName === 'all' ?
                     'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
                     'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
                     }>
-
                     All Sites
                   </Button>
                   <Button
-                    size="sm"
+                    size="default"
                     variant="ghost"
                     onClick={() => setSelectedSiteName('Tarangire')}
-                    className={`transition-all ${
+                    className={`transition-all text-base px-5 ${
                     selectedSiteName === 'Tarangire' ?
                     'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
                     'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
                     }>
-
                     Tarangire
                   </Button>
                   <Button
-                    size="sm"
+                    size="default"
                     variant="ghost"
                     onClick={() => setSelectedSiteName('Serengeti')}
-                    className={`transition-all ${
+                    className={`transition-all text-base px-5 ${
                     selectedSiteName === 'Serengeti' ?
                     'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
                     'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
                     }>
-
                     Serengeti
                   </Button>
                 </div>
