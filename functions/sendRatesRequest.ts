@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
 
     const base44 = createClientFromRequest(req);
 
-    // Load notification settings (as service role since public user is not authenticated)
+    // Load notification settings as service role
     let settings = {};
     try {
       const settingsList = await base44.asServiceRole.entities.NotificationSettings.list();
@@ -40,11 +40,26 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: true });
     }
 
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
     await Promise.all(uniqueRecipients.map((to) =>
-      base44.asServiceRole.integrations.Core.SendEmail({
-        to,
-        subject: `Rate Request from ${contactName}`,
-        body,
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Whisper Bookings <onboarding@resend.dev>',
+          to,
+          subject: `Rate Request from ${contactName}`,
+          html: body,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`Resend error: ${err}`);
+        }
       })
     ));
 
