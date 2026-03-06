@@ -45,6 +45,11 @@ export default function HomePage() {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [publicMultiRanges, setPublicMultiRanges] = useState([]);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
+  const [showRatesModal, setShowRatesModal] = useState(false);
+  const [ratesEmail, setRatesEmail] = useState('');
+  const [ratesName, setRatesName] = useState('');
+  const [ratesSending, setRatesSending] = useState(false);
+  const [ratesSent, setRatesSent] = useState(false);
 
 
   useEffect(() => {
