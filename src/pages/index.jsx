@@ -403,7 +403,6 @@ export default function HomePage() {
                     size="icon"
                     onClick={() => navigateDate('prev')}
                     className="hover:bg-blue-50 h-9 w-9">
-
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                   <Button
@@ -411,15 +410,29 @@ export default function HomePage() {
                     size="sm"
                     onClick={() => setCurrentDate(new Date())}
                     className="hover:bg-blue-50 h-9">
-
                     Today
                   </Button>
+                  <Popover open={isDatePopoverOpen} onOpenChange={setIsDatePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-36 justify-start text-left font-normal h-9">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(currentDate, 'dd MMM')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={currentDate}
+                        onSelect={(date) => { if (date) { setCurrentDate(date); setIsDatePopoverOpen(false); } }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => navigateDate('next')}
                     className="hover:bg-blue-50 h-9 w-9">
-
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
