@@ -555,6 +555,40 @@ export default function HomePage() {
         </Card>
       </div>
 
+      {/* Rates Request Modal */}
+      <Dialog open={showRatesModal} onOpenChange={(open) => { setShowRatesModal(open); if (!open) setRatesSent(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request Rates</DialogTitle>
+            <DialogDescription>Enter your contact details and we'll get back to you with our rates.</DialogDescription>
+          </DialogHeader>
+          {ratesSent ? (
+            <div className="py-6 text-center space-y-3">
+              <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                <Mail className="w-7 h-7 text-emerald-600" />
+              </div>
+              <p className="text-lg font-semibold text-slate-800">Request sent!</p>
+              <p className="text-slate-500 text-sm">We'll be in touch shortly.</p>
+              <Button className="bg-yellow-700 hover:bg-yellow-800 w-full mt-2" onClick={() => setShowRatesModal(false)}>Close</Button>
+            </div>
+          ) : (
+            <form onSubmit={handleRatesRequest} className="space-y-4 pt-2">
+              <div>
+                <Label htmlFor="rates-name">Your Name</Label>
+                <Input id="rates-name" placeholder="Jane Smith" value={ratesName} onChange={e => setRatesName(e.target.value)} required className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="rates-email">Your Email</Label>
+                <Input id="rates-email" type="email" placeholder="jane@example.com" value={ratesEmail} onChange={e => setRatesEmail(e.target.value)} required className="mt-1" />
+              </div>
+              <Button type="submit" className="bg-yellow-700 hover:bg-yellow-800 w-full" disabled={ratesSending}>
+                {ratesSending ? 'Sending...' : 'Send Request'}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showBookingForm} onOpenChange={setShowBookingForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
