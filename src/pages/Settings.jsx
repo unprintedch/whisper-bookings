@@ -212,6 +212,7 @@ export default function SettingsPage() {
         setNewBookingTemplate(defaultNewBookingTemplate);
         setUpdateBookingTemplate(defaultUpdateBookingTemplate);
         setCancellationTemplate(defaultCancellationTemplate);
+        setRatesRequestTemplate(defaultRatesRequestTemplate);
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
