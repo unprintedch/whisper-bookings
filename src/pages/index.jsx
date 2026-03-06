@@ -471,23 +471,6 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Select
-                    value={filters.bedConfigId}
-                    onValueChange={(value) => setFilters((prev) => ({ ...prev, bedConfigId: value }))}>
-
-                    <SelectTrigger className="w-52">
-                      <SelectValue placeholder="Bed configuration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All bed configurations</SelectItem>
-                      {bedConfigurations.map((config) =>
-                      <SelectItem key={config.id} value={config.id}>
-                          {config.name} ({config.max_occupancy} max)
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-
                   <Button
                     variant="outline"
                     onClick={() => { setRatesSent(false); setRatesEmail(''); setRatesName(''); setShowRatesModal(true); }}
