@@ -188,6 +188,7 @@ export default function SettingsPage() {
         setNewBookingTemplate(current.template_new_booking || defaultNewBookingTemplate);
         setUpdateBookingTemplate(current.template_update_booking || defaultUpdateBookingTemplate);
         setCancellationTemplate(current.template_cancellation || defaultCancellationTemplate);
+        setRatesRequestTemplate(current.template_rates_request || defaultRatesRequestTemplate);
 
         // Build siteConfigs map
         const configMap = {};
