@@ -174,24 +174,37 @@ export default function HomePage() {
     setRatesSending(true);
     try {
       const settingsList = await base44.entities.NotificationSettings.list();
-      const settings = settingsList[0];
-      const template = settings?.template_rates_request || `<p>Hello,</p><p><strong>[CONTACT_NAME]</strong> (<a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a>) has requested rates information via the online booking system.</p><p>Please reply to them directly.</p>`;
+      const settings = settingsList[0] || {};
+
+      const template = settings.template_rates_request || `<p>Hello,</p><p><strong>[CONTACT_NAME]</strong> (<a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a>) has requested rates information via the online booking system.</p><p>Please reply to them directly.</p>`;
       const body = template
         .replace(/\[CONTACT_NAME\]/g, ratesName)
         .replace(/\[CONTACT_EMAIL\]/g, ratesEmail);
 
-      // Collect all admin emails
+      // Collect all admin emails (from site configs first, then global fallback)
       let recipients = [];
-      (settings?.site_configs || []).forEach(sc => { recipients = [...recipients, ...(sc.admin_emails || [])]; });
-      if (recipients.length === 0) recipients = settings?.admin_emails || [];
+      (settings.site_configs || []).forEach(sc => {
+        (sc.admin_emails || []).forEach(email => { if (email) recipients.push(email); });
+      });
+      if (recipients.length === 0) {
+        recipients = (settings.admin_emails || []).filter(Boolean);
+      }
       const uniqueRecipients = [...new Set(recipients)];
+
+      if (uniqueRecipients.length === 0) {
+        // No recipients configured — still mark as sent (silently succeeds)
+        console.warn('No admin email recipients configured for rate requests.');
+        setRatesSent(true);
+        setRatesSending(false);
+        return;
+      }
 
       await Promise.all(uniqueRecipients.map(to =>
         base44.integrations.Core.SendEmail({ to, subject: `Rate Request from ${ratesName}`, body })
       ));
       setRatesSent(true);
     } catch (err) {
-      console.error(err);
+      console.error('Rate request error:', err);
       alert('Error sending request. Please try again.');
     }
     setRatesSending(false);
