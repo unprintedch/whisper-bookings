@@ -11,6 +11,7 @@ import { LogIn, ChevronLeft, ChevronRight, CalendarCheck, Calendar as CalendarIc
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { base44 } from "@/api/base44Client";
+import { sendRatesRequest } from "@/functions/sendRatesRequest";
 import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
