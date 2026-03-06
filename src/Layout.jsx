@@ -400,23 +400,7 @@ export default function Layout({ children }) {
                 </Button>
               </div>
 
-              {/* Bed Configuration Filter - Replacing Capacity Filter */}
-              <Select 
-                value={filters.bedConfigId} 
-                onValueChange={(value) => setFilters(prev => ({ ...prev, bedConfigId: value }))}
-              >
-                <SelectTrigger className="w-52">
-                  <SelectValue placeholder="Bed configuration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All bed configurations</SelectItem>
-                  {bedConfigurations.map(config => (
-                    <SelectItem key={config.id} value={config.id}>
-                      {config.name} ({config.max_occupancy} max)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
             </div>
           )}
 
