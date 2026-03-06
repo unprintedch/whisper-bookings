@@ -44,6 +44,7 @@ export default function HomePage() {
   const [bookingConfirmed, setBookingConfirmed] = useState(null);
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [publicMultiRanges, setPublicMultiRanges] = useState([]);
+  const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
 
 
   useEffect(() => {
