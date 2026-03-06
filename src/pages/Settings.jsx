@@ -368,6 +368,11 @@ export default function SettingsPage() {
                   <Label>Cancellation Template</Label>
                   <ReactQuill theme="snow" value={cancellationTemplate} onChange={setCancellationTemplate} className="bg-white" />
                 </div>
+                <div className="space-y-2">
+                  <Label>Rate Request Template</Label>
+                  <p className="text-xs text-slate-500">Sent to admins when a visitor clicks "Request Rates". Placeholders: [CONTACT_NAME], [CONTACT_EMAIL]</p>
+                  <ReactQuill theme="snow" value={ratesRequestTemplate} onChange={setRatesRequestTemplate} className="bg-white" />
+                </div>
                 <div className="text-sm text-slate-600 bg-slate-50 p-4 rounded-lg border">
                   <strong>Available Placeholders:</strong>
                   <ul className="list-disc list-inside mt-2 grid grid-cols-2 gap-1">
