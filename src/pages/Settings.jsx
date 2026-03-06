@@ -69,6 +69,24 @@ const defaultUpdateBookingTemplate = `
 </div>
 `;
 
+const defaultRatesRequestTemplate = `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+  <div style="background-color: #f8f8f8; padding: 20px; text-align: center;">
+    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" alt="Whisper B. Logo" style="width: 60px; height: 60px; margin-bottom: 10px;">
+    <h1 style="color: #1e293b; font-size: 24px; margin: 0;">Rate Request</h1>
+  </div>
+  <div style="padding: 25px;">
+    <p>A visitor has requested rates information from the online booking system:</p>
+    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin: 20px 0;">
+      <p><strong>Name:</strong> [CONTACT_NAME]</p>
+      <p><strong>Email:</strong> <a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a></p>
+    </div>
+    <p>Please reply to them directly at <a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a>.</p>
+  </div>
+  <div style="background-color: #f8f8f8; padding: 15px; text-align: center; font-size: 12px; color: #64748b;">
+    <p>This is an automated notification from Whisper Bookings.</p>
+  </div>
+</div>`;
+
 const defaultCancellationTemplate = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
   <div style="background-color: #f8f8f8; padding: 20px; text-align: center;">
