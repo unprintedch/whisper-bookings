@@ -174,40 +174,7 @@ export default function HomePage() {
     e.preventDefault();
     setRatesSending(true);
     try {
-      let settings = {};
-      try {
-        const settingsList = await base44.entities.NotificationSettings.list();
-        settings = settingsList[0] || {};
-      } catch (settingsErr) {
-        console.warn('Could not load notification settings:', settingsErr);
-      }
-
-      const defaultTemplate = `<p>Hello,</p><p><strong>[CONTACT_NAME]</strong> (<a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a>) has requested rates information via the online booking system.</p><p>Please reply to them directly.</p>`;
-      const template = settings.template_rates_request || defaultTemplate;
-      const body = template
-        .replace(/\[CONTACT_NAME\]/g, ratesName)
-        .replace(/\[CONTACT_EMAIL\]/g, ratesEmail);
-
-      // Collect all admin emails (from site configs first, then global fallback)
-      let recipients = [];
-      (settings.site_configs || []).forEach((sc) => {
-        (sc.admin_emails || []).forEach((email) => { if (email) recipients.push(email); });
-      });
-      if (recipients.length === 0) {
-        recipients = (settings.admin_emails || []).filter(Boolean);
-      }
-      const uniqueRecipients = [...new Set(recipients)];
-
-      if (uniqueRecipients.length === 0) {
-        console.warn('No admin email recipients configured for rate requests.');
-        setRatesSent(true);
-        setRatesSending(false);
-        return;
-      }
-
-      await Promise.all(uniqueRecipients.map((to) =>
-        base44.integrations.Core.SendEmail({ to, subject: `Rate Request from ${ratesName}`, body })
-      ));
+      await sendRatesRequest({ contactName: ratesName, contactEmail: ratesEmail });
       setRatesSent(true);
     } catch (err) {
       console.error('Rate request error:', err);
