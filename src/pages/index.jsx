@@ -30,13 +30,13 @@ export default function HomePage() {
   const [selectedSiteName, setSelectedSiteName] = useState('all');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filters, setFilters] = useState({ bedConfigId: 'all' });
-  
+
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [allowPublicBooking, setAllowPublicBooking] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
-  
+
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showMultiModal, setShowMultiModal] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(null);
@@ -52,16 +52,16 @@ export default function HomePage() {
     try {
       const isAuth = await base44.auth.isAuthenticated();
       setIsAuthenticated(isAuth);
-      
+
       let shouldLoadData = false;
-      
+
       // Check if password protection is enabled
       const settingsList = await base44.entities.PublicAccessSettings.list();
       if (settingsList.length > 0) {
         const settings = settingsList[0];
         setIsPasswordProtected(settings.is_password_protected || false);
         setAllowPublicBooking(settings.allow_public_booking || false);
-        
+
         // If authenticated or not protected, grant access
         if (isAuth || !settings.is_password_protected) {
           setHasAccess(true);
@@ -81,7 +81,7 @@ export default function HomePage() {
         setHasAccess(true);
         shouldLoadData = true;
       }
-      
+
       if (shouldLoadData) {
         loadData();
       }
@@ -96,7 +96,7 @@ export default function HomePage() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setPasswordError(false);
-    
+
     try {
       const settingsList = await base44.entities.PublicAccessSettings.list();
       if (settingsList.length > 0) {
@@ -121,15 +121,15 @@ export default function HomePage() {
       const urlParams = new URLSearchParams(window.location.search);
       const isTestMode = urlParams.get('base44_data_env') === 'dev';
       const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
-      
+
       const [roomsData, sitesData, bedConfigsData, reservationsData, clientsData, agenciesData] = await Promise.all([
-        dbClient.entities.Room.list('-name'),
-        dbClient.entities.Site.list(),
-        dbClient.entities.BedConfiguration.list('sort_order'),
-        dbClient.entities.Reservation.list('-created_date'),
-        dbClient.entities.Client.list(),
-        dbClient.entities.Agency.list()
-      ]);
+      dbClient.entities.Room.list('-name'),
+      dbClient.entities.Site.list(),
+      dbClient.entities.BedConfiguration.list('sort_order'),
+      dbClient.entities.Reservation.list('-created_date'),
+      dbClient.entities.Client.list(),
+      dbClient.entities.Agency.list()]
+      );
       setRooms(roomsData);
       setSites(sitesData);
       setBedConfigurations(bedConfigsData);
@@ -146,7 +146,7 @@ export default function HomePage() {
 
   const navigateDate = (direction) => {
     const days = direction === 'prev' ? -7 : 7;
-    setCurrentDate(prev => {
+    setCurrentDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(newDate.getDate() + days);
       return newDate;
@@ -154,15 +154,15 @@ export default function HomePage() {
   };
 
   const handleSlotToggle = (roomId, dateStr) => {
-    setSelectedSlots(prev => {
-      const exists = prev.some(s => s.roomId === roomId && s.date === dateStr);
-      if (exists) return prev.filter(s => !(s.roomId === roomId && s.date === dateStr));
+    setSelectedSlots((prev) => {
+      const exists = prev.some((s) => s.roomId === roomId && s.date === dateStr);
+      if (exists) return prev.filter((s) => !(s.roomId === roomId && s.date === dateStr));
       return [...prev, { roomId, date: dateStr }];
     });
   };
 
   const handleRemoveRoomSlots = (roomId) => {
-    setSelectedSlots(prev => prev.filter(s => s.roomId !== roomId));
+    setSelectedSlots((prev) => prev.filter((s) => s.roomId !== roomId));
   };
 
   const handleBookingSubmit = async (formData) => {
@@ -182,9 +182,9 @@ export default function HomePage() {
         clientId = newClient.id;
       }
 
-      const rangesToBook = publicMultiRanges.length > 0
-        ? publicMultiRanges
-        : [{ roomId: formData.room_id, checkin: formData.date_checkin, checkout: formData.date_checkout }];
+      const rangesToBook = publicMultiRanges.length > 0 ?
+      publicMultiRanges :
+      [{ roomId: formData.room_id, checkin: formData.date_checkin, checkout: formData.date_checkout }];
 
       for (const range of rangesToBook) {
         await dbClient.entities.Reservation.create({
@@ -207,9 +207,9 @@ export default function HomePage() {
       setBookingConfirmed({
         clientName: formData.contact_name,
         count: rangesToBook.length,
-        roomName: rangesToBook.length === 1 ? (rooms.find(r => r.id === rangesToBook[0].roomId)?.name || '') : null,
+        roomName: rangesToBook.length === 1 ? rooms.find((r) => r.id === rangesToBook[0].roomId)?.name || '' : null,
         dateCheckin: typeof rangesToBook[0].checkin === 'string' ? rangesToBook[0].checkin : format(rangesToBook[0].checkin, 'yyyy-MM-dd'),
-        dateCheckout: typeof rangesToBook[rangesToBook.length - 1].checkout === 'string' ? rangesToBook[rangesToBook.length - 1].checkout : format(rangesToBook[rangesToBook.length - 1].checkout, 'yyyy-MM-dd'),
+        dateCheckout: typeof rangesToBook[rangesToBook.length - 1].checkout === 'string' ? rangesToBook[rangesToBook.length - 1].checkout : format(rangesToBook[rangesToBook.length - 1].checkout, 'yyyy-MM-dd')
       });
       loadData();
     } catch (error) {
@@ -227,8 +227,8 @@ export default function HomePage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-700 mx-auto"></div>
           <p className="mt-4 text-slate-600">Loading availability...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!hasAccess && isPasswordProtected) {
@@ -237,11 +237,11 @@ export default function HomePage() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center mb-6">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" 
-                alt="Whisper B. Logo" 
-                className="w-16 h-16 mx-auto mb-3" 
-              />
+              <img
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png"
+                alt="Whisper B. Logo"
+                className="w-16 h-16 mx-auto mb-3" />
+
               <h1 className="text-2xl font-bold text-slate-800">Whisper B.</h1>
               <p className="text-slate-600 mt-2">This page is password protected</p>
             </div>
@@ -258,11 +258,11 @@ export default function HomePage() {
                     setPasswordInput(e.target.value);
                     setPasswordError(false);
                   }}
-                  className="mt-1"
-                />
-                {passwordError && (
-                  <p className="text-sm text-red-600 mt-1">Incorrect password</p>
-                )}
+                  className="mt-1" />
+
+                {passwordError &&
+                <p className="text-sm text-red-600 mt-1">Incorrect password</p>
+                }
               </div>
 
               <Button type="submit" className="w-full bg-yellow-700 hover:bg-yellow-800">
@@ -270,23 +270,23 @@ export default function HomePage() {
               </Button>
             </form>
 
-            {!isAuthenticated && (
-              <div className="mt-4 text-center">
+            {!isAuthenticated &&
+            <div className="mt-4 text-center">
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => base44.auth.redirectToLogin()}
-                  className="text-slate-600 hover:text-slate-900"
-                >
+                variant="ghost"
+                size="sm"
+                onClick={() => base44.auth.redirectToLogin()}
+                className="text-slate-600 hover:text-slate-900">
+
                   <LogIn className="w-4 h-4 mr-1" />
                   Or login as admin
                 </Button>
               </div>
-            )}
+            }
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
 
@@ -308,15 +308,15 @@ export default function HomePage() {
               {bookingConfirmed.dateCheckout && <div><span className="text-slate-500">Check-out:</span> <span className="font-medium text-slate-800">{format(new Date(bookingConfirmed.dateCheckout + 'T12:00:00'), 'dd MMM yyyy')}</span></div>}
             </div>
             <Button
-              onClick={() => { setBookingConfirmed(null); loadData(); }}
-              className="bg-yellow-700 hover:bg-yellow-800 w-full"
-            >
+              onClick={() => {setBookingConfirmed(null);loadData();}}
+              className="bg-yellow-700 hover:bg-yellow-800 w-full">
+
               New request
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -324,34 +324,34 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4 relative">
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" 
-              alt="Whisper B. Logo" 
-              className="w-12 h-12" 
-            />
-            <h1 className="text-4xl font-bold text-slate-800">Whisper B.</h1>
-            {isAuthenticated ? (
-              <Button
-                variant="default"
-                size="sm"
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-yellow-700 hover:bg-yellow-800"
-                onClick={() => navigate(createPageUrl('Dashboard'))}
-              >
+            <img
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png"
+              alt="Whisper B. Logo"
+              className="w-12 h-12" />
+
+            <h1 className="text-4xl font-bold text-slate-800">Whisper Camps</h1>
+            {isAuthenticated ?
+            <Button
+              variant="default"
+              size="sm"
+              className="absolute right-0 top-1/2 -translate-y-1/2 bg-yellow-700 hover:bg-yellow-800"
+              onClick={() => navigate(createPageUrl('Dashboard'))}>
+
                 Go to Dashboard
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-900"
-                onClick={() => base44.auth.redirectToLogin()}
-              >
+              </Button> :
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-900"
+              onClick={() => base44.auth.redirectToLogin()}>
+
                 <LogIn className="w-4 h-4 mr-1" />
                 Admin
               </Button>
-            )}
+            }
           </div>
-          <p className="text-xl text-slate-600">Safari Lodge Availability</p>
+          <p className="text-xl text-slate-600">online booking system</p>
         </div>
 
         <Card className="max-w-7xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
@@ -366,11 +366,11 @@ export default function HomePage() {
                     variant="ghost"
                     onClick={() => setSelectedSiteName('all')}
                     className={`transition-all ${
-                      selectedSiteName === 'all' 
-                        ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' 
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
+                    selectedSiteName === 'all' ?
+                    'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
+                    'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
+                    }>
+
                     All Sites
                   </Button>
                   <Button
@@ -378,11 +378,11 @@ export default function HomePage() {
                     variant="ghost"
                     onClick={() => setSelectedSiteName('Tarangire')}
                     className={`transition-all ${
-                      selectedSiteName === 'Tarangire' 
-                        ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' 
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
+                    selectedSiteName === 'Tarangire' ?
+                    'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
+                    'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
+                    }>
+
                     Tarangire
                   </Button>
                   <Button
@@ -390,11 +390,11 @@ export default function HomePage() {
                     variant="ghost"
                     onClick={() => setSelectedSiteName('Serengeti')}
                     className={`transition-all ${
-                      selectedSiteName === 'Serengeti' 
-                        ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' 
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
+                    selectedSiteName === 'Serengeti' ?
+                    'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
+                    'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
+                    }>
+
                     Serengeti
                   </Button>
                 </div>
@@ -404,91 +404,91 @@ export default function HomePage() {
                     variant="outline"
                     size="icon"
                     onClick={() => navigateDate('prev')}
-                    className="hover:bg-blue-50 h-9 w-9"
-                  >
+                    className="hover:bg-blue-50 h-9 w-9">
+
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentDate(new Date())}
-                    className="hover:bg-blue-50 h-9"
-                  >
+                    className="hover:bg-blue-50 h-9">
+
                     Today
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => navigateDate('next')}
-                    className="hover:bg-blue-50 h-9 w-9"
-                  >
+                    className="hover:bg-blue-50 h-9 w-9">
+
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Select 
-                    value={filters.bedConfigId} 
-                    onValueChange={(value) => setFilters(prev => ({ ...prev, bedConfigId: value }))}
-                  >
+                  <Select
+                    value={filters.bedConfigId}
+                    onValueChange={(value) => setFilters((prev) => ({ ...prev, bedConfigId: value }))}>
+
                     <SelectTrigger className="w-52">
                       <SelectValue placeholder="Bed configuration" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All bed configurations</SelectItem>
-                      {bedConfigurations.map(config => (
-                        <SelectItem key={config.id} value={config.id}>
+                      {bedConfigurations.map((config) =>
+                      <SelectItem key={config.id} value={config.id}>
                           {config.name} ({config.max_occupancy} max)
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
 
-                  {hasAccess && allowPublicBooking && (
-                    <Button
-                      onClick={() => { setPublicMultiRanges([]); setShowBookingForm(true); }}
-                      className="bg-yellow-700 hover:bg-yellow-800"
-                    >
+                  {hasAccess && allowPublicBooking &&
+                  <Button
+                    onClick={() => {setPublicMultiRanges([]);setShowBookingForm(true);}}
+                    className="bg-yellow-700 hover:bg-yellow-800">
+
                       <CalendarCheck className="w-4 h-4 mr-2" />
                       Request a Booking
                     </Button>
-                  )}
+                  }
                 </div>
               </div>
             </div>
 
             <GanttChart
               rooms={(() => {
-                let filteredRooms = rooms.filter(room => room.is_active);
-                
+                let filteredRooms = rooms.filter((room) => room.is_active);
+
                 if (selectedSiteName !== 'all') {
-                  const matchingSiteIds = sites
-                    .filter(s => s.name === selectedSiteName)
-                    .map(s => s.id);
-                  
+                  const matchingSiteIds = sites.
+                  filter((s) => s.name === selectedSiteName).
+                  map((s) => s.id);
+
                   if (matchingSiteIds.length > 0) {
-                    filteredRooms = filteredRooms.filter(room => 
-                      matchingSiteIds.includes(room.site_id)
+                    filteredRooms = filteredRooms.filter((room) =>
+                    matchingSiteIds.includes(room.site_id)
                     );
                   }
                 }
-                
+
                 if (filters.bedConfigId !== 'all') {
-                  filteredRooms = filteredRooms.filter(room => 
-                    room.bed_configuration_ids?.includes(filters.bedConfigId)
+                  filteredRooms = filteredRooms.filter((room) =>
+                  room.bed_configuration_ids?.includes(filters.bedConfigId)
                   );
                 }
-                
+
                 return filteredRooms.sort((a, b) => {
-                  const siteA = sites.find(s => s.id === a.site_id)?.name || '';
-                  const siteB = sites.find(s => s.id === b.site_id)?.name || '';
+                  const siteA = sites.find((s) => s.id === a.site_id)?.name || '';
+                  const siteB = sites.find((s) => s.id === b.site_id)?.name || '';
                   if (siteA !== siteB) {
-                      return siteA.localeCompare(siteB);
+                    return siteA.localeCompare(siteB);
                   }
                   return a.number.localeCompare(b.number, undefined, { numeric: true });
                 });
               })()}
-              reservations={reservations.filter(r => r.status !== 'OPTION' && r.status !== 'REQUEST')}
+              reservations={reservations.filter((r) => r.status !== 'OPTION' && r.status !== 'REQUEST')}
               clients={clients}
               groups={[]}
               sites={sites}
@@ -499,8 +499,8 @@ export default function HomePage() {
               selectedSlots={selectedSlots}
               onBookingEdit={null}
               onRoomEdit={null}
-              isPublicView={true}
-            />
+              isPublicView={true} />
+
           </CardContent>
         </Card>
       </div>
@@ -517,8 +517,8 @@ export default function HomePage() {
             reservations={reservations}
             agencies={agencies}
             onSubmit={handleBookingSubmit}
-            initialRanges={publicMultiRanges}
-          />
+            initialRanges={publicMultiRanges} />
+
         </DialogContent>
       </Dialog>
 
@@ -531,12 +531,12 @@ export default function HomePage() {
           setShowMultiModal(true);
         }}
         rooms={rooms}
-        sites={sites}
-      />
+        sites={sites} />
+
 
       <PublicMultiReservationModal
         isOpen={showMultiModal}
-        onClose={() => { setShowMultiModal(false); setPublicMultiRanges([]); }}
+        onClose={() => {setShowMultiModal(false);setPublicMultiRanges([]);}}
         mergedRanges={publicMultiRanges}
         rooms={rooms}
         sites={sites}
@@ -548,8 +548,8 @@ export default function HomePage() {
           setShowMultiModal(false);
           setBookingConfirmed({ clientName, count, roomName: null, dateCheckin: null, dateCheckout: null });
           loadData();
-        }}
-      />
-    </div>
-  );
+        }} />
+
+    </div>);
+
 }
