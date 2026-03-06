@@ -169,6 +169,34 @@ export default function HomePage() {
     });
   };
 
+  const handleRatesRequest = async (e) => {
+    e.preventDefault();
+    setRatesSending(true);
+    try {
+      const settingsList = await base44.entities.NotificationSettings.list();
+      const settings = settingsList[0];
+      const template = settings?.template_rates_request || `<p>Hello,</p><p><strong>[CONTACT_NAME]</strong> (<a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a>) has requested rates information via the online booking system.</p><p>Please reply to them directly.</p>`;
+      const body = template
+        .replace(/\[CONTACT_NAME\]/g, ratesName)
+        .replace(/\[CONTACT_EMAIL\]/g, ratesEmail);
+
+      // Collect all admin emails
+      let recipients = [];
+      (settings?.site_configs || []).forEach(sc => { recipients = [...recipients, ...(sc.admin_emails || [])]; });
+      if (recipients.length === 0) recipients = settings?.admin_emails || [];
+      const uniqueRecipients = [...new Set(recipients)];
+
+      await Promise.all(uniqueRecipients.map(to =>
+        base44.integrations.Core.SendEmail({ to, subject: `Rate Request from ${ratesName}`, body })
+      ));
+      setRatesSent(true);
+    } catch (err) {
+      console.error(err);
+      alert('Error sending request. Please try again.');
+    }
+    setRatesSending(false);
+  };
+
   const handleRemoveRoomSlots = (roomId) => {
     setSelectedSlots((prev) => prev.filter((s) => s.roomId !== roomId));
   };
