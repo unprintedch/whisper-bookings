@@ -177,14 +177,14 @@ export default function HomePage() {
       const settings = settingsList[0] || {};
 
       const template = settings.template_rates_request || `<p>Hello,</p><p><strong>[CONTACT_NAME]</strong> (<a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a>) has requested rates information via the online booking system.</p><p>Please reply to them directly.</p>`;
-      const body = template
-        .replace(/\[CONTACT_NAME\]/g, ratesName)
-        .replace(/\[CONTACT_EMAIL\]/g, ratesEmail);
+      const body = template.
+      replace(/\[CONTACT_NAME\]/g, ratesName).
+      replace(/\[CONTACT_EMAIL\]/g, ratesEmail);
 
       // Collect all admin emails (from site configs first, then global fallback)
       let recipients = [];
-      (settings.site_configs || []).forEach(sc => {
-        (sc.admin_emails || []).forEach(email => { if (email) recipients.push(email); });
+      (settings.site_configs || []).forEach((sc) => {
+        (sc.admin_emails || []).forEach((email) => {if (email) recipients.push(email);});
       });
       if (recipients.length === 0) {
         recipients = (settings.admin_emails || []).filter(Boolean);
@@ -199,8 +199,8 @@ export default function HomePage() {
         return;
       }
 
-      await Promise.all(uniqueRecipients.map(to =>
-        base44.integrations.Core.SendEmail({ to, subject: `Rate Request from ${ratesName}`, body })
+      await Promise.all(uniqueRecipients.map((to) =>
+      base44.integrations.Core.SendEmail({ to, subject: `Rate Request from ${ratesName}`, body })
       ));
       setRatesSent(true);
     } catch (err) {
@@ -400,7 +400,11 @@ export default function HomePage() {
               </Button>
             }
           </div>
-          <p className="text-xl text-slate-600">online booking system</p>
+          <p className="text-xl text-slate-600">Online availability for Whisper Tarangire and Whisper Serengeti.
+
+You are welcome to submit a single request for consecutive or non-consecutive nights, whether for one camp or for both.
+
+Our reservations team will respond within 24 hours to confirm availability and will provide a proforma invoice by email.</p>
         </div>
 
         <Card className="max-w-7xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
@@ -408,11 +412,7 @@ export default function HomePage() {
             <div className="mb-4">
               <div className="flex items-center gap-4 flex-wrap justify-between">
                 <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl">
-                  <Button
-                    size="default"
-                    variant="ghost"
-                    onClick={() => setSelectedSiteName('all')}
-                    className={`transition-all text-base px-5 ${
+                  <Button size="default" variant="ghost" onClick={() => setSelectedSiteName('all')} className={`transition-all text-base px-5 ${
                     selectedSiteName === 'all' ?
                     'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
                     'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
@@ -469,9 +469,9 @@ export default function HomePage() {
                       <Calendar
                         mode="single"
                         selected={currentDate}
-                        onSelect={(date) => { if (date) { setCurrentDate(date); setIsDatePopoverOpen(false); } }}
-                        initialFocus
-                      />
+                        onSelect={(date) => {if (date) {setCurrentDate(date);setIsDatePopoverOpen(false);}}}
+                        initialFocus />
+
                     </PopoverContent>
                   </Popover>
                   <Button
@@ -486,7 +486,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
-                    onClick={() => { setRatesSent(false); setRatesEmail(''); setRatesName(''); setShowRatesModal(true); }}
+                    onClick={() => {setRatesSent(false);setRatesEmail('');setRatesName('');setShowRatesModal(true);}}
                     className="border-yellow-700 text-yellow-700 hover:bg-yellow-50">
                     <Mail className="w-4 h-4 mr-2" />
                     Request Rates
@@ -552,36 +552,36 @@ export default function HomePage() {
       </div>
 
       {/* Rates Request Modal */}
-      <Dialog open={showRatesModal} onOpenChange={(open) => { setShowRatesModal(open); if (!open) setRatesSent(false); }}>
+      <Dialog open={showRatesModal} onOpenChange={(open) => {setShowRatesModal(open);if (!open) setRatesSent(false);}}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Request Rates</DialogTitle>
             <DialogDescription>Enter your contact details and we'll get back to you with our rates.</DialogDescription>
           </DialogHeader>
-          {ratesSent ? (
-            <div className="py-6 text-center space-y-3">
+          {ratesSent ?
+          <div className="py-6 text-center space-y-3">
               <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
                 <Mail className="w-7 h-7 text-emerald-600" />
               </div>
               <p className="text-lg font-semibold text-slate-800">Request sent!</p>
               <p className="text-slate-500 text-sm">We'll be in touch shortly.</p>
               <Button className="bg-yellow-700 hover:bg-yellow-800 w-full mt-2" onClick={() => setShowRatesModal(false)}>Close</Button>
-            </div>
-          ) : (
-            <form onSubmit={handleRatesRequest} className="space-y-4 pt-2">
+            </div> :
+
+          <form onSubmit={handleRatesRequest} className="space-y-4 pt-2">
               <div>
                 <Label htmlFor="rates-name">Your Name</Label>
-                <Input id="rates-name" placeholder="Jane Smith" value={ratesName} onChange={e => setRatesName(e.target.value)} required className="mt-1" />
+                <Input id="rates-name" placeholder="Jane Smith" value={ratesName} onChange={(e) => setRatesName(e.target.value)} required className="mt-1" />
               </div>
               <div>
                 <Label htmlFor="rates-email">Your Email</Label>
-                <Input id="rates-email" type="email" placeholder="jane@example.com" value={ratesEmail} onChange={e => setRatesEmail(e.target.value)} required className="mt-1" />
+                <Input id="rates-email" type="email" placeholder="jane@example.com" value={ratesEmail} onChange={(e) => setRatesEmail(e.target.value)} required className="mt-1" />
               </div>
               <Button type="submit" className="bg-yellow-700 hover:bg-yellow-800 w-full" disabled={ratesSending}>
                 {ratesSending ? 'Sending...' : 'Send Request'}
               </Button>
             </form>
-          )}
+          }
         </DialogContent>
       </Dialog>
 
