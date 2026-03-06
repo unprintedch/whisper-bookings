@@ -172,6 +172,7 @@ export default function SettingsPage() {
   const [newBookingTemplate, setNewBookingTemplate] = useState('');
   const [updateBookingTemplate, setUpdateBookingTemplate] = useState('');
   const [cancellationTemplate, setCancellationTemplate] = useState('');
+  const [ratesRequestTemplate, setRatesRequestTemplate] = useState('');
   const [isSavingTemplates, setIsSavingTemplates] = useState(false);
 
   useEffect(() => { loadSettings(); }, []);
