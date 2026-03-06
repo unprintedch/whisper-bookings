@@ -253,6 +253,7 @@ export default function SettingsPage() {
       template_new_booking: newBookingTemplate,
       template_update_booking: updateBookingTemplate,
       template_cancellation: cancellationTemplate,
+      template_rates_request: ratesRequestTemplate,
     });
     setIsSavingTemplates(false);
   };
