@@ -398,13 +398,6 @@ export default function Dashboard({
       if (!roomSite || roomSite.name !== selectedSiteName) return false;
     }
     
-    // New filter: by bed configuration ID
-    if (filters.bedConfigId !== "all") {
-      if (!room.bed_configuration_ids || !room.bed_configuration_ids.includes(filters.bedConfigId)) {
-        return false;
-      }
-    }
-    
     return room.is_active;
   }).sort((a, b) => {
     const siteA = sites.find(s => s.id === a.site_id)?.name || '';
