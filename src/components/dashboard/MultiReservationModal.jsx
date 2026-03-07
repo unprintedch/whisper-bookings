@@ -561,13 +561,11 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" /> Group Pax (total)
-              </Label>
+              <Label className="text-sm font-semibold text-slate-700">Total number of guest(s)</Label>
               <Input
                 type="number"
-                min="0"
-                placeholder="ex: 12"
+                min="1"
+                placeholder="e.g. 12"
                 value={groupPax}
                 onChange={e => setGroupPax(e.target.value)}
               />
