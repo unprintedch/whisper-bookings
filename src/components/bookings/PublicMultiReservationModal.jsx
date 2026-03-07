@@ -302,6 +302,16 @@ export default function PublicMultiReservationModal({
               value={groupPax}
               onChange={e => setGroupPax(e.target.value)}
             />
+            {mergedRanges.length > 0 && (() => {
+              const totalAdults = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.adults_count, 10) || 0), 0);
+              const totalChildren = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.children_count, 10) || 0), 0);
+              const totalInfants = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.infants_count, 10) || 0), 0);
+              return (
+                <span className="text-sm text-slate-500">
+                  {totalAdults}A · {totalChildren}C · {totalInfants}I
+                </span>
+              );
+            })()}
           </div>
 
           {/* 5. Rooms grouped by date */}
