@@ -1715,7 +1715,7 @@ export default function BookingForm({
           </div>
           <div className="flex items-center gap-3">
             <Label htmlFor="group_pax" className="flex items-center gap-1 whitespace-nowrap text-sm font-medium shrink-0">
-              <Users className="w-3.5 h-3.5" /> Group Pax
+              Total number of guest(s)
             </Label>
             <Input
               id="group_pax"
