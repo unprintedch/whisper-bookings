@@ -1786,9 +1786,21 @@ export default function BookingForm({
         {/* Actions Footer - Edit mode */}
         {existingBooking && (
           <div className="flex items-center justify-between gap-4 pt-4 border-t mt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              {selectedClient && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setIsDeleteAllDialogOpen(true)}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete all reservations
+                </Button>
+              )}
+            </div>
             <Button type="submit" className="bg-yellow-700 hover:bg-yellow-800">
               Save Changes
             </Button>
