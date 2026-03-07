@@ -981,6 +981,17 @@ export default function BookingForm({
     }
   };
 
+  const handleDeleteAllClientReservations = async () => {
+    if (!selectedClient) return;
+    const clientReservations = reservations.filter(r => r.client_id === selectedClient.id);
+    for (const r of clientReservations) {
+      await Client.delete ? null : null; // no-op
+      await base44.entities.Reservation.delete(r.id);
+    }
+    setIsDeleteAllDialogOpen(false);
+    onCancel();
+  };
+
   // Helper functions
   const getAgencyName = (agencyId) => {
     return agencies.find(a => a.id === agencyId)?.name || '';
