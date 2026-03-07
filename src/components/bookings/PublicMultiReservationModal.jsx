@@ -297,7 +297,23 @@ export default function PublicMultiReservationModal({
             )}
           </div>
 
-          {/* 4. Comment */}
+          {/* 4. Group Pax */}
+          <div className="flex items-center gap-3">
+            <Label htmlFor="group_pax_multi" className="whitespace-nowrap text-sm font-medium shrink-0">
+              Total number of guest(s)
+            </Label>
+            <Input
+              id="group_pax_multi"
+              type="number"
+              min="1"
+              placeholder="e.g. 12"
+              className="w-28 h-10"
+              value={groupPax}
+              onChange={e => setGroupPax(e.target.value)}
+            />
+          </div>
+
+          {/* 5. Comment */}
           <div className="space-y-1">
             <Label className="text-sm">Special Requests <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
             <Textarea
