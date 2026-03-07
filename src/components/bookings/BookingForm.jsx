@@ -1617,7 +1617,7 @@ export default function BookingForm({
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                 <Command shouldFilter={true}>
                   <CommandInput placeholder="Search room..." className="h-9" />
-                  <CommandEmpty>No room found for selected criteria.</CommandEmpty>
+                  <CommandEmpty>No tent found for selected criteria.</CommandEmpty>
                   <CommandGroup className="max-h-60 overflow-y-auto">
                     {filteredAvailableRooms.map((room) => (
                       <CommandItem
