@@ -1805,7 +1805,12 @@ export default function BookingForm({
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={() => setIsDeleteAllDialogOpen(true)}
+                  onClick={() => {
+                    const count = reservations.filter(r => r.client_id === selectedClient.id).length;
+                    if (window.confirm(`⚠️ Delete ALL ${count} reservation(s) for "${selectedClient.name}"? This cannot be undone.`)) {
+                      handleDeleteAllClientReservations();
+                    }
+                  }}
                   className="bg-red-600 hover:bg-red-700"
                 >
                   Delete all reservations
