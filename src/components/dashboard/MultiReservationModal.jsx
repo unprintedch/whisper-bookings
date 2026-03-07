@@ -677,7 +677,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
             const totalChildren = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.children_count, 10) || 0), 0);
             const totalInfants = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.infants_count, 10) || 0), 0);
             const totalBeds = Object.values(perRoomDetails).filter(d => d.bed_configuration).length;
-            const hasDetails = totalAdults > 0 || totalChildren > 0 || totalInfants > 0 || totalBeds > 0;
+            const hasRooms = Object.keys(perRoomDetails).length > 0;
             return (
               <div className="flex items-center gap-3">
                 <Label className="whitespace-nowrap text-sm font-semibold text-slate-700 shrink-0">Total number of guest(s)</Label>
@@ -689,7 +689,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                   value={groupPax}
                   onChange={e => setGroupPax(e.target.value)}
                 />
-                {hasDetails && (
+                {hasRooms && (
                   <span className="text-sm text-slate-500">
                     {totalAdults}A · {totalChildren}C · {totalInfants}I
                     {totalBeds > 0 && <span className="font-semibold text-slate-700 ml-2">{totalBeds} bed{totalBeds > 1 ? 's' : ''} assigned</span>}
