@@ -434,7 +434,7 @@ export default function BookingForm({
     // Availability validation
     const availability = validateAvailability(currentFormData);
     if (!availability.isAvailable) {
-      newErrors.availability = `Room is not available for selected dates. Conflicts with ${availability.conflicts.length} existing reservation(s)`;
+    newErrors.availability = `Tent is not available for selected dates. Conflicts with ${availability.conflicts.length} existing reservation(s)`;
     }
 
     // Option expiry validation
