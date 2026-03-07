@@ -659,6 +659,22 @@ export default function PublicBookingForm({
           </div>
         </div>
 
+        {/* Group Pax */}
+        <div className="flex items-center gap-3">
+          <Label htmlFor="group_pax" className="whitespace-nowrap text-sm font-medium shrink-0">
+            Total number of guest(s)
+          </Label>
+          <Input
+            id="group_pax"
+            type="number"
+            min="1"
+            placeholder="e.g. 12"
+            className="w-28 h-10"
+            value={formData.group_pax}
+            onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
+          />
+        </div>
+
         {/* Comments */}
         <div className="space-y-2">
           <Label htmlFor="comment">Special Requests or Comments (Optional)</Label>
