@@ -987,7 +987,6 @@ export default function BookingForm({
     for (const r of clientReservations) {
       await Reservation.delete(r.id);
     }
-    setIsDeleteAllDialogOpen(false);
     onCancel();
   };
 
