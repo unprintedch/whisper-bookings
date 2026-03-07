@@ -671,6 +671,34 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
             ))}
           </div>
 
+          {/* Group Pax */}
+          {(() => {
+            const totalAdults = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.adults_count, 10) || 0), 0);
+            const totalChildren = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.children_count, 10) || 0), 0);
+            const totalInfants = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.infants_count, 10) || 0), 0);
+            const totalBeds = Object.values(perRoomDetails).filter(d => d.bed_configuration).length;
+            const hasDetails = totalAdults > 0 || totalChildren > 0 || totalInfants > 0 || totalBeds > 0;
+            return (
+              <div className="flex items-center gap-3">
+                <Label className="whitespace-nowrap text-sm font-semibold text-slate-700 shrink-0">Total number of guest(s)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 12"
+                  className="w-28 h-10"
+                  value={groupPax}
+                  onChange={e => setGroupPax(e.target.value)}
+                />
+                {hasDetails && (
+                  <span className="text-sm text-slate-500">
+                    {totalAdults}A · {totalChildren}C · {totalInfants}I
+                    {totalBeds > 0 && <span className="font-semibold text-slate-700 ml-2">{totalBeds} bed{totalBeds > 1 ? 's' : ''} assigned</span>}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Comment */}
           <div className="space-y-1">
             <Label className="text-sm font-semibold text-slate-700">Comments <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
