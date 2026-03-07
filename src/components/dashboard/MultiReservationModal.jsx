@@ -698,6 +698,17 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
               </div>
             );
           })()}
+
+          {/* Comment */}
+          <div className="space-y-1">
+            <Label className="text-sm font-semibold text-slate-700">Comments <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
+            <Textarea
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder="Special requests, notes..."
+              className="h-16"
+            />
+          </div>
         </div>
 
         {/* Footer */}
