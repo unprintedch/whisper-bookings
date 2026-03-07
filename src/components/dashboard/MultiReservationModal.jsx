@@ -545,32 +545,48 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
             </div>
           </div>
 
-          {/* Status + Group Pax */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className="text-sm font-semibold text-slate-700">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-sm font-semibold text-slate-700">Total number of guest(s)</Label>
-              <Input
-                type="number"
-                min="1"
-                placeholder="e.g. 12"
-                value={groupPax}
-                onChange={e => setGroupPax(e.target.value)}
-              />
-            </div>
+          {/* Status */}
+          <div className="space-y-1">
+            <Label className="text-sm font-semibold text-slate-700">Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {["REQUEST","OPTION","RESERVE","CONFIRME","PAYE"].map(s => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Group Pax */}
+          {(() => {
+            const totalAdults = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.adults_count, 10) || 0), 0);
+            const totalChildren = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.children_count, 10) || 0), 0);
+            const totalInfants = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.infants_count, 10) || 0), 0);
+            const totalBeds = Object.values(perRoomDetails).filter(d => d.bed_configuration).length;
+            const hasDetails = totalAdults > 0 || totalChildren > 0 || totalInfants > 0 || totalBeds > 0;
+            return (
+              <div className="flex items-center gap-3">
+                <Label className="whitespace-nowrap text-sm font-semibold text-slate-700 shrink-0">Total number of guest(s)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 12"
+                  className="w-28 h-10"
+                  value={groupPax}
+                  onChange={e => setGroupPax(e.target.value)}
+                />
+                {hasDetails && (
+                  <span className="text-sm text-slate-500">
+                    {totalAdults}A · {totalChildren}C · {totalInfants}I
+                    {totalBeds > 0 && <span className="font-semibold text-slate-700 ml-2">{totalBeds} bed{totalBeds > 1 ? 's' : ''} assigned</span>}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Rooms grouped by date */}
           <div className="space-y-4">
