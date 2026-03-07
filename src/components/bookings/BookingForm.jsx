@@ -1188,7 +1188,6 @@ export default function BookingForm({
                 autoComplete="off"
               />
 
-              {/* Client suggestions dropdown */}
               {showClientSuggestions && filteredClients.length > 0 && (
                 <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-40 overflow-y-auto mt-1">
                   {filteredClients.map((client, index) => (
