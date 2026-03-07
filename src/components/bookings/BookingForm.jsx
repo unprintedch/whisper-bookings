@@ -1040,10 +1040,6 @@ export default function BookingForm({
 
   const bookedDates = getBookedDatesForRoom(formData.room_id);
 
-  const isDateBooked = (date) => {
-    return bookedDates.some(bookedDate => isSameDay(bookedDate, date));
-  };
-
   const isRoomAvailable = useCallback((roomId, checkinStr, checkoutStr) => {
     if (!roomId || !checkinStr || !checkoutStr) {
       return false;
