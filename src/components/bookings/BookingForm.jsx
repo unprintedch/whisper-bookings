@@ -1140,10 +1140,7 @@ export default function BookingForm({
     return false;
   };
 
-  const submitButtonText = existingBooking ? "Save Booking" : "Create Booking";
-
   return (
-    // Add px-2 for general padding fix, as requested in the outline.
     <div className="py-0 px-2 relative">
       {/* Show validation errors only after submit attempt */}
       {hasAttemptedSubmit && Object.keys(errors).length > 0 && (
