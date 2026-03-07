@@ -1736,7 +1736,7 @@ export default function BookingForm({
               const groupPaxVal = formData.group_pax ? parseInt(formData.group_pax, 10) : null;
               if (related.length === 0) return null;
               return (
-                <div className={`text-xs flex items-center gap-2 ${groupPaxVal && total > groupPaxVal ? 'text-red-600' : 'text-slate-500'}`}>
+                <div className="text-xs flex items-center gap-2 text-slate-500">
                   <span>{totalAdults}A · {totalChildren}C · {totalInfants}I</span>
                   <span className="font-semibold">
                     {groupPaxVal ? `${total} / ${groupPaxVal} beds assigned` : `${total} beds assigned`}
