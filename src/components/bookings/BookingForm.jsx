@@ -985,11 +985,7 @@ export default function BookingForm({
     if (!selectedClient) return;
     const clientReservations = reservations.filter(r => r.client_id === selectedClient.id);
     for (const r of clientReservations) {
-      try {
-        await Reservation.delete(r.id);
-      } catch (e) {
-        console.warn(`Could not delete reservation ${r.id}:`, e.message);
-      }
+      await Reservation.delete(r.id);
     }
     onCancel();
   };
