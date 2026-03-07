@@ -373,11 +373,7 @@ export default function HomePage() {
               </Button>
             }
           </div>
-          <p className="text-xl text-slate-600">Online availability for Whisper Tarangire and Whisper Serengeti. <You are welcome to submit a single request for consecutive or non-consecutive nights, whether for one camp or for both. Our reservations team will respond within 24 hours to confirm availability and will provide a proforma invoice by email.
-
-
-
-          </p>
+          <p className="text-xl text-slate-600">Online availability for Whisper Tarangire and Whisper Serengeti. You are welcome to submit a single request for consecutive or non-consecutive nights, whether for one camp or for both. Our reservations team will respond within 24 hours to confirm availability and will provide a proforma invoice by email.</p>
         </div>
 
         <Card className="max-w-7xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
