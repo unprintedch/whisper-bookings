@@ -11,7 +11,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, isSameDay, eachDayOfInterval } from "date-fns";
 import { Calendar as CalendarIcon, ChevronsUpDown, Check, X, Plus, Edit, User, Mail, Phone, Lock, ChevronDown, ChevronUp, Users } from "lucide-react";
-import { Client, Agency } from "@/entities/all";
+import { Client, Agency, Reservation } from "@/entities/all";
 import {
   AlertDialog,
   AlertDialogAction,
