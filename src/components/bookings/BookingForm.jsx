@@ -1885,7 +1885,7 @@ export default function BookingForm({
               )}
 
               <Button type="submit" className="bg-yellow-700 hover:bg-yellow-800">
-                {submitButtonText}
+                {existingBooking ? "Save Booking" : "Create Booking"}
               </Button>
             </div>
           </div>
