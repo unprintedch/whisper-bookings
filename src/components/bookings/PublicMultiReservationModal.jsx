@@ -304,17 +304,6 @@ export default function PublicMultiReservationModal({
             />
           </div>
 
-          {/* 5. Comment */}
-          <div className="space-y-1">
-            <Label className="text-sm">Special Requests <span className="text-xs font-normal text-slate-400">(optional)</span></Label>
-            <Textarea
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              placeholder="Any special requests, dietary requirements, or additional information..."
-              className="h-20"
-            />
-          </div>
-
           {/* 5. Rooms grouped by date */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-slate-700">Selected Rooms</h3>
