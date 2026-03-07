@@ -677,7 +677,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
             const totalChildren = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.children_count, 10) || 0), 0);
             const totalInfants = Object.values(perRoomDetails).reduce((sum, d) => sum + (parseInt(d.infants_count, 10) || 0), 0);
             const totalBeds = Object.values(perRoomDetails).filter(d => d.bed_configuration).length;
-            const hasRooms = Object.keys(perRoomDetails).length > 0;
+            const hasRooms = mergedRanges.length > 0;
             return (
               <div className="flex items-center gap-3">
                 <Label className="whitespace-nowrap text-sm font-semibold text-slate-700 shrink-0">Total number of guest(s)</Label>
