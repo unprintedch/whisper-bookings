@@ -207,40 +207,32 @@ export default function PublicMultiReservationModal({
 
           {/* 2. Agency */}
           {agencies.length > 0 && (
-            <div className="space-y-3 p-4 border rounded-lg bg-slate-50/70 text-sm">
-              <div className="flex items-center gap-3">
-                <Label className="text-sm font-medium whitespace-nowrap shrink-0">Agency</Label>
-                <Select value={agencyId || '__none__'} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
+            <div className="flex items-center gap-3">
+              <Label className="text-sm font-medium whitespace-nowrap shrink-0">Agency</Label>
+              <Select value={agencyId || '__none__'} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
+                <SelectTrigger className="h-9 flex-1">
+                  <SelectValue placeholder="Select agency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No Agency</SelectItem>
+                  {agencies.map(a => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedAgency?.contacts?.length > 0 && (
+                <Select value={agencyContactId || '__none__'} onValueChange={v => setAgencyContactId(v === '__none__' ? '' : v)}>
                   <SelectTrigger className="h-9 flex-1">
-                    <SelectValue placeholder="Select agency" />
+                    <SelectValue placeholder="General contact" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">No Agency</SelectItem>
-                    {agencies.map(a => (
-                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                    <SelectItem value="__none__">General Contact</SelectItem>
+                    {selectedAgency.contacts.map((c, i) => (
+                      <SelectItem key={i} value={String(i)}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              {false && ( // placeholder to keep structure
-
-                {selectedAgency?.contacts?.length > 0 && (
-                  <div className="space-y-1">
-                    <Label className="text-xs">Agency Contact</Label>
-                    <Select value={agencyContactId || '__none__'} onValueChange={v => setAgencyContactId(v === '__none__' ? '' : v)}>
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="General contact" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">General Contact</SelectItem>
-                        {selectedAgency.contacts.map((c, i) => (
-                          <SelectItem key={i} value={String(i)}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           )}
 
