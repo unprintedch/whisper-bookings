@@ -1588,10 +1588,10 @@ export default function BookingForm({
             </Select>
           </div>
 
-          {/* Room Selection - Always editable */}
+          {/* Tent Selection - Always editable */}
           <div className="space-y-2">
             <Label htmlFor="room_id" className={errors.room_id ? 'text-red-600' : ''}>
-              Room {errors.room_id && <span className="text-red-500">*</span>}
+              Tent {errors.room_id && <span className="text-red-500">*</span>}
             </Label>
             <Popover open={roomComboboxOpen} onOpenChange={setRoomComboboxOpen}>
               <PopoverTrigger asChild>
@@ -1610,7 +1610,7 @@ export default function BookingForm({
                 >
                   {formData.room_id && selectedRoom
                     ? `${getSiteName(selectedRoom.site_id)} – ${selectedRoom.number} – ${selectedRoom.name}`
-                    : (filteredAvailableRooms.length > 0 && formData.date_checkin && selectedBedConfigId) ? "Choose an available room..." : "Select dates and bed setup first"}
+                    : (filteredAvailableRooms.length > 0 && formData.date_checkin && selectedBedConfigId) ? "Choose an available tent..." : "Select dates and bed setup first"}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
