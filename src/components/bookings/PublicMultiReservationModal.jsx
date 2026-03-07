@@ -48,6 +48,7 @@ export default function PublicMultiReservationModal({
       setContactName('');
       setContactEmail('');
       setContactPhone('');
+      setGroupPax('');
       setComment('');
       setPerRoomDetails({});
       setExpandedRows({});
