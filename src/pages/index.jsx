@@ -373,11 +373,11 @@ export default function HomePage() {
               </Button>
             }
           </div>
-          <p className="text-xl text-slate-600">Online availability for Whisper Tarangire and Whisper Serengeti.
+          <p className="text-xl text-slate-600">Online availability for Whisper Tarangire and Whisper Serengeti. <You are welcome to submit a single request for consecutive or non-consecutive nights, whether for one camp or for both. Our reservations team will respond within 24 hours to confirm availability and will provide a proforma invoice by email.
 
-You are welcome to submit a single request for consecutive or non-consecutive nights, whether for one camp or for both.
 
-Our reservations team will respond within 24 hours to confirm availability and will provide a proforma invoice by email.</p>
+
+          </p>
         </div>
 
         <Card className="max-w-7xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
@@ -386,10 +386,10 @@ Our reservations team will respond within 24 hours to confirm availability and w
               <div className="flex items-center gap-4 flex-wrap justify-between">
                 <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl">
                   <Button size="default" variant="ghost" onClick={() => setSelectedSiteName('all')} className={`transition-all text-base px-5 ${
-                    selectedSiteName === 'all' ?
-                    'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
-                    'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
-                    }>
+                  selectedSiteName === 'all' ?
+                  'bg-slate-800 text-white hover:bg-slate-700 hover:text-white' :
+                  'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`
+                  }>
                     All Sites
                   </Button>
                   <Button
