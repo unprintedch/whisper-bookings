@@ -28,6 +28,8 @@ export default function PublicMultiReservationModal({
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  // Group pax
+  const [groupPax, setGroupPax] = useState('');
   // Comment
   const [comment, setComment] = useState('');
   // Room details
