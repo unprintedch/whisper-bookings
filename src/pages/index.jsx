@@ -218,6 +218,7 @@ export default function HomePage() {
           adults_count: formData.adults_count,
           children_count: formData.children_count,
           infants_count: formData.infants_count,
+          group_pax: formData.group_pax || undefined,
           comment: formData.comment || '',
           status: 'REQUEST'
         });
