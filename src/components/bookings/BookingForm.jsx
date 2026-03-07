@@ -408,7 +408,7 @@ export default function BookingForm({
 
     // Required fields
     if (!currentFormData.client_id) newErrors.client_id = "Client is required";
-    if (!currentFormData.room_id) newErrors.room_id = "Room is required";
+    if (!currentFormData.room_id) newErrors.room_id = "Tent is required";
     if (!currentFormData.date_checkin) newErrors.date_checkin = "Check-in date is required";
     if (!currentFormData.date_checkout) newErrors.date_checkout = "Check-out date is required";
 
