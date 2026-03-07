@@ -208,22 +208,21 @@ export default function PublicMultiReservationModal({
           {/* 2. Agency */}
           {agencies.length > 0 && (
             <div className="space-y-3 p-4 border rounded-lg bg-slate-50/70 text-sm">
-              <h4 className="font-medium text-slate-800">Agency</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">Agency</Label>
-                  <Select value={agencyId || '__none__'} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select agency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">No Agency</SelectItem>
-                      {agencies.map(a => (
-                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex items-center gap-3">
+                <Label className="text-sm font-medium whitespace-nowrap shrink-0">Agency</Label>
+                <Select value={agencyId || '__none__'} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
+                  <SelectTrigger className="h-9 flex-1">
+                    <SelectValue placeholder="Select agency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No Agency</SelectItem>
+                    {agencies.map(a => (
+                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {false && ( // placeholder to keep structure
 
                 {selectedAgency?.contacts?.length > 0 && (
                   <div className="space-y-1">
