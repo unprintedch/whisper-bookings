@@ -1892,7 +1892,23 @@ export default function BookingForm({
         )}
       </form>
 
-      {/* Inline Client Edit Modal */}
+      <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={(open) => { if (!open) setIsDeleteAllDialogOpen(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all reservations for "{selectedClient?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all {reservations.filter(r => r.client_id === selectedClient?.id).length} reservation(s). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingAll}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllClientReservations} disabled={isDeletingAll} className="bg-red-600 hover:bg-red-700">
+              {isDeletingAll ? "Deleting..." : "Yes, delete all"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isClientEditOpen} onOpenChange={setIsClientEditOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
