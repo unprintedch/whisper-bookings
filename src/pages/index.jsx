@@ -461,14 +461,7 @@ export default function HomePage() {
                     <Mail className="w-4 h-4 mr-2" />
                     Request Rates
                   </Button>
-                  {hasAccess && allowPublicBooking &&
-                  <Button
-                    onClick={() => {setPublicMultiRanges([]);setShowBookingForm(true);}}
-                    className="bg-yellow-700 hover:bg-yellow-800">
-                      <CalendarCheck className="w-4 h-4 mr-2" />
-                      Request a Booking
-                    </Button>
-                  }
+
                 </div>
               </div>
             </div>
