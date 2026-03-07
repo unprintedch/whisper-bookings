@@ -166,6 +166,7 @@ export default function PublicMultiReservationModal({
           adults_count: parseInt(details.adults_count, 10) || 0,
           children_count: parseInt(details.children_count, 10) || 0,
           infants_count: parseInt(details.infants_count, 10) || 0,
+          group_pax: groupPax ? parseInt(groupPax, 10) : undefined,
           comment: comment || '',
           status: 'REQUEST',
         });
