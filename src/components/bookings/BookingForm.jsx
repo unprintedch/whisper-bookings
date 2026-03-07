@@ -1733,8 +1733,7 @@ export default function BookingForm({
               value={formData.group_pax}
               onChange={(e) => handleChange('group_pax', e.target.value ? parseInt(e.target.value, 10) : '')}
             />
-            {/* Occupancy summary across all related reservations */}
-            {existingBooking && selectedClient && (() => {
+                {existingBooking && selectedClient && (() => {
               const related = reservations.filter(r => r.client_id === selectedClient.id && r.status !== 'ANNULE');
               const totalAdults = related.reduce((s, r) => s + (r.adults_count || 0), 0);
               const totalChildren = related.reduce((s, r) => s + (r.children_count || 0), 0);
