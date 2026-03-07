@@ -192,7 +192,6 @@ export default function BookingForm({
   const [errors, setErrors] = useState({});
   const [warnings, setWarnings] = useState({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
 
