@@ -37,7 +37,8 @@ export default function PublicBookingForm({
     children_count: 0,
     infants_count: 0,
     comment: '',
-    notes: ''
+    notes: '',
+    group_pax: ''
   });
 
   const [existingClient, setExistingClient] = useState(null);
