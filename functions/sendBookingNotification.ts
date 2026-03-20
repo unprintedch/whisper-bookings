@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
     }
 
     const settings = settingsList[0] || {};
+    const isTestMode = !!settings.test_mode;
 
     const [client, room] = await Promise.all([
       base44.asServiceRole.entities.Client.get(booking.client_id),

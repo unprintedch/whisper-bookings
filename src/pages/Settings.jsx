@@ -281,6 +281,35 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 px-6 py-6">
       <div className="w-full max-w-4xl mx-auto space-y-6">
 
+        {/* Test Mode Toggle */}
+        <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FlaskConical className={`w-5 h-5 ${settings?.test_mode ? 'text-amber-500' : 'text-slate-400'}`} />
+                <div>
+                  <p className="font-semibold text-slate-800">Test Mode</p>
+                  <p className="text-sm text-slate-500">Les emails sont <strong>loggés mais pas envoyés</strong> en mode test.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {settings?.test_mode && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">TEST MODE ACTIVE</span>
+                )}
+                <Switch
+                  checked={!!settings?.test_mode}
+                  disabled={isLoading || !settings}
+                  onCheckedChange={async (checked) => {
+                    if (!settings) return;
+                    setSettings(prev => ({ ...prev, test_mode: checked }));
+                    await base44.entities.NotificationSettings.update(settings.id, { test_mode: checked });
+                  }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Per-site email config */}
         <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
           <CardHeader>
