@@ -10,7 +10,7 @@ async function sendEmail(to, subject, html) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Whisper Bookings <notifications@whisper-bookings.com>',
+      from: 'Whisper Bookings <notifications@send.whisper-tanzania.ch>',
       to,
       subject,
       html,
