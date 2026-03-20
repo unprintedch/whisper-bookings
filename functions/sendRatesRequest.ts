@@ -88,9 +88,11 @@ Deno.serve(async (req) => {
 
         if (!res.ok) {
           const err = await res.text();
-          throw new Error(`Resend error: ${err}`);
+          console.warn(`Resend error for ${to}: ${err}`);
+          await logEmail(to, 'failed', err);
+        } else {
+          await logEmail(to, 'sent');
         }
-        await logEmail(to, 'sent');
       } catch (err) {
         console.warn(`Failed to send email to ${to}:`, err.message);
         await logEmail(to, 'failed', err.message);
