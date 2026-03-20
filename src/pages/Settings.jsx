@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Mail, AlertTriangle, Save, Plus } from "lucide-react";
+import { X, Mail, AlertTriangle, Save, Plus, FlaskConical } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { base44 } from "@/api/base44Client";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
