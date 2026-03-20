@@ -111,7 +111,7 @@ const adminNavItems = [
   {
     title: "Email Logs",
     url: createPageUrl("EmailLogs"),
-    icon: Settings,
+    icon: Mail,
     description: "Email sending history",
     pageName: "EmailLogs"
   }
