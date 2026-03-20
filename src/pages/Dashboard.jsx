@@ -184,7 +184,7 @@ export default function Dashboard({
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await sendNotificationEmails({ ...bookingDataWithNotifications, id: newBooking.id }, 'new');
+      await sendNotificationEmails(newBooking.id, 'new', notifications);
     } catch (error) {
       console.error('Error creating booking:', error);
     }
