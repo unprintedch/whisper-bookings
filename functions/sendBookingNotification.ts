@@ -145,13 +145,19 @@ Deno.serve(async (req) => {
       emailTasks.map(async ({ to, recipientType }) => {
         let status = 'sent';
         let errorMessage = null;
-        try {
-          await sendEmail(to, subject, body);
-          sent++;
-        } catch (err) {
-          console.warn(`Failed to send email to ${to}:`, err.message);
-          status = 'failed';
-          errorMessage = err.message;
+        if (isTestMode) {
+          status = 'skipped';
+          errorMessage = 'Test mode active — email not sent';
+          console.log(`[TEST MODE] Would send email to ${to}: ${subject}`);
+        } else {
+          try {
+            await sendEmail(to, subject, body);
+            sent++;
+          } catch (err) {
+            console.warn(`Failed to send email to ${to}:`, err.message);
+            status = 'failed';
+            errorMessage = err.message;
+          }
         }
         // Log every attempt
         await base44.asServiceRole.entities.EmailLog.create({
