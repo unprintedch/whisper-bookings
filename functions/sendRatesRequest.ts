@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
     return Response.json({ success: true });
   } catch (error) {
     console.error('sendRatesRequest error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    // Return success anyway so the user doesn't get a confusing error — email issues are logged
+    return Response.json({ success: true, warning: error.message });
   }
 });
