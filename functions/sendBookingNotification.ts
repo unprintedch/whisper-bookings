@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
     const checkoutDate = new Date(booking.date_checkout + 'T00:00:00');
     const formatDate = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    const bookingUrl = `https://preview--whisper-bookings-b975b3db.base44.app/Clients?bookingId=${bookingId}`;
+    const bookingUrl = `https://booking.whisper-tanzania.ch/Clients?bookingId=${bookingId}`;
 
     const placeholders = {
       '[HOTEL_NAME]': hotelName,
