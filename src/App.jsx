@@ -61,6 +61,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/EmailLogs" element={<LayoutWrapper currentPageName="EmailLogs"><EmailLogs /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

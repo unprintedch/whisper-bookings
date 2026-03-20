@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { 
-  Calendar as CalendarIcon, // Renamed to avoid conflict with the component
+  Calendar as CalendarIcon,
   Building2, 
   Users, 
   Settings, 
@@ -11,10 +11,11 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
-  CircleUser, // Added for dropdown
-  LogOut, // Added for dropdown
-  Briefcase, // Added for Agencies
-  Bed, // Added for Bed Configurations
+  CircleUser,
+  LogOut,
+  Briefcase,
+  Bed,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
