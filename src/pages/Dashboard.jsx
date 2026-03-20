@@ -219,7 +219,7 @@ export default function Dashboard({
     try {
       const bookingToDelete = reservations.find(r => r.id === bookingId);
       if (bookingToDelete) {
-         await sendNotificationEmails({ ...bookingToDelete, notifications: { toAdmin: true, toAgency: false, toClient: false }}, 'cancellation');
+        await sendNotificationEmails(bookingId, 'cancellation', { toAdmin: true, toAgency: false, toClient: false });
       }
 
       await base44.entities.Reservation.delete(bookingId);
