@@ -160,103 +160,19 @@ export default function Dashboard({
     setIsLoading(false);
   };
 
-  const sendNotificationEmails = async (bookingDetails, bookingType = 'new') => {
-       const { notifications, ...bookingData } = bookingDetails;
-       if (!notifications || (!notifications.toAdmin && !notifications.toAgency && !notifications.toClient)) {
-           return;
-       }
-
-       const client = clients.find(c => c.id === bookingData.client_id);
-       const room = rooms.find(r => r.id === bookingData.room_id);
-       const agency = agencies.find(a => a.id === client?.agency_id);
-
-       if (!client || !room) return;
-
-       try {
-         const settingsList = await base44.entities.NotificationSettings.list();
-         const settings = settingsList[0] || {};
-
-         // Determine which site this room belongs to
-         const roomSite = sites.find(s => s.id === room.site_id);
-         const siteName = roomSite?.name || '';
-
-         // Find site-specific config
-         const siteConfig = (settings.site_configs || []).find(sc => sc.site_name === siteName);
-         const hotelName = siteConfig?.hotel_name || siteName || 'Whisper B.';
-
-        let template = '';
-        if (bookingType === 'new') {
-          template = settings.template_new_booking || 'A new booking has been created for [CLIENT_NAME].';
-        } else if (bookingType === 'update') {
-          template = settings.template_update_booking || 'A booking has been updated for [CLIENT_NAME].';
-        } else if (bookingType === 'cancellation') {
-          template = settings.template_cancellation || 'A booking has been cancelled for [CLIENT_NAME].';
-        }
-
-        const bookingUrl = bookingData.id ? `${window.location.origin}${createPageUrl('Clients')}?bookingId=${bookingData.id}` : '';
-
-        const placeholders = {
-          '[HOTEL_NAME]': hotelName,
-          '[CLIENT_NAME]': client.name,
-          '[ROOM_NAME]': room.name,
-          '[CHECKIN_DATE]': format(new Date(bookingData.date_checkin + 'T00:00:00'), 'dd MMM yyyy'),
-          '[CHECKOUT_DATE]': format(new Date(bookingData.date_checkout + 'T00:00:00'), 'dd MMM yyyy'),
-          '[STATUS]': bookingData.status,
-          '[AGENCY_NAME]': agency?.name || 'N/A',
-          '[BOOKING_LINK]': bookingUrl,
-        };
-
-        let body = template;
-        for (const [key, value] of Object.entries(placeholders)) {
-          body = body.replace(new RegExp(key.replace(/\[/g, '\\[').replace(/\]/g, '\\]'), 'g'), value);
-        }
-        
-        const subject = bookingType === 'cancellation'
-            ? `Booking Cancellation: ${client.name} - ${room.name} (${hotelName})`
-            : (bookingType === 'update' 
-                ? `Booking Update: ${client.name} - ${room.name} (${hotelName})`
-                : `New Booking Confirmation: ${client.name} - ${room.name} (${hotelName})`);
-
-        // Send emails with proper error handling
-        const emailPromises = [];
-        
-        if (notifications.toAdmin) {
-          // Use site-specific emails if available, otherwise fallback to global list
-          const siteAdminEmails = siteConfig?.admin_emails?.length > 0
-            ? siteConfig.admin_emails
-            : (settings.admin_emails || []);
-          siteAdminEmails.forEach(email => {
-            emailPromises.push(
-              base44.integrations.Core.SendEmail({ to: email, subject, body }).catch(err => {
-                console.warn(`Could not send email to ${email}:`, err.message);
-              })
-            );
-          });
-        }
-
-        if (notifications.toAgency && agency?.email) {
-          emailPromises.push(
-            base44.integrations.Core.SendEmail({ to: agency.email, subject, body }).catch(err => {
-              console.warn(`Could not send email to agency ${agency.email}:`, err.message);
-            })
-          );
-        }
-
-        if (notifications.toClient && client.contact_email) {
-          emailPromises.push(
-            base44.integrations.Core.SendEmail({ to: client.contact_email, subject, body }).catch(err => {
-              console.warn(`Could not send email to client ${client.contact_email}:`, err.message);
-            })
-          );
-        }
-
-        // Wait for all email attempts to complete (but don't fail if some fail)
-        await Promise.allSettled(emailPromises);
-        
-      } catch (error) {
-          console.error("Failed to send notification emails:", error);
-          // Don't block the booking operation - just log the error
-      }
+  // Send notifications via the centralized backend function
+  const sendNotificationEmails = async (bookingId, bookingType, notifications) => {
+    if (!bookingId) return;
+    // Only call manually if specific recipients beyond admin are selected
+    // (admin notifications are already handled by the entity automation)
+    const hasManualTargets = notifications?.toAgency || notifications?.toClient;
+    const skipAdmin = !notifications?.toAdmin; // automation handles admin
+    if (!hasManualTargets && skipAdmin) return;
+    try {
+      await sendBookingNotification({ bookingId, bookingType, notifications });
+    } catch (error) {
+      console.warn('Could not send manual notification emails:', error.message);
+    }
   };
 
   const handleCreateBooking = async (bookingDataWithNotifications) => {
