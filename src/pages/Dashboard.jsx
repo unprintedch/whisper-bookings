@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
+import { sendBookingNotification } from "@/functions/sendBookingNotification";
 
 import GanttChart from "../components/dashboard/GanttChart";
 import AvailableRooms from "../components/dashboard/AvailableRooms";
