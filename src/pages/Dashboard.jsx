@@ -209,7 +209,7 @@ export default function Dashboard({
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await sendNotificationEmails(bookingDataWithNotifications, 'update');
+      await sendNotificationEmails(editingBooking?.id, 'update', notifications);
     } catch (error) {
       console.error('Error updating booking:', error);
     }
