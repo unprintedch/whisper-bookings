@@ -112,11 +112,9 @@ Deno.serve(async (req) => {
         : `New Booking: ${client.name} – ${room.name} (${hotelName})`;
 
     // Determine recipients
-    // If notifications object provided (manual send from form), use it.
-    // If no notifications object (automated trigger), default to toAdmin only.
     const notifOptions = notifications || { toAdmin: true, toAgency: false, toClient: false };
 
-    const emailPromises = [];
+    const emailTasks = [];
 
     if (notifOptions.toAdmin) {
       const siteAdminEmails =
@@ -125,37 +123,52 @@ Deno.serve(async (req) => {
           : settings.admin_emails || [];
 
       for (const email of siteAdminEmails) {
-        emailPromises.push(
-          sendEmail(email, subject, body).catch(err =>
-            console.warn(`Failed to send admin email to ${email}:`, err.message)
-          )
-        );
+        emailTasks.push({ to: email, recipientType: 'admin' });
       }
     }
 
     if (notifOptions.toAgency && agency?.email) {
-      emailPromises.push(
-        sendEmail(agency.email, subject, body).catch(err =>
-          console.warn(`Failed to send agency email to ${agency.email}:`, err.message)
-        )
-      );
+      emailTasks.push({ to: agency.email, recipientType: 'agency' });
     }
 
     if (notifOptions.toClient && client.contact_email) {
-      emailPromises.push(
-        sendEmail(client.contact_email, subject, body).catch(err =>
-          console.warn(`Failed to send client email to ${client.contact_email}:`, err.message)
-        )
-      );
+      emailTasks.push({ to: client.contact_email, recipientType: 'client' });
     }
 
-    if (emailPromises.length === 0) {
+    if (emailTasks.length === 0) {
       return Response.json({ success: true, skipped: true, reason: 'No recipients configured' });
     }
 
-    await Promise.allSettled(emailPromises);
+    let sent = 0;
+    await Promise.allSettled(
+      emailTasks.map(async ({ to, recipientType }) => {
+        let status = 'sent';
+        let errorMessage = null;
+        try {
+          await sendEmail(to, subject, body);
+          sent++;
+        } catch (err) {
+          console.warn(`Failed to send email to ${to}:`, err.message);
+          status = 'failed';
+          errorMessage = err.message;
+        }
+        // Log every attempt
+        await base44.asServiceRole.entities.EmailLog.create({
+          booking_id: bookingId,
+          recipient: to,
+          recipient_type: recipientType,
+          subject,
+          body,
+          booking_type: bookingType,
+          status,
+          error_message: errorMessage,
+          client_name: client.name,
+          site_name: siteName,
+        }).catch(logErr => console.warn('Failed to save email log:', logErr.message));
+      })
+    );
 
-    return Response.json({ success: true, sent: emailPromises.length });
+    return Response.json({ success: true, sent });
   } catch (error) {
     console.error('sendBookingNotification error:', error);
     return Response.json({ error: error.message }, { status: 500 });

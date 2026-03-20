@@ -106,6 +106,13 @@ const adminNavItems = [
     icon: Settings,
     description: "Manage public page access",
     pageName: "PublicAccessSettings"
+  },
+  {
+    title: "Email Logs",
+    url: createPageUrl("EmailLogs"),
+    icon: Settings,
+    description: "Email sending history",
+    pageName: "EmailLogs"
   }
 ];
 
