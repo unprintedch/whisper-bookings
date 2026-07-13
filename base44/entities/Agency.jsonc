@@ -1,0 +1,70 @@
+{
+  "name": "Agency",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom de l'agence"
+    },
+    "code": {
+      "type": "string",
+      "description": "Code unique pour l'agence (pas de limite de longueur)"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email g\u00e9n\u00e9ral de l'agence"
+    },
+    "phone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone g\u00e9n\u00e9ral de l'agence"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes sur l'agence"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Agence active"
+    },
+    "sendEmailNotifications": {
+      "type": "boolean",
+      "default": false,
+      "description": "Envoyer des notifications par email"
+    },
+    "sendSmsNotifications": {
+      "type": "boolean",
+      "default": false,
+      "description": "Envoyer des notifications par SMS"
+    },
+    "contacts": {
+      "type": "array",
+      "description": "Liste des contacts sp\u00e9cifiques de l'agence",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nom du contact"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email du contact"
+          },
+          "phone": {
+            "type": "string",
+            "description": "T\u00e9l\u00e9phone du contact"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

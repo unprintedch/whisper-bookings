@@ -1,0 +1,27 @@
+{
+  "name": "Site",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "enum": [
+        "Serengeti",
+        "Tarangire"
+      ],
+      "description": "Nom du site"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Identifiant unique du site"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Site actif"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

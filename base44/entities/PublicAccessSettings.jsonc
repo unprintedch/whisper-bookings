@@ -1,0 +1,21 @@
+{
+  "name": "PublicAccessSettings",
+  "type": "object",
+  "properties": {
+    "is_password_protected": {
+      "type": "boolean",
+      "default": false,
+      "description": "Activer la protection par mot de passe"
+    },
+    "access_password": {
+      "type": "string",
+      "description": "Mot de passe pour acc\u00e9der \u00e0 la page publique"
+    },
+    "allow_public_booking": {
+      "type": "boolean",
+      "default": false,
+      "description": "Autoriser les demandes de r\u00e9servation publiques"
+    }
+  },
+  "required": []
+}

@@ -2,6 +2,8 @@
  * Tests d'intégration (mini e2e) pour multi-sélection
  * Simule le flux complet: cellule cliquée → slot ajouté → merge → validation → création
  */
+/* eslint-env jest */
+/* global describe, it, expect */
 
 import { mergeConsecutiveSlots, validateNoOverlaps, countNights } from './multiSelectLogic';
 

@@ -1,0 +1,75 @@
+{
+  "name": "Reservation",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "ID du client"
+    },
+    "room_id": {
+      "type": "string",
+      "description": "ID de la chambre"
+    },
+    "bed_configuration": {
+      "type": "string",
+      "description": "Configuration de lit choisie"
+    },
+    "date_checkin": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'arriv\u00e9e"
+    },
+    "date_checkout": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9part"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "REQUEST",
+        "OPTION",
+        "RESERVE",
+        "CONFIRME",
+        "PAYE",
+        "ANNULE"
+      ],
+      "default": "REQUEST",
+      "description": "Statut de la r\u00e9servation"
+    },
+    "hold_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date d'expiration de l'option"
+    },
+    "adults_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre d'adultes (+16 ans)"
+    },
+    "children_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre d'enfants (5-16 ans)"
+    },
+    "infants_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de nourrissons (-5 ans)"
+    },
+    "group_pax": {
+      "type": "number",
+      "description": "Nombre total de personnes dans le groupe"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Commentaire sur la r\u00e9servation"
+    }
+  },
+  "required": [
+    "client_id",
+    "room_id",
+    "date_checkin",
+    "date_checkout"
+  ]
+}

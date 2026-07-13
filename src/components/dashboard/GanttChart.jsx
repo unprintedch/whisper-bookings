@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, isBefore, startOfDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -277,6 +277,14 @@ export default function GanttChart({
     return sites.find((site) => site.id === siteId);
   };
 
+  const today = startOfDay(new Date());
+  const isPastDate = (date) => isBefore(startOfDay(date), today);
+  const isPastReservation = (reservation) => {
+    if (!reservation.date_checkout) return false;
+    const [y, m, d] = reservation.date_checkout.split('-').map(Number);
+    return isBefore(new Date(y, m - 1, d), today);
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
@@ -319,6 +327,7 @@ export default function GanttChart({
               <div
                 key={date.toISOString()}
                 className={`border-r border-slate-200 flex items-center justify-center py-3 flex-shrink-0 ${
+                isPastDate(date) ? 'opacity-80' : ''} ${
                 highlightDate && isSameDay(date, highlightDate) ? 'bg-slate-100' : 'bg-slate-50/40'} ${
                 format(date, 'EEE', { locale: enUS }) === 'Sun' ? 'border-r-2 border-r-slate-300' : ''}`}
                 style={{ width: '120px' }}>
@@ -387,6 +396,7 @@ export default function GanttChart({
                       <div
                         key={`${room.id}-${date.toISOString()}-${dateIndex}`}
                         className={`border-r border-slate-200 flex items-center justify-center relative group/cell flex-shrink-0 ${
+                        isPastDate(date) ? 'opacity-80' : ''} ${
                         // IMPORTANT: onSlotToggle doit aussi activer cursor-pointer en mode public
                         (!isPublicView || onSlotToggle || onCellClick) ? 'cursor-pointer hover:bg-blue-50' : ''} ${
                         isSelected ? 'bg-yellow-100 border-l-4 border-l-yellow-700' : ''} ${
@@ -447,7 +457,8 @@ export default function GanttChart({
                           <div
                             key={position.reservation.id}
                             className={`absolute top-0 pointer-events-auto transition-all duration-200 ${
-                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'}`
+                            isOwnAgency ? 'cursor-pointer group/booking' : 'cursor-default'} ${
+                            isPastReservation(position.reservation) ? 'opacity-80' : ''}`
                             }
                             style={{
                               left: `${startPixel}px`,

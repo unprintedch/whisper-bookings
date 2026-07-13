@@ -1,0 +1,39 @@
+{
+  "name": "Group",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom du groupe"
+    },
+    "agency_id": {
+      "type": "string",
+      "description": "ID de l'agence"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Nom du contact"
+    },
+    "contact_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email du contact"
+    },
+    "contact_phone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone du contact"
+    },
+    "color_hex": {
+      "type": "string",
+      "description": "Couleur du groupe (hex)",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes sur le groupe"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

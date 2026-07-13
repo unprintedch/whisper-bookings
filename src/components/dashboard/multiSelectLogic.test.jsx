@@ -8,6 +8,8 @@
  * - overlaps
  * - DST/timezone
  */
+/* eslint-env jest */
+/* global describe, it, expect */
 
 import {
   validateReservationDates,

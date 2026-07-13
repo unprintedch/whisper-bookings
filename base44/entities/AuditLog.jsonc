@@ -1,0 +1,48 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "enum": [
+        "ROOM",
+        "CLIENT",
+        "RESERVATION",
+        "BLOCKOUT",
+        "USER"
+      ],
+      "description": "Type d'entit\u00e9"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID de l'entit\u00e9"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "CREATE",
+        "UPDATE",
+        "DELETE",
+        "STATUS_CHANGE"
+      ],
+      "description": "Type d'action"
+    },
+    "details": {
+      "type": "string",
+      "description": "D\u00e9tails de l'action"
+    },
+    "old_values": {
+      "type": "string",
+      "description": "Anciennes valeurs (JSON)"
+    },
+    "new_values": {
+      "type": "string",
+      "description": "Nouvelles valeurs (JSON)"
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id",
+    "action"
+  ]
+}

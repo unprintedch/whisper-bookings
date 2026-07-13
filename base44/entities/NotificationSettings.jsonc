@@ -1,0 +1,62 @@
+{
+  "name": "NotificationSettings",
+  "type": "object",
+  "properties": {
+    "test_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "En mode test, les emails sont logg\u00e9s mais pas envoy\u00e9s via Resend."
+    },
+    "admin_emails": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "email"
+      },
+      "default": [],
+      "description": "List of admin email addresses to receive notifications (fallback)."
+    },
+    "site_configs": {
+      "type": "array",
+      "description": "Per-site email and name configuration",
+      "items": {
+        "type": "object",
+        "properties": {
+          "site_name": {
+            "type": "string",
+            "description": "Site name (e.g. Serengeti, Tarangire)"
+          },
+          "hotel_name": {
+            "type": "string",
+            "description": "Display name of the hotel for emails"
+          },
+          "admin_emails": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Admin emails for this site"
+          }
+        }
+      }
+    },
+    "template_new_booking": {
+      "type": "string",
+      "description": "Email template for new bookings. Use placeholders like [CLIENT_NAME]."
+    },
+    "template_update_booking": {
+      "type": "string",
+      "description": "Email template for updated bookings."
+    },
+    "template_cancellation": {
+      "type": "string",
+      "description": "Email template for cancelled bookings."
+    },
+    "template_rates_request": {
+      "type": "string",
+      "description": "Email template for rate requests from the public page. Use [CONTACT_NAME] and [CONTACT_EMAIL]."
+    }
+  },
+  "required": []
+}

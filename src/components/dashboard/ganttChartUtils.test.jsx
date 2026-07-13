@@ -2,6 +2,8 @@
  * Tests pour ganttChartUtils
  * Valide la conversion dates -> pixels et les cas limites
  */
+/* eslint-env jest */
+/* global describe, test, expect */
 
 import { getReservationPixels } from './ganttChartUtils';
 

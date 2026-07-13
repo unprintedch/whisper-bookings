@@ -1,0 +1,34 @@
+{
+  "name": "Blockout",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string",
+      "description": "ID de la chambre"
+    },
+    "date_start": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de d\u00e9but du blocage"
+    },
+    "date_end": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de fin du blocage"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Motif du blocage"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Commentaire sur le blocage"
+    }
+  },
+  "required": [
+    "room_id",
+    "date_start",
+    "date_end",
+    "reason"
+  ]
+}

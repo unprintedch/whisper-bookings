@@ -1,0 +1,60 @@
+{
+  "name": "Room",
+  "type": "object",
+  "properties": {
+    "site_id": {
+      "type": "string",
+      "description": "ID du site"
+    },
+    "number": {
+      "type": "string",
+      "description": "Num\u00e9ro de la chambre"
+    },
+    "name": {
+      "type": "string",
+      "description": "Nom de la chambre"
+    },
+    "capacity_max": {
+      "type": "number",
+      "description": "Capacit\u00e9 maximale"
+    },
+    "type_label": {
+      "type": "string",
+      "enum": [
+        "Single",
+        "Double",
+        "Triple",
+        "Quadruple",
+        "Family"
+      ],
+      "description": "Type bas\u00e9 sur la capacit\u00e9"
+    },
+    "bed_configuration_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des IDs des configurations de lit disponibles"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes internes"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "URL de la photo principale"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Chambre active"
+    }
+  },
+  "required": [
+    "site_id",
+    "number",
+    "name",
+    "capacity_max",
+    "type_label"
+  ]
+}

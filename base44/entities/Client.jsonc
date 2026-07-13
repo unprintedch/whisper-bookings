@@ -1,0 +1,47 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "client_number": {
+      "type": "string",
+      "description": "Num\u00e9ro unique du client (XXXXCODE)"
+    },
+    "agency_id": {
+      "type": "string",
+      "description": "ID de l'agence"
+    },
+    "agency_contact_id": {
+      "type": "string",
+      "description": "Index du contact sp\u00e9cifique au sein de l'agence"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Nom du contact direct"
+    },
+    "contact_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email du contact direct"
+    },
+    "contact_phone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone du contact direct"
+    },
+    "color_hex": {
+      "type": "string",
+      "description": "Couleur du client (hex)",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes sur le client"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

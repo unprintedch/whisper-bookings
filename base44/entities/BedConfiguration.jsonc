@@ -1,0 +1,22 @@
+{
+  "name": "BedConfiguration",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Description de la configuration (ex: 1 lit double, 2 lits simples)"
+    },
+    "max_occupancy": {
+      "type": "number",
+      "description": "Occupation maximale pour cette configuration"
+    },
+    "sort_order": {
+      "type": "number",
+      "description": "Ordre d'affichage de la configuration"
+    }
+  },
+  "required": [
+    "name",
+    "max_occupancy"
+  ]
+}
