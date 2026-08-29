@@ -44,8 +44,6 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: true });
     }
 
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-
     // Log each email attempt
     const logEmail = async (to, status, errorMessage = null) => {
       try {
@@ -72,27 +70,8 @@ Deno.serve(async (req) => {
       }
 
       try {
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
-            to,
-            subject,
-            html: body,
-          }),
-        });
-
-        if (!res.ok) {
-          const err = await res.text();
-          console.warn(`Resend error for ${to}: ${err}`);
-          await logEmail(to, 'failed', err);
-        } else {
-          await logEmail(to, 'sent');
-        }
+        await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
+        await logEmail(to, 'sent');
       } catch (err) {
         console.warn(`Failed to send email to ${to}:`, err.message);
         await logEmail(to, 'failed', err.message);
