@@ -316,54 +316,52 @@ export default function SettingsPage() {
 
         {/* Email Provider Toggle */}
         <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-slate-500" />
-                <div>
-                  <p className="font-semibold text-slate-800">Email Provider</p>
-                  <p className="text-sm text-slate-500">
-                    <strong>Native</strong> atteint les utilisateurs enregistrés de l'app (gratuit).
-                    <strong> Resend</strong> atteint toute adresse externe (demandes de devis public).
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={isLoading || !settings}
-                  onClick={async () => {
-                    if (!settings) return;
-                    setEmailProvider('native');
-                    await base44.entities.NotificationSettings.update(settings.id, { email_provider: 'native' });
-                  }}
-                  className={`transition-all ${
-                    emailProvider === 'native'
-                      ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  Native
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={isLoading || !settings}
-                  onClick={async () => {
-                    if (!settings) return;
-                    setEmailProvider('resend');
-                    await base44.entities.NotificationSettings.update(settings.id, { email_provider: 'resend' });
-                  }}
-                  className={`transition-all ${
-                    emailProvider === 'resend'
-                      ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  Resend
-                </Button>
-              </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-blue-600" />
+              Email Provider
+            </CardTitle>
+            <CardDescription>
+              <strong>Native</strong> atteint les utilisateurs enregistrés de l'app (gratuit).
+              <strong> Resend</strong> atteint toute adresse externe (demandes de devis public).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center gap-2 p-1 bg-slate-200/60 rounded-xl w-fit">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={isLoading || !settings}
+                onClick={async () => {
+                  if (!settings) return;
+                  setEmailProvider('native');
+                  await base44.entities.NotificationSettings.update(settings.id, { email_provider: 'native' });
+                }}
+                className={`transition-all ${
+                  emailProvider === 'native'
+                    ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                Native (Base44)
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={isLoading || !settings}
+                onClick={async () => {
+                  if (!settings) return;
+                  setEmailProvider('resend');
+                  await base44.entities.NotificationSettings.update(settings.id, { email_provider: 'resend' });
+                }}
+                className={`transition-all ${
+                  emailProvider === 'resend'
+                    ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                Resend (external)
+              </Button>
             </div>
           </CardContent>
         </Card>
