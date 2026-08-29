@@ -2,10 +2,19 @@
   "name": "NotificationSettings",
   "type": "object",
   "properties": {
+    "email_provider": {
+      "type": "string",
+      "enum": [
+        "native",
+        "resend"
+      ],
+      "default": "native",
+      "description": "Fournisseur d'envoi d'email: native (Base44 SendEmail, utilisateurs enregistr\u00e9s) ou resend (cl\u00e9 API Resend, adresses externes)"
+    },
     "test_mode": {
       "type": "boolean",
       "default": false,
-      "description": "En mode test, les emails sont logg\u00e9s mais pas envoy\u00e9s via Resend."
+      "description": "En mode test, les emails sont logg\u00e9s mais pas envoy\u00e9s."
     },
     "admin_emails": {
       "type": "array",

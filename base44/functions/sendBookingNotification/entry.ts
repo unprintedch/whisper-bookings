@@ -1,5 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
+async function sendViaResend(to, subject, html) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
+      to,
+      subject,
+      html,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend error sending to ${to}: ${err}`);
+  }
+}
+
+async function sendEmail(base44, provider, to, subject, body) {
+  if (provider === 'resend') {
+    await sendViaResend(to, subject, body);
+  } else {
+    await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -129,7 +159,7 @@ Deno.serve(async (req) => {
           console.log(`[TEST MODE] Would send email to ${to}: ${subject}`);
         } else {
           try {
-            await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
+            await sendEmail(base44, settings.email_provider || 'native', to, subject, body);
             sent++;
           } catch (err) {
             console.warn(`Failed to send email to ${to}:`, err.message);

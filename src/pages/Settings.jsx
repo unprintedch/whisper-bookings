@@ -187,6 +187,7 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingEmails, setIsSavingEmails] = useState(false);
+  const [emailProvider, setEmailProvider] = useState('native');
 
   const [newBookingTemplate, setNewBookingTemplate] = useState('');
   const [updateBookingTemplate, setUpdateBookingTemplate] = useState('');
@@ -203,6 +204,7 @@ export default function SettingsPage() {
       if (settingsList.length > 0) {
         const current = settingsList[0];
         setSettings(current);
+        setEmailProvider(current.email_provider || 'native');
         setAdminEmails(current.admin_emails || []);
         setNewBookingTemplate(current.template_new_booking || defaultNewBookingTemplate);
         setUpdateBookingTemplate(current.template_update_booking || defaultUpdateBookingTemplate);
@@ -218,12 +220,14 @@ export default function SettingsPage() {
         const initialSiteConfigs = SITE_NAMES.map(name => ({ site_name: name, hotel_name: '', admin_emails: [] }));
         const newSettings = await base44.entities.NotificationSettings.create({
           admin_emails: [],
+          email_provider: 'native',
           site_configs: initialSiteConfigs,
           template_new_booking: defaultNewBookingTemplate,
           template_update_booking: defaultUpdateBookingTemplate,
           template_cancellation: defaultCancellationTemplate,
         });
         setSettings(newSettings);
+        setEmailProvider('native');
         setAdminEmails([]);
         const configMap = {};
         SITE_NAMES.forEach(name => { configMap[name] = { site_name: name, hotel_name: '', admin_emails: [] }; });
@@ -305,6 +309,60 @@ export default function SettingsPage() {
                     await base44.entities.NotificationSettings.update(settings.id, { test_mode: checked });
                   }}
                 />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Email Provider Toggle */}
+        <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-slate-500" />
+                <div>
+                  <p className="font-semibold text-slate-800">Email Provider</p>
+                  <p className="text-sm text-slate-500">
+                    <strong>Native</strong> atteint les utilisateurs enregistrés de l'app (gratuit).
+                    <strong> Resend</strong> atteint toute adresse externe (demandes de devis public).
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isLoading || !settings}
+                  onClick={async () => {
+                    if (!settings) return;
+                    setEmailProvider('native');
+                    await base44.entities.NotificationSettings.update(settings.id, { email_provider: 'native' });
+                  }}
+                  className={`transition-all ${
+                    emailProvider === 'native'
+                      ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  Native
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isLoading || !settings}
+                  onClick={async () => {
+                    if (!settings) return;
+                    setEmailProvider('resend');
+                    await base44.entities.NotificationSettings.update(settings.id, { email_provider: 'resend' });
+                  }}
+                  className={`transition-all ${
+                    emailProvider === 'resend'
+                      ? 'bg-slate-800 text-white hover:bg-slate-700 hover:text-white'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  Resend
+                </Button>
               </div>
             </div>
           </CardContent>
