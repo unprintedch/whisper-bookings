@@ -37,7 +37,7 @@ const columnsConfig = [
 { id: 'contactEmail', label: 'Contact Email', defaultVisible: false, sortable: true },
 { id: 'contactPhone', label: 'Contact Phone', defaultVisible: false, sortable: true },
 { id: 'comment', label: 'Comment', defaultVisible: false, sortable: false },
-{ id: 'created_date', label: 'Created Date', defaultVisible: false, sortable: true },
+{ id: 'created_date', label: 'Created Date', defaultVisible: true, sortable: true },
 { id: 'updated_date', label: 'Updated Date', defaultVisible: false, sortable: true }];
 
 
@@ -62,7 +62,7 @@ export default function ReservationsTable({
   const [columnVisibility, setColumnVisibility] = useState(
     columnsConfig.reduce((acc, col) => ({ ...acc, [col.id]: col.defaultVisible }), {})
   );
-  const [sortConfig, setSortConfig] = useState({ key: 'date_checkin', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'created_date', direction: 'desc' });
 
   // Load external column visibility when it becomes available
   useEffect(() => {
@@ -106,6 +106,21 @@ export default function ReservationsTable({
           try {
             const dateA = aVal ? new Date(aVal + 'T00:00:00') : null;
             const dateB = bVal ? new Date(bVal + 'T00:00:00') : null;
+
+            if (!dateA || isNaN(dateA.getTime())) return sortConfig.direction === 'asc' ? 1 : -1;
+            if (!dateB || isNaN(dateB.getTime())) return sortConfig.direction === 'asc' ? -1 : 1;
+
+            return sortConfig.direction === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
+          } catch (error) {
+            console.warn('Error sorting by date:', error);
+            return 0;
+          }
+        }
+
+        if (sortConfig.key === 'created_date' || sortConfig.key === 'updated_date') {
+          try {
+            const dateA = aVal ? new Date(aVal) : null;
+            const dateB = bVal ? new Date(bVal) : null;
 
             if (!dateA || isNaN(dateA.getTime())) return sortConfig.direction === 'asc' ? 1 : -1;
             if (!dateB || isNaN(dateB.getTime())) return sortConfig.direction === 'asc' ? -1 : 1;

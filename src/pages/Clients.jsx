@@ -173,7 +173,7 @@ export default function ClientsPage() {
       const [clientsData, agenciesData, reservationsData, roomsData, sitesData, bedConfigsData] = await Promise.all([
         Client.list('-created_date'),
         Agency.list(),
-        Reservation.list(),
+        Reservation.list('-created_date'),
         Room.list(),
         Site.list(),
         BedConfiguration.list('sort_order')]
