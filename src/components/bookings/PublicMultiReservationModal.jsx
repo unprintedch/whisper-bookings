@@ -53,7 +53,7 @@ export default function PublicMultiReservationModal({
       setPerRoomDetails({});
       setExpandedRows({});
       setErrors({});
-      setContactExpanded(false);
+      setContactExpanded(true);
     }
   }, [isOpen]);
 
@@ -136,6 +136,12 @@ export default function PublicMultiReservationModal({
   const handleSubmit = async () => {
     const newErrors = {};
     if (!clientName.trim()) newErrors.clientName = 'Required';
+    if (!contactName.trim()) newErrors.contactName = 'Contact name is required';
+    if (!contactEmail.trim()) {
+      newErrors.contactEmail = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim())) {
+      newErrors.contactEmail = 'Invalid email format';
+    }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
     setIsSubmitting(true);
@@ -246,7 +252,7 @@ export default function PublicMultiReservationModal({
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-slate-400" />
                 <span className="font-medium text-slate-800">Contact Details</span>
-                <span className="text-xs font-normal text-slate-400">(optional)</span>
+                <span className="text-xs font-normal text-red-500">required</span>
               </div>
               {contactExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
             </button>
@@ -254,24 +260,30 @@ export default function PublicMultiReservationModal({
             {contactExpanded && (
               <div className="p-4 space-y-3 bg-white">
                 <div className="space-y-1">
-                  <Label className="text-xs">Contact Name</Label>
+                  <Label className={`text-xs ${errors.contactName ? 'text-red-600' : ''}`}>
+                    Contact Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     value={contactName}
-                    onChange={e => setContactName(e.target.value)}
+                    onChange={e => { setContactName(e.target.value); setErrors(prev => ({ ...prev, contactName: undefined })); }}
                     placeholder="Contact person"
-                    className="h-9"
+                    className={`h-9 ${errors.contactName ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
                   />
+                  {errors.contactName && <p className="text-xs text-red-600">{errors.contactName}</p>}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Email</Label>
+                    <Label className={`text-xs ${errors.contactEmail ? 'text-red-600' : ''}`}>
+                      Email <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       type="email"
                       value={contactEmail}
-                      onChange={e => setContactEmail(e.target.value)}
+                      onChange={e => { setContactEmail(e.target.value); setErrors(prev => ({ ...prev, contactEmail: undefined })); }}
                       placeholder="contact@example.com"
-                      className="h-9"
+                      className={`h-9 ${errors.contactEmail ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
                     />
+                    {errors.contactEmail && <p className="text-xs text-red-600">{errors.contactEmail}</p>}
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Phone</Label>
