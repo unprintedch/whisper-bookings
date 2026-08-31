@@ -16,6 +16,11 @@
       "default": false,
       "description": "En mode test, les emails sont logg\u00e9s mais pas envoy\u00e9s."
     },
+    "notify_client_on_request": {
+      "type": "boolean",
+      "default": false,
+      "description": "Envoyer un email de confirmation au client lorsqu'une demande de r\u00e9servation (status REQUEST) est cr\u00e9\u00e9e."
+    },
     "admin_emails": {
       "type": "array",
       "items": {
@@ -65,6 +70,10 @@
     "template_rates_request": {
       "type": "string",
       "description": "Email template for rate requests from the public page. Use [CONTACT_NAME] and [CONTACT_EMAIL]."
+    },
+    "template_client_booking_request": {
+      "type": "string",
+      "description": "Email template sent to the client when a booking request (status REQUEST) is created. Use [CLIENT_NAME], [HOTEL_NAME], [ROOM_NAME], [CHECKIN_DATE], [CHECKOUT_DATE], [STATUS]."
     }
   },
   "required": []
