@@ -2,19 +2,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
-async function sendViaResend(to, subject, html) {
+async function sendViaResend(to, subject, html, replyTo) {
+  const payload = {
+    from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
+    to,
+    subject,
+    html,
+  };
+  if (replyTo) payload.reply_to = replyTo;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
-      to,
-      subject,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -22,10 +24,11 @@ async function sendViaResend(to, subject, html) {
   }
 }
 
-async function sendEmail(base44, provider, to, subject, body) {
+async function sendEmail(base44, provider, to, subject, body, replyTo) {
   if (provider === 'resend') {
-    await sendViaResend(to, subject, body);
+    await sendViaResend(to, subject, body, replyTo);
   } else {
+    // Native Base44 SendEmail does not support reply-to; the contact email is included in the body instead.
     await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
   }
 }
@@ -71,6 +74,16 @@ Deno.serve(async (req) => {
       agency = await base44.asServiceRole.entities.Agency.get(client.agency_id);
     }
 
+    // Resolve the specific agency contact (if any) so admin reply-to targets the right person
+    let agencyContact = null;
+    if (agency?.contacts?.length && client.agency_contact_id != null) {
+      const idx = parseInt(client.agency_contact_id, 10);
+      if (!Number.isNaN(idx)) agencyContact = agency.contacts[idx] || null;
+    }
+    const contactName = client.contact_name || agencyContact?.name || agency?.name || client.name;
+    const contactEmail = client.contact_email || agencyContact?.email || agency?.email || '';
+    const contactPhone = client.contact_phone || agencyContact?.phone || agency?.phone || '';
+
     let site = null;
     if (room.site_id) {
       site = await base44.asServiceRole.entities.Site.get(room.site_id);
@@ -106,12 +119,21 @@ Deno.serve(async (req) => {
       '[STATUS]': booking.status,
       '[AGENCY_NAME]': agency?.name || 'N/A',
       '[BOOKING_LINK]': bookingUrl,
+      '[CONTACT_NAME]': contactName,
+      '[CONTACT_EMAIL]': contactEmail,
+      '[CONTACT_PHONE]': contactPhone,
     };
 
     let body = template;
     for (const [key, value] of Object.entries(placeholders)) {
       body = body.replace(new RegExp(key.replace('[', '\\[').replace(']', '\\]'), 'g'), value);
     }
+
+    // Contact info block appended to admin emails so the contact details are always visible
+    const contactInfoBlock = `
+<div style="margin-top:16px;padding:12px;border-top:1px solid #eee;font-size:13px;color:#444;">
+<strong>Contact:</strong> ${contactName}${contactEmail ? ` &middot; <a href="mailto:${contactEmail}">${contactEmail}</a>` : ''}${contactPhone ? ` &middot; ${contactPhone}` : ''}
+</div>`;
 
     const subject =
       bookingType === 'cancellation'
@@ -151,6 +173,10 @@ Deno.serve(async (req) => {
     let sent = 0;
     await Promise.allSettled(
       emailTasks.map(async ({ to, recipientType }) => {
+        const isAdmin = recipientType === 'admin';
+        const finalBody = isAdmin ? body + contactInfoBlock : body;
+        // Admin notifications reply to the booking contact
+        const replyTo = isAdmin && contactEmail ? contactEmail : undefined;
         let status = 'sent';
         let errorMessage = null;
         if (isTestMode) {
@@ -159,7 +185,7 @@ Deno.serve(async (req) => {
           console.log(`[TEST MODE] Would send email to ${to}: ${subject}`);
         } else {
           try {
-            await sendEmail(base44, settings.email_provider || 'native', to, subject, body);
+            await sendEmail(base44, settings.email_provider || 'native', to, subject, finalBody, replyTo);
             sent++;
           } catch (err) {
             console.warn(`Failed to send email to ${to}:`, err.message);
@@ -173,7 +199,7 @@ Deno.serve(async (req) => {
           recipient: to,
           recipient_type: recipientType,
           subject,
-          body,
+          body: finalBody,
           booking_type: bookingType,
           status,
           error_message: errorMessage,

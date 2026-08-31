@@ -2,19 +2,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
-async function sendViaResend(to, subject, html) {
+async function sendViaResend(to, subject, html, replyTo) {
+  const payload = {
+    from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
+    to,
+    subject,
+    html,
+  };
+  if (replyTo) payload.reply_to = replyTo;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
-      to,
-      subject,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -22,10 +24,11 @@ async function sendViaResend(to, subject, html) {
   }
 }
 
-async function sendEmail(base44, provider, to, subject, body) {
+async function sendEmail(base44, provider, to, subject, body, replyTo) {
   if (provider === 'resend') {
-    await sendViaResend(to, subject, body);
+    await sendViaResend(to, subject, body, replyTo);
   } else {
+    // Native Base44 SendEmail does not support reply-to; the contact email is included in the body instead.
     await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
   }
 }
@@ -100,7 +103,7 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendEmail(base44, settings.email_provider || 'native', to, subject, body);
+        await sendEmail(base44, settings.email_provider || 'native', to, subject, body, contactEmail);
         await logEmail(to, 'sent');
       } catch (err) {
         console.warn(`Failed to send email to ${to}:`, err.message);
