@@ -220,6 +220,9 @@ export default function SettingsPage() {
   const [ratesRequestTemplate, setRatesRequestTemplate] = useState('');
   const [clientRequestTemplate, setClientRequestTemplate] = useState('');
   const [isSavingTemplates, setIsSavingTemplates] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('Request received');
+  const [confirmMessage, setConfirmMessage] = useState('We will get back to you shortly.');
+  const [isSavingConfirmText, setIsSavingConfirmText] = useState(false);
 
   useEffect(() => { loadSettings(); }, []);
 
@@ -237,6 +240,8 @@ export default function SettingsPage() {
         setCancellationTemplate(current.template_cancellation || defaultCancellationTemplate);
         setRatesRequestTemplate(current.template_rates_request || defaultRatesRequestTemplate);
         setClientRequestTemplate(current.template_client_booking_request || defaultClientRequestTemplate);
+        setConfirmTitle(current.booking_request_confirm_title || 'Request received');
+        setConfirmMessage(current.booking_request_confirm_message || 'We will get back to you shortly.');
 
         // Build siteConfigs map
         const configMap = {};
@@ -253,6 +258,8 @@ export default function SettingsPage() {
           template_update_booking: defaultUpdateBookingTemplate,
           template_cancellation: defaultCancellationTemplate,
           template_client_booking_request: defaultClientRequestTemplate,
+          booking_request_confirm_title: 'Request received',
+          booking_request_confirm_message: 'We will get back to you shortly.',
         });
         setSettings(newSettings);
         setEmailProvider('native');
@@ -265,6 +272,8 @@ export default function SettingsPage() {
         setCancellationTemplate(defaultCancellationTemplate);
         setRatesRequestTemplate(defaultRatesRequestTemplate);
         setClientRequestTemplate(defaultClientRequestTemplate);
+        setConfirmTitle('Request received');
+        setConfirmMessage('We will get back to you shortly.');
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
@@ -366,6 +375,60 @@ export default function SettingsPage() {
               />
             </div>
           </CardContent>
+        </Card>
+
+        {/* Booking Request Confirmation Text */}
+        <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-blue-600" />
+              Booking Request Confirmation Text
+            </CardTitle>
+            <CardDescription>
+              Texte affiché sur la page publique juste après qu'un client soumet une demande de réservation.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? <p className="text-slate-500">Loading...</p> : (
+              <>
+                <div className="space-y-1">
+                  <Label>Title</Label>
+                  <Input
+                    value={confirmTitle}
+                    onChange={e => setConfirmTitle(e.target.value)}
+                    placeholder="Request received"
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Message</Label>
+                  <Input
+                    value={confirmMessage}
+                    onChange={e => setConfirmMessage(e.target.value)}
+                    placeholder="We will get back to you shortly."
+                    className="h-9"
+                  />
+                </div>
+              </>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button
+              onClick={async () => {
+                if (!settings) return;
+                setIsSavingConfirmText(true);
+                await base44.entities.NotificationSettings.update(settings.id, {
+                  booking_request_confirm_title: confirmTitle,
+                  booking_request_confirm_message: confirmMessage,
+                });
+                setIsSavingConfirmText(false);
+              }}
+              disabled={isSavingConfirmText || isLoading || !settings}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSavingConfirmText ? 'Saving...' : 'Save Confirmation Text'}
+            </Button>
+          </CardFooter>
         </Card>
 
         {/* Email Provider Toggle */}

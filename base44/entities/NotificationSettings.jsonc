@@ -74,6 +74,16 @@
     "template_client_booking_request": {
       "type": "string",
       "description": "Email template sent to the client when a booking request (status REQUEST) is created. Use [CLIENT_NAME], [HOTEL_NAME], [ROOM_NAME], [CHECKIN_DATE], [CHECKOUT_DATE], [STATUS]."
+    },
+    "booking_request_confirm_title": {
+      "type": "string",
+      "default": "Request received",
+      "description": "Titre affich\u00e9 sur la page publique apr\u00e8s qu'un client soumet une demande de r\u00e9servation."
+    },
+    "booking_request_confirm_message": {
+      "type": "string",
+      "default": "We will get back to you shortly.",
+      "description": "Message affich\u00e9 sur la page publique apr\u00e8s qu'un client soumet une demande de r\u00e9servation."
     }
   },
   "required": []

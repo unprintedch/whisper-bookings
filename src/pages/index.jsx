@@ -51,6 +51,8 @@ export default function HomePage() {
   const [ratesName, setRatesName] = useState('');
   const [ratesSending, setRatesSending] = useState(false);
   const [ratesSent, setRatesSent] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('Request received');
+  const [confirmMessage, setConfirmMessage] = useState('We will get back to you shortly.');
 
 
   useEffect(() => {
@@ -131,13 +133,14 @@ export default function HomePage() {
       const isTestMode = urlParams.get('base44_data_env') === 'dev';
       const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
 
-      const [roomsData, sitesData, bedConfigsData, reservationsData, clientsData, agenciesData] = await Promise.all([
+      const [roomsData, sitesData, bedConfigsData, reservationsData, clientsData, agenciesData, notifSettingsList] = await Promise.all([
       dbClient.entities.Room.list('-name'),
       dbClient.entities.Site.list(),
       dbClient.entities.BedConfiguration.list('sort_order'),
       dbClient.entities.Reservation.list('-created_date'),
       dbClient.entities.Client.list(),
-      dbClient.entities.Agency.list()]
+      dbClient.entities.Agency.list(),
+      dbClient.entities.NotificationSettings.list()]
       );
       setRooms(roomsData);
       setSites(sitesData);
@@ -145,6 +148,11 @@ export default function HomePage() {
       setReservations(reservationsData);
       setClients(clientsData);
       setAgencies(agenciesData);
+      if (notifSettingsList && notifSettingsList.length > 0) {
+        const ns = notifSettingsList[0];
+        if (ns.booking_request_confirm_title) setConfirmTitle(ns.booking_request_confirm_title);
+        if (ns.booking_request_confirm_message) setConfirmMessage(ns.booking_request_confirm_message);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -322,8 +330,8 @@ export default function HomePage() {
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <CalendarCheck className="w-8 h-8 text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Request received</h2>
-            <p className="text-slate-600 mb-6">We will get back to you shortly.</p>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">{confirmTitle}</h2>
+            <p className="text-slate-600 mb-6">{confirmMessage}</p>
             <div className="bg-slate-50 rounded-lg p-4 text-left space-y-2 mb-8 text-sm">
               <div><span className="text-slate-500">Name:</span> <span className="font-medium text-slate-800">{bookingConfirmed.clientName}</span></div>
               <div><span className="text-slate-500">Room:</span> <span className="font-medium text-slate-800">{bookingConfirmed.count > 1 ? `${bookingConfirmed.count} rooms requested` : bookingConfirmed.roomName}</span></div>
