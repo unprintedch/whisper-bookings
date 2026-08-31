@@ -215,7 +215,19 @@ export default function PublicMultiReservationModal({
           {agencies.length > 0 && (
             <div className="flex items-center gap-3">
               <Label className="text-sm font-medium whitespace-nowrap shrink-0">Agency</Label>
-              <Select value={agencyId || '__none__'} onValueChange={v => { setAgencyId(v === '__none__' ? '' : v); setAgencyContactId(''); }}>
+              <Select value={agencyId || '__none__'} onValueChange={v => {
+                setAgencyId(v === '__none__' ? '' : v);
+                setAgencyContactId('');
+                if (v !== '__none__') {
+                  const ag = agencies.find(a => a.id === v);
+                  setContactName('');
+                  setContactEmail(ag?.email || '');
+                  setContactPhone(ag?.phone || '');
+                  setErrors(prev => ({ ...prev, contactName: undefined, contactEmail: undefined }));
+                } else {
+                  setContactName(''); setContactEmail(''); setContactPhone('');
+                }
+              }}>
                 <SelectTrigger className="h-9 flex-1">
                   <SelectValue placeholder="Select agency" />
                 </SelectTrigger>
@@ -227,7 +239,23 @@ export default function PublicMultiReservationModal({
                 </SelectContent>
               </Select>
               {selectedAgency?.contacts?.length > 0 && (
-                <Select value={agencyContactId || '__none__'} onValueChange={v => setAgencyContactId(v === '__none__' ? '' : v)}>
+                <Select value={agencyContactId || '__none__'} onValueChange={v => {
+                  if (v === '__none__') {
+                    setAgencyContactId('');
+                    setContactName('');
+                    setContactEmail(selectedAgency?.email || '');
+                    setContactPhone(selectedAgency?.phone || '');
+                  } else {
+                    setAgencyContactId(v);
+                    const c = selectedAgency?.contacts?.[parseInt(v, 10)];
+                    if (c) {
+                      setContactName(c.name || '');
+                      setContactEmail(c.email || '');
+                      setContactPhone(c.phone || '');
+                      setErrors(prev => ({ ...prev, contactName: undefined, contactEmail: undefined }));
+                    }
+                  }
+                }}>
                   <SelectTrigger className="h-9 flex-1">
                     <SelectValue placeholder="General contact" />
                   </SelectTrigger>
