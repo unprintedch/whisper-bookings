@@ -129,6 +129,15 @@ Deno.serve(async (req) => {
       body = body.replace(new RegExp(key.replace('[', '\\[').replace(']', '\\]'), 'g'), value);
     }
 
+    // Client-facing template for new booking requests (sent to the client contact)
+    let clientBody = body;
+    if (bookingType === 'new' && settings.template_client_booking_request) {
+      clientBody = settings.template_client_booking_request;
+      for (const [key, value] of Object.entries(placeholders)) {
+        clientBody = clientBody.replace(new RegExp(key.replace('[', '\\[').replace(']', '\\]'), 'g'), value);
+      }
+    }
+
     // Contact info block appended to admin emails so the contact details are always visible
     const contactInfoBlock = `
 <div style="margin-top:16px;padding:12px;border-top:1px solid #eee;font-size:13px;color:#444;">
@@ -144,6 +153,16 @@ Deno.serve(async (req) => {
 
     // Determine recipients
     const notifOptions = notifications || { toAdmin: true, toAgency: false, toClient: false };
+
+    // Auto-enable client notification for new booking requests (status REQUEST) if configured
+    if (
+      bookingType === 'new' &&
+      booking.status === 'REQUEST' &&
+      settings.notify_client_on_request &&
+      (client.contact_email || (agency && agency.email))
+    ) {
+      notifOptions.toClient = true;
+    }
 
     const emailTasks = [];
 
@@ -162,8 +181,11 @@ Deno.serve(async (req) => {
       emailTasks.push({ to: agency.email, recipientType: 'agency' });
     }
 
-    if (notifOptions.toClient && client.contact_email) {
-      emailTasks.push({ to: client.contact_email, recipientType: 'client' });
+    if (notifOptions.toClient) {
+      const clientEmail = client.contact_email || agencyContact?.email || agency?.email;
+      if (clientEmail) {
+        emailTasks.push({ to: clientEmail, recipientType: 'client' });
+      }
     }
 
     if (emailTasks.length === 0) {
@@ -174,7 +196,9 @@ Deno.serve(async (req) => {
     await Promise.allSettled(
       emailTasks.map(async ({ to, recipientType }) => {
         const isAdmin = recipientType === 'admin';
-        const finalBody = isAdmin ? body + contactInfoBlock : body;
+        const finalBody = isAdmin
+          ? body + contactInfoBlock
+          : (recipientType === 'client' ? clientBody : body);
         // Admin notifications reply to the booking contact
         const replyTo = isAdmin && contactEmail ? contactEmail : undefined;
         let status = 'sent';

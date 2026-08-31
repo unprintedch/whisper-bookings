@@ -88,6 +88,31 @@ const defaultRatesRequestTemplate = `<div style="font-family: Arial, sans-serif;
   </div>
 </div>`;
 
+const defaultClientRequestTemplate = `
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+  <div style="background-color: #f8f8f8; padding: 20px; text-align: center;">
+    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68d170d1e58c53edb975b3db/b98b290c7_Capturedecran2025-10-02a111335.png" alt="Whisper B. Logo" style="width: 60px; height: 60px; margin-bottom: 10px;">
+    <h1 style="color: #1e293b; font-size: 24px; margin: 0;">Booking Request Received – [HOTEL_NAME]</h1>
+  </div>
+  <div style="padding: 25px;">
+    <p>Dear [CLIENT_NAME],</p>
+    <p>Thank you for your booking request. We have received the following details and will get back to you shortly to confirm availability:</p>
+    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin: 20px 0;">
+      <p><strong>Hotel:</strong> [HOTEL_NAME]</p>
+      <p><strong>Room:</strong> [ROOM_NAME]</p>
+      <p><strong>Check-in:</strong> [CHECKIN_DATE]</p>
+      <p><strong>Check-out:</strong> [CHECKOUT_DATE]</p>
+      <p><strong>Status:</strong> <span style="font-weight: bold; color: #2563eb;">[STATUS]</span></p>
+    </div>
+    <p>This is a request and is not yet confirmed. Our team will contact you to finalise your reservation.</p>
+    <p>Kind regards,<br/>The [HOTEL_NAME] Team</p>
+  </div>
+  <div style="background-color: #f8f8f8; padding: 15px; text-align: center; font-size: 12px; color: #64748b;">
+    <p>This is an automated message from Whisper Bookings.</p>
+  </div>
+</div>
+`;
+
 const defaultCancellationTemplate = `
 <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
   <div style="background-color: #f8f8f8; padding: 20px; text-align: center;">
@@ -193,6 +218,7 @@ export default function SettingsPage() {
   const [updateBookingTemplate, setUpdateBookingTemplate] = useState('');
   const [cancellationTemplate, setCancellationTemplate] = useState('');
   const [ratesRequestTemplate, setRatesRequestTemplate] = useState('');
+  const [clientRequestTemplate, setClientRequestTemplate] = useState('');
   const [isSavingTemplates, setIsSavingTemplates] = useState(false);
 
   useEffect(() => { loadSettings(); }, []);
@@ -210,6 +236,7 @@ export default function SettingsPage() {
         setUpdateBookingTemplate(current.template_update_booking || defaultUpdateBookingTemplate);
         setCancellationTemplate(current.template_cancellation || defaultCancellationTemplate);
         setRatesRequestTemplate(current.template_rates_request || defaultRatesRequestTemplate);
+        setClientRequestTemplate(current.template_client_booking_request || defaultClientRequestTemplate);
 
         // Build siteConfigs map
         const configMap = {};
@@ -225,6 +252,7 @@ export default function SettingsPage() {
           template_new_booking: defaultNewBookingTemplate,
           template_update_booking: defaultUpdateBookingTemplate,
           template_cancellation: defaultCancellationTemplate,
+          template_client_booking_request: defaultClientRequestTemplate,
         });
         setSettings(newSettings);
         setEmailProvider('native');
@@ -236,6 +264,7 @@ export default function SettingsPage() {
         setUpdateBookingTemplate(defaultUpdateBookingTemplate);
         setCancellationTemplate(defaultCancellationTemplate);
         setRatesRequestTemplate(defaultRatesRequestTemplate);
+        setClientRequestTemplate(defaultClientRequestTemplate);
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
@@ -277,6 +306,7 @@ export default function SettingsPage() {
       template_update_booking: updateBookingTemplate,
       template_cancellation: cancellationTemplate,
       template_rates_request: ratesRequestTemplate,
+      template_client_booking_request: clientRequestTemplate,
     });
     setIsSavingTemplates(false);
   };
@@ -310,6 +340,30 @@ export default function SettingsPage() {
                   }}
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Client Notification Toggle */}
+        <Card className="border border-slate-200 bg-white/90 backdrop-blur-sm">
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Mail className={`w-5 h-5 ${settings?.notify_client_on_request ? 'text-green-600' : 'text-slate-400'}`} />
+                <div>
+                  <p className="font-semibold text-slate-800">Client Notification on Booking Request</p>
+                  <p className="text-sm text-slate-500">Envoie automatiquement un email de confirmation au client quand une demande de réservation (status REQUEST) est créée.</p>
+                </div>
+              </div>
+              <Switch
+                checked={!!settings?.notify_client_on_request}
+                disabled={isLoading || !settings}
+                onCheckedChange={async (checked) => {
+                  if (!settings) return;
+                  setSettings(prev => ({ ...prev, notify_client_on_request: checked }));
+                  await base44.entities.NotificationSettings.update(settings.id, { notify_client_on_request: checked });
+                }}
+              />
             </div>
           </CardContent>
         </Card>
@@ -458,6 +512,11 @@ export default function SettingsPage() {
                   <Label>Rate Request Template</Label>
                   <p className="text-xs text-slate-500">Sent to admins when a visitor clicks "Request Rates". Placeholders: [CONTACT_NAME], [CONTACT_EMAIL]</p>
                   <ReactQuill theme="snow" value={ratesRequestTemplate} onChange={setRatesRequestTemplate} className="bg-white" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Client Booking Request Template</Label>
+                  <p className="text-xs text-slate-500">Sent to the client when a booking request (status REQUEST) is created, if the toggle above is enabled.</p>
+                  <ReactQuill theme="snow" value={clientRequestTemplate} onChange={setClientRequestTemplate} className="bg-white" />
                 </div>
                 <div className="text-sm text-slate-600 bg-slate-50 p-4 rounded-lg border">
                   <strong>Available Placeholders:</strong>
