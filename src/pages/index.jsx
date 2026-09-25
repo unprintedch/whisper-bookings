@@ -166,6 +166,10 @@ export default function HomePage() {
     setCurrentDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(newDate.getDate() + days);
+      const today = startOfDay(new Date());
+      if (startOfDay(newDate) < today) {
+        return today;
+      }
       return newDate;
     });
   };
@@ -427,6 +431,7 @@ export default function HomePage() {
                     variant="outline"
                     size="icon"
                     onClick={() => navigateDate('prev')}
+                    disabled={startOfDay(currentDate) <= startOfDay(new Date())}
                     className="hover:bg-blue-50 h-9 w-9">
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -449,6 +454,7 @@ export default function HomePage() {
                         mode="single"
                         selected={currentDate}
                         onSelect={(date) => {if (date) {setCurrentDate(date);setIsDatePopoverOpen(false);}}}
+                        disabled={{ before: new Date() }}
                         initialFocus />
 
                     </PopoverContent>
