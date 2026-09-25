@@ -1368,6 +1368,35 @@ export default function BookingForm({
            onReservationDeleted={onReservationDeleted}
            onReservationsUpdated={(updated) => {
              setReservations(updated);
+             // Sync formData when the existingBooking is modified via RelatedReservations
+             if (existingBooking) {
+               const updatedBooking = updated.find(r => r.id === existingBooking.id);
+               if (updatedBooking) {
+                 setFormData(prev => {
+                   const newData = { ...prev };
+                   if (updatedBooking.status !== prev.status) {
+                     newData.status = updatedBooking.status;
+                     newData.hold_expires_at = updatedBooking.hold_expires_at || '';
+                   }
+                   if (updatedBooking.adults_count !== undefined && updatedBooking.adults_count !== prev.adults_count) {
+                     newData.adults_count = updatedBooking.adults_count;
+                   }
+                   if (updatedBooking.children_count !== undefined && updatedBooking.children_count !== prev.children_count) {
+                     newData.children_count = updatedBooking.children_count;
+                   }
+                   if (updatedBooking.infants_count !== undefined && updatedBooking.infants_count !== prev.infants_count) {
+                     newData.infants_count = updatedBooking.infants_count;
+                   }
+                   if (updatedBooking.bed_configuration !== undefined && updatedBooking.bed_configuration !== prev.bed_configuration) {
+                     newData.bed_configuration = updatedBooking.bed_configuration;
+                   }
+                   if (updatedBooking.comment !== undefined && updatedBooking.comment !== prev.comment) {
+                     newData.comment = updatedBooking.comment;
+                   }
+                   return newData;
+                 });
+               }
+             }
              if (onReservationsUpdated) onReservationsUpdated(updated);
            }}
          />
