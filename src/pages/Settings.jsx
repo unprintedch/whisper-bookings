@@ -27,7 +27,7 @@ const defaultNewBookingTemplate = `
     <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin: 20px 0;">
       <p><strong>Hotel:</strong> [HOTEL_NAME]</p>
       <p><strong>Client:</strong> [CLIENT_NAME]</p>
-      <p><strong>Room:</strong> [ROOM_NAME]</p>
+      <p><strong>Tent:</strong> [ROOM_NAME]</p>
       <p><strong>Check-in:</strong> [CHECKIN_DATE]</p>
       <p><strong>Check-out:</strong> [CHECKOUT_DATE]</p>
       <p><strong>Status:</strong> <span style="font-weight: bold; color: #2563eb;">[STATUS]</span></p>
@@ -54,7 +54,7 @@ const defaultUpdateBookingTemplate = `
     <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin: 20px 0;">
       <p><strong>Hotel:</strong> [HOTEL_NAME]</p>
       <p><strong>Client:</strong> [CLIENT_NAME]</p>
-      <p><strong>Room:</strong> [ROOM_NAME]</p>
+      <p><strong>Tent:</strong> [ROOM_NAME]</p>
       <p><strong>Check-in:</strong> [CHECKIN_DATE]</p>
       <p><strong>Check-out:</strong> [CHECKOUT_DATE]</p>
       <p><strong>Status:</strong> <span style="font-weight: bold; color: #2563eb;">[STATUS]</span></p>
@@ -99,7 +99,7 @@ const defaultClientRequestTemplate = `
     <p>Thank you for your booking request. We have received the following details and will get back to you shortly to confirm availability:</p>
     <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px; margin: 20px 0;">
       <p><strong>Hotel:</strong> [HOTEL_NAME]</p>
-      <p><strong>Room:</strong> [ROOM_NAME]</p>
+      <p><strong>Tent:</strong> [ROOM_NAME]</p>
       <p><strong>Check-in:</strong> [CHECKIN_DATE]</p>
       <p><strong>Check-out:</strong> [CHECKOUT_DATE]</p>
       <p><strong>Status:</strong> <span style="font-weight: bold; color: #2563eb;">[STATUS]</span></p>
@@ -124,7 +124,7 @@ const defaultCancellationTemplate = `
     <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 15px; margin: 20px 0;">
       <p><strong>Hotel:</strong> [HOTEL_NAME]</p>
       <p><strong>Client:</strong> [CLIENT_NAME]</p>
-      <p><strong>Room:</strong> [ROOM_NAME]</p>
+      <p><strong>Tent:</strong> [ROOM_NAME]</p>
       <p><strong>Check-in:</strong> [CHECKIN_DATE]</p>
       <p><strong>Check-out:</strong> [CHECKOUT_DATE]</p>
       <p><strong>Status:</strong> <span style="font-weight: bold; color: #991b1b;">CANCELLED</span></p>
