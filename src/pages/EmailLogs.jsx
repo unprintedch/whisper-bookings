@@ -221,9 +221,12 @@ export default function EmailLogs() {
               )}
               <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <div className="bg-slate-50 px-4 py-2 text-xs text-slate-500 border-b">Email content</div>
-                <div
-                  className="p-4 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: selectedLog.body || '<em>No content</em>' }}
+                <iframe
+                  srcDoc={selectedLog.body || '<em>No content</em>'}
+                  className="w-full"
+                  style={{ minHeight: '300px', border: 0 }}
+                  sandbox=""
+                  title="Email content"
                 />
               </div>
             </div>

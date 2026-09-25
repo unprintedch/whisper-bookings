@@ -1,8 +1,8 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
-
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { escapeHtml, stripHtml } from "../../shared/escapeHtml.ts";
 
 async function sendViaResend(to, subject, html, replyTo) {
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   const payload = {
     from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
     to,
@@ -28,26 +28,42 @@ async function sendEmail(base44, provider, to, subject, body, replyTo) {
   if (provider === 'resend') {
     await sendViaResend(to, subject, body, replyTo);
   } else {
-    // Native Base44 SendEmail does not support reply-to; the contact email is included in the body instead.
     await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
   }
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    const reqBody = await req.json();
+
+    // --- Authorization: admin user (manual UI sends) OR automation secret (from onReservationChange) ---
+    let isAuthorized = false;
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role === 'admin') isAuthorized = true;
+    } catch {}
+
+    if (!isAuthorized) {
+      const automationSecret = Deno.env.get('AUTOMATION_SECRET');
+      if (automationSecret && reqBody._automationSecret === automationSecret) {
+        isAuthorized = true;
+      }
+    }
+    if (!isAuthorized) {
+      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
     const {
       bookingId,
-      bookingType, // 'new' | 'update' | 'cancellation'
-      notifications, // { toAdmin, toAgency, toClient } — optional, for manual sends
-    } = await req.json();
+      bookingType,
+      notifications,
+    } = reqBody;
 
     if (!bookingId || !bookingType) {
       return Response.json({ error: 'Missing bookingId or bookingType' }, { status: 400 });
     }
 
-    // Load all needed data
     const [booking, settingsList] = await Promise.all([
       base44.asServiceRole.entities.Reservation.get(bookingId),
       base44.asServiceRole.entities.NotificationSettings.list(),
@@ -74,7 +90,6 @@ Deno.serve(async (req) => {
       agency = await base44.asServiceRole.entities.Agency.get(client.agency_id);
     }
 
-    // Resolve the specific agency contact (if any) so admin reply-to targets the right person
     let agencyContact = null;
     if (agency?.contacts?.length && client.agency_contact_id != null) {
       const idx = parseInt(client.agency_contact_id, 10);
@@ -93,7 +108,6 @@ Deno.serve(async (req) => {
     const siteConfig = (settings.site_configs || []).find(sc => sc.site_name === siteName);
     const hotelName = siteConfig?.hotel_name || siteName || 'Whisper B.';
 
-    // Select template
     let template = '';
     if (bookingType === 'new') {
       template = settings.template_new_booking || '<p>New booking for [CLIENT_NAME].</p>';
@@ -103,34 +117,33 @@ Deno.serve(async (req) => {
       template = settings.template_cancellation || '<p>Booking cancelled for [CLIENT_NAME].</p>';
     }
 
-    // Format dates
     const checkinDate = new Date(booking.date_checkin + 'T00:00:00');
     const checkoutDate = new Date(booking.date_checkout + 'T00:00:00');
     const formatDate = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
     const bookingUrl = `https://booking.whisper-tanzania.ch/Clients?bookingId=${bookingId}`;
 
+    // Escape all user-controlled values before inserting into HTML templates (prevents stored XSS)
     const placeholders = {
-      '[HOTEL_NAME]': hotelName,
-      '[CLIENT_NAME]': client.name,
-      '[ROOM_NAME]': `${room.number} – ${room.name}`,
+      '[HOTEL_NAME]': escapeHtml(hotelName),
+      '[CLIENT_NAME]': escapeHtml(client.name),
+      '[ROOM_NAME]': escapeHtml(`${room.number} – ${room.name}`),
       '[CHECKIN_DATE]': formatDate(checkinDate),
       '[CHECKOUT_DATE]': formatDate(checkoutDate),
-      '[STATUS]': booking.status,
-      '[AGENCY_NAME]': agency?.name || 'N/A',
+      '[STATUS]': escapeHtml(booking.status),
+      '[AGENCY_NAME]': escapeHtml(agency?.name || 'N/A'),
       '[BOOKING_LINK]': bookingUrl,
-      '[CONTACT_NAME]': contactName,
-      '[CONTACT_EMAIL]': contactEmail,
-      '[CONTACT_PHONE]': contactPhone,
+      '[CONTACT_NAME]': escapeHtml(contactName),
+      '[CONTACT_EMAIL]': escapeHtml(contactEmail),
+      '[CONTACT_PHONE]': escapeHtml(contactPhone),
     };
 
-    let body = template;
+    let emailBody = template;
     for (const [key, value] of Object.entries(placeholders)) {
-      body = body.replace(new RegExp(key.replace('[', '\\[').replace(']', '\\]'), 'g'), value);
+      emailBody = emailBody.replace(new RegExp(key.replace('[', '\\[').replace(']', '\\]'), 'g'), value);
     }
 
-    // Client-facing template for new booking requests (sent to the client contact)
-    let clientBody = body;
+    let clientBody = emailBody;
     if (bookingType === 'new' && settings.template_client_booking_request) {
       clientBody = settings.template_client_booking_request;
       for (const [key, value] of Object.entries(placeholders)) {
@@ -138,23 +151,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Contact info block appended to admin emails so the contact details are always visible
     const contactInfoBlock = `
 <div style="margin-top:16px;padding:12px;border-top:1px solid #eee;font-size:13px;color:#444;">
-<strong>Contact:</strong> ${contactName}${contactEmail ? ` &middot; <a href="mailto:${contactEmail}">${contactEmail}</a>` : ''}${contactPhone ? ` &middot; ${contactPhone}` : ''}
+<strong>Contact:</strong> ${escapeHtml(contactName)}${contactEmail ? ` &middot; <a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a>` : ''}${contactPhone ? ` &middot; ${escapeHtml(contactPhone)}` : ''}
 </div>`;
 
     const subject =
       bookingType === 'cancellation'
-        ? `Booking Cancellation: ${client.name} – ${room.name} (${hotelName})`
+        ? `Booking Cancellation: ${stripHtml(client.name)} – ${stripHtml(room.name)} (${stripHtml(hotelName)})`
         : bookingType === 'update'
-        ? `Booking Update: ${client.name} – ${room.name} (${hotelName})`
-        : `New Booking: ${client.name} – ${room.name} (${hotelName})`;
+        ? `Booking Update: ${stripHtml(client.name)} – ${stripHtml(room.name)} (${stripHtml(hotelName)})`
+        : `New Booking: ${stripHtml(client.name)} – ${stripHtml(room.name)} (${stripHtml(hotelName)})`;
 
-    // Determine recipients
     const notifOptions = notifications || { toAdmin: true, toAgency: false, toClient: false };
 
-    // Auto-enable client notification for new booking requests (status REQUEST) if configured
     if (
       bookingType === 'new' &&
       booking.status === 'REQUEST' &&
@@ -171,7 +181,6 @@ Deno.serve(async (req) => {
         siteConfig?.admin_emails?.length > 0
           ? siteConfig.admin_emails
           : settings.admin_emails || [];
-
       for (const email of siteAdminEmails) {
         emailTasks.push({ to: email, recipientType: 'admin' });
       }
@@ -197,9 +206,8 @@ Deno.serve(async (req) => {
       emailTasks.map(async ({ to, recipientType }) => {
         const isAdmin = recipientType === 'admin';
         const finalBody = isAdmin
-          ? body + contactInfoBlock
-          : (recipientType === 'client' ? clientBody : body);
-        // Admin notifications reply to the booking contact
+          ? emailBody + contactInfoBlock
+          : (recipientType === 'client' ? clientBody : emailBody);
         const replyTo = isAdmin && contactEmail ? contactEmail : undefined;
         let status = 'sent';
         let errorMessage = null;
@@ -217,7 +225,6 @@ Deno.serve(async (req) => {
             errorMessage = err.message;
           }
         }
-        // Log every attempt
         await base44.asServiceRole.entities.EmailLog.create({
           booking_id: bookingId,
           recipient: to,
@@ -238,4 +245,4 @@ Deno.serve(async (req) => {
     console.error('sendBookingNotification error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

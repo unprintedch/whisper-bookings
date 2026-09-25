@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { base44 } from "@/api/base44Client";
 import { sendRatesRequest } from "@/functions/sendRatesRequest";
+import { verifyPublicAccess } from "@/functions/verifyPublicAccess";
 import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
@@ -66,31 +67,22 @@ export default function HomePage() {
 
       let shouldLoadData = false;
 
-      // Check if password protection is enabled
-      const settingsList = await base44.entities.PublicAccessSettings.list();
-      if (settingsList.length > 0) {
-        const settings = settingsList[0];
-        setIsPasswordProtected(settings.is_password_protected || false);
-        setAllowPublicBooking(settings.allow_public_booking || false);
+      // Use backend function to check access — never exposes access_password to the client
+      const accessResult = await verifyPublicAccess({});
+      setIsPasswordProtected(accessResult.isPasswordProtected);
+      setAllowPublicBooking(accessResult.allowPublicBooking);
 
-        // If authenticated or not protected, grant access
-        if (isAuth || !settings.is_password_protected) {
+      if (isAuth || !accessResult.isPasswordProtected) {
+        setHasAccess(true);
+        shouldLoadData = true;
+      } else {
+        const storedAccess = sessionStorage.getItem('publicPageAccess');
+        if (storedAccess === 'granted') {
           setHasAccess(true);
           shouldLoadData = true;
         } else {
-          // Check if password was previously entered (stored in sessionStorage)
-          const storedAccess = sessionStorage.getItem('publicPageAccess');
-          if (storedAccess === 'granted') {
-            setHasAccess(true);
-            shouldLoadData = true;
-          } else {
-            setIsLoading(false);
-          }
+          setIsLoading(false);
         }
-      } else {
-        // No settings, grant access by default
-        setHasAccess(true);
-        shouldLoadData = true;
       }
 
       if (shouldLoadData) {
@@ -109,16 +101,13 @@ export default function HomePage() {
     setPasswordError(false);
 
     try {
-      const settingsList = await base44.entities.PublicAccessSettings.list();
-      if (settingsList.length > 0) {
-        const settings = settingsList[0];
-        if (passwordInput === settings.access_password) {
-          setHasAccess(true);
-          sessionStorage.setItem('publicPageAccess', 'granted');
-          loadData();
-        } else {
-          setPasswordError(true);
-        }
+      const result = await verifyPublicAccess({ password: passwordInput });
+      if (result.hasAccess) {
+        setHasAccess(true);
+        sessionStorage.setItem('publicPageAccess', 'granted');
+        loadData();
+      } else {
+        setPasswordError(true);
       }
     } catch (error) {
       console.error('Error verifying password:', error);

@@ -1,8 +1,8 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
-
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { escapeHtml, stripHtml } from "../../shared/escapeHtml.ts";
 
 async function sendViaResend(to, subject, html, replyTo) {
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   const payload = {
     from: 'Whisper Bookings <notifications@whisper-tanzania.ch>',
     to,
@@ -28,12 +28,11 @@ async function sendEmail(base44, provider, to, subject, body, replyTo) {
   if (provider === 'resend') {
     await sendViaResend(to, subject, body, replyTo);
   } else {
-    // Native Base44 SendEmail does not support reply-to; the contact email is included in the body instead.
     await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
   }
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const { contactName, contactEmail } = await req.json();
 
@@ -41,9 +40,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing contactName or contactEmail' }, { status: 400 });
     }
 
+    // Validate email format to prevent injection of arbitrary reply-to addresses
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contactEmail)) {
+      return Response.json({ error: 'Invalid email format' }, { status: 400 });
+    }
+
     const base44 = createClientFromRequest(req);
 
-    // Load notification settings as service role
     let settings = {};
     try {
       const settingsList = await base44.asServiceRole.entities.NotificationSettings.list();
@@ -54,15 +58,19 @@ Deno.serve(async (req) => {
 
     const isTestMode = !!settings.test_mode;
 
+    // Escape user-controlled values before inserting into HTML (prevents HTML injection in admin emails)
+    const safeName = escapeHtml(contactName);
+    const safeEmail = escapeHtml(contactEmail);
+
     const defaultTemplate = `<p>Hello,</p><p><strong>[CONTACT_NAME]</strong> (<a href="mailto:[CONTACT_EMAIL]">[CONTACT_EMAIL]</a>) has requested rates information via the online booking system.</p><p>Please reply to them directly.</p>`;
     const template = settings.template_rates_request || defaultTemplate;
-    const body = template
-      .replace(/\[CONTACT_NAME\]/g, contactName)
-      .replace(/\[CONTACT_EMAIL\]/g, contactEmail);
+    const emailBody = template
+      .replace(/\[CONTACT_NAME\]/g, safeName)
+      .replace(/\[CONTACT_EMAIL\]/g, safeEmail);
 
-    const subject = `Rate Request from ${contactName}`;
+    // Strip HTML from subject line — no markup should survive in email subjects
+    const subject = `Rate Request from ${stripHtml(contactName)}`;
 
-    // Collect recipients
     let recipients = [];
     (settings.site_configs || []).forEach((sc) => {
       (sc.admin_emails || []).forEach((email) => { if (email) recipients.push(email); });
@@ -77,18 +85,17 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: true });
     }
 
-    // Log each email attempt
     const logEmail = async (to, status, errorMessage = null) => {
       try {
         await base44.asServiceRole.entities.EmailLog.create({
           recipient: to,
           recipient_type: 'admin',
           subject,
-          body,
+          body: emailBody,
           booking_type: 'rates_request',
           status,
           error_message: errorMessage,
-          client_name: contactName,
+          client_name: stripHtml(contactName),
         });
       } catch (e) {
         console.warn('Could not log email:', e.message);
@@ -103,7 +110,7 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendEmail(base44, settings.email_provider || 'native', to, subject, body, contactEmail);
+        await sendEmail(base44, settings.email_provider || 'native', to, subject, emailBody, contactEmail);
         await logEmail(to, 'sent');
       } catch (err) {
         console.warn(`Failed to send email to ${to}:`, err.message);
@@ -114,7 +121,6 @@ Deno.serve(async (req) => {
     return Response.json({ success: true });
   } catch (error) {
     console.error('sendRatesRequest error:', error);
-    // Return success anyway so the user doesn't get a confusing error — email issues are logged
     return Response.json({ success: true, warning: error.message });
   }
-});
+}
