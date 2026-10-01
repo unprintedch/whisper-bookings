@@ -37,18 +37,17 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const reqBody = await req.json();
 
-    // --- Authorization: admin user (manual UI sends) OR automation secret (from onReservationChange) ---
+    // --- Authorization: any authenticated user (manual UI sends) OR service-role internal call (from onReservationChange) ---
     let isAuthorized = false;
     try {
-      const user = await base44.auth.me();
-      if (user && user.role === 'admin') isAuthorized = true;
+      await base44.auth.me();
+      isAuthorized = true;
     } catch {}
 
     if (!isAuthorized) {
-      const automationSecret = Deno.env.get('AUTOMATION_SECRET');
-      if (automationSecret && reqBody._automationSecret === automationSecret) {
-        isAuthorized = true;
-      }
+      try {
+        isAuthorized = await base44.auth.isAuthenticated();
+      } catch {}
     }
     if (!isAuthorized) {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });

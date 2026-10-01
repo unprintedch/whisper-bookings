@@ -36,12 +36,10 @@ export default async function(req) {
       return Response.json({ skipped: true, reason: 'Reservation not recently modified' });
     }
 
-    // Invoke the centralized sendBookingNotification function with automation secret
-    const automationSecret = Deno.env.get('AUTOMATION_SECRET');
+    // Invoke the centralized sendBookingNotification function (service-role call is authenticated)
     const result = await base44.asServiceRole.functions.invoke('sendBookingNotification', {
       bookingId: event.entity_id,
       bookingType,
-      _automationSecret: automationSecret,
     });
 
     return Response.json({ success: true, result });
