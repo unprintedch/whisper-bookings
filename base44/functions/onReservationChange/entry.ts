@@ -1,10 +1,24 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 
-// This function is called by an entity automation on Reservation create/update.
-// It sends admin notification emails automatically.
+// This function is called only by the "Reservation Email Notifications" workflow
+// on Reservation create/update. It sends admin notification emails automatically.
+// The workflow invokes it as its creator (an app admin), so any direct anonymous
+// call is rejected and visitors cannot trigger notification emails themselves.
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch {}
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const payload = await req.json();
 
     const { event } = payload;

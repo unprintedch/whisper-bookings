@@ -1,0 +1,50 @@
+{
+  "name": "PublicAccessAttempt",
+  "type": "object",
+  "properties": {
+    "ip": {
+      "type": "string",
+      "description": "Adresse IP du client (cl\u00e9 de limitation des tentatives)"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de tentatives de mot de passe \u00e9chou\u00e9es dans la fen\u00eatre courante"
+    },
+    "window_start": {
+      "type": "string",
+      "format": "date-time",
+      "description": "D\u00e9but de la fen\u00eatre de limitation"
+    },
+    "locked_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fin du blocage temporaire apr\u00e8s trop d'\u00e9checs"
+    }
+  },
+  "required": [
+    "ip"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -39,9 +39,15 @@ const getAppParams = () => {
 		storage.removeItem('base44_access_token');
 		storage.removeItem('token');
 	}
+	// The backend URL must never come from a URL parameter or localStorage: an
+	// attacker could poison it (?server_url=https://evil.com) and redirect the
+	// SDK's authenticated traffic — including the access token — to their own
+	// server. Purge any previously persisted value and use only the build-time
+	// setting.
+	storage.removeItem('base44_server_url');
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
-		serverUrl: getAppParamValue("server_url", { defaultValue: import.meta.env.VITE_BASE44_BACKEND_URL }),
+		serverUrl: import.meta.env.VITE_BASE44_BACKEND_URL,
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
 		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),

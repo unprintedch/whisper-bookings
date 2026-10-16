@@ -39,7 +39,8 @@ export default function HomePage() {
   const [hasAccess, setHasAccess] = useState(false);
   const [allowPublicBooking, setAllowPublicBooking] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [accessError, setAccessError] = useState(false);
 
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showMultiModal, setShowMultiModal] = useState(false);
@@ -72,46 +73,46 @@ export default function HomePage() {
       setIsPasswordProtected(accessResult.isPasswordProtected);
       setAllowPublicBooking(accessResult.allowPublicBooking);
 
-      if (isAuth || !accessResult.isPasswordProtected) {
+      if (isAuth || accessResult.hasAccess) {
         setHasAccess(true);
         shouldLoadData = true;
       } else {
-        const storedAccess = sessionStorage.getItem('publicPageAccess');
-        if (storedAccess === 'granted') {
-          setHasAccess(true);
-          shouldLoadData = true;
-        } else {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
 
       if (shouldLoadData) {
         loadData();
       }
     } catch (error) {
+      // Fail closed: if access cannot be verified, deny it. The gate must never
+      // be opened by client-side state or by an error.
       console.error('Error checking auth:', error);
       setIsAuthenticated(false);
-      setHasAccess(true);
-      loadData();
+      setHasAccess(false);
+      setIsPasswordProtected(true);
+      setAccessError(true);
+      setIsLoading(false);
     }
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setPasswordError(false);
+    setPasswordError('');
 
     try {
       const result = await verifyPublicAccess({ password: passwordInput });
       if (result.hasAccess) {
         setHasAccess(true);
-        sessionStorage.setItem('publicPageAccess', 'granted');
         loadData();
+      } else if (result.locked) {
+        const mins = Math.max(1, Math.ceil((result.retryAfterSeconds || 0) / 60));
+        setPasswordError(`Too many attempts. Please try again in ${mins} minute${mins > 1 ? 's' : ''}.`);
       } else {
-        setPasswordError(true);
+        setPasswordError('Incorrect password');
       }
     } catch (error) {
       console.error('Error verifying password:', error);
-      setPasswordError(true);
+      setPasswordError('Unable to verify access. Please try again.');
     }
   };
 
@@ -267,7 +268,11 @@ export default function HomePage() {
                 className="w-16 h-16 mx-auto mb-3" />
 
               <h1 className="text-2xl font-bold text-slate-800">Whisper B.</h1>
-              <p className="text-slate-600 mt-2">This page is password protected</p>
+              <p className="text-slate-600 mt-2">
+                {accessError
+                  ? 'Access could not be verified. Please try again later.'
+                  : 'This page is password protected'}
+              </p>
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -280,12 +285,12 @@ export default function HomePage() {
                   value={passwordInput}
                   onChange={(e) => {
                     setPasswordInput(e.target.value);
-                    setPasswordError(false);
+                    setPasswordError('');
                   }}
                   className="mt-1" />
 
                 {passwordError &&
-                <p className="text-sm text-red-600 mt-1">Incorrect password</p>
+                <p className="text-sm text-red-600 mt-1">{passwordError}</p>
                 }
               </div>
 
