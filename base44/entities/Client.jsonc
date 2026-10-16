@@ -65,6 +65,11 @@
           }
         },
         {
+          "user_condition": {
+            "data.custom_role": "full_access"
+          }
+        },
+        {
           "created_by_id": "{{user.id}}"
         },
         {
