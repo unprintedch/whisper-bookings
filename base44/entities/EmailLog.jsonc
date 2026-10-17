@@ -58,6 +58,10 @@
     "site_name": {
       "type": "string",
       "description": "Nom du site (d\u00e9normalis\u00e9 pour affichage)"
+    },
+    "requested_by_id": {
+      "type": "string",
+      "description": "ID de l'utilisateur ayant d\u00e9clench\u00e9 l'envoi (utilis\u00e9 pour la limitation de volume)"
     }
   },
   "required": [

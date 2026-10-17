@@ -5,13 +5,51 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 // Failed password attempts are rate-limited per IP to prevent brute-forcing.
 
 const MAX_ATTEMPTS = 5;
+const MAX_GLOBAL_ATTEMPTS = 50;   // cap independent of the client IP, defeats IP spoofing
+const GLOBAL_KEY = '__global__';
 const WINDOW_MS = 15 * 60 * 1000; // failed attempts are counted within 15 minutes
 const LOCK_MS = 15 * 60 * 1000;   // lockout duration once the limit is reached
 
+// Only headers set by the platform edge are trusted to identify a client.
+// x-forwarded-for is controlled by the caller: trusting it lets an attacker send a
+// different first entry on every request and get a fresh attempt counter each time.
 function getClientIp(req) {
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return req.headers.get('x-real-ip') || req.headers.get('cf-connecting-ip') || 'unknown';
+  return req.headers.get('cf-connecting-ip') || req.headers.get('x-real-ip') || null;
+}
+
+// Constant-time comparison so the password cannot be recovered from response timing.
+function timingSafeEqual(a, b) {
+  const aBytes = new TextEncoder().encode(String(a));
+  const bBytes = new TextEncoder().encode(String(b));
+  let diff = aBytes.length ^ bBytes.length;
+  const len = Math.max(aBytes.length, bBytes.length);
+  for (let i = 0; i < len; i++) {
+    diff |= (aBytes[i] || 0) ^ (bBytes[i] || 0);
+  }
+  return diff === 0;
+}
+
+// Next counter state for one rate-limit key, within the rolling window.
+function nextAttemptState(record, now, maxAttempts) {
+  const windowStartMs = record?.window_start ? new Date(record.window_start).getTime() : 0;
+  const withinWindow = windowStartMs > 0 && now - windowStartMs < WINDOW_MS;
+  const attempts = withinWindow ? (record?.attempts || 0) + 1 : 1;
+  const window_start = withinWindow ? record.window_start : new Date(now).toISOString();
+  const locked_until = attempts >= maxAttempts ? new Date(now + LOCK_MS).toISOString() : null;
+  return { attempts, window_start, locked_until };
+}
+
+async function saveAttempt(base44, record, key, state) {
+  if (!key) return;
+  if (record) {
+    await base44.asServiceRole.entities.PublicAccessAttempt.update(record.id, state);
+  } else {
+    await base44.asServiceRole.entities.PublicAccessAttempt.create({ ip: key, ...state });
+  }
+}
+
+function lockedUntilMs(record) {
+  return record?.locked_until ? new Date(record.locked_until).getTime() : 0;
 }
 
 export default async function(req) {
@@ -34,13 +72,17 @@ export default async function(req) {
     const ip = getClientIp(req);
     const now = Date.now();
 
-    const records = await base44.asServiceRole.entities.PublicAccessAttempt.filter({ ip });
-    const record = records[0] || null;
+    // Both the per-client counter and a global counter are checked, so spoofing or
+    // omitting the IP header no longer grants an unlimited number of attempts.
+    const keys = [GLOBAL_KEY, ...(ip ? [ip] : [])];
+    const records = await base44.asServiceRole.entities.PublicAccessAttempt.filter({ ip: { $in: keys } });
+    const record = ip ? records.find(r => r.ip === ip) || null : null;
+    const globalRecord = records.find(r => r.ip === GLOBAL_KEY) || null;
 
     // Temporarily locked out after too many failed attempts?
-    const lockedUntilMs = record?.locked_until ? new Date(record.locked_until).getTime() : 0;
-    if (lockedUntilMs > now) {
-      const retryAfterSeconds = Math.ceil((lockedUntilMs - now) / 1000);
+    const lockUntil = Math.max(lockedUntilMs(record), lockedUntilMs(globalRecord));
+    if (lockUntil > now) {
+      const retryAfterSeconds = Math.ceil((lockUntil - now) / 1000);
       return Response.json({
         isPasswordProtected,
         hasAccess: false,
@@ -56,42 +98,33 @@ export default async function(req) {
     }
 
     // Correct password: clear any recorded failures.
-    if (password === settings.access_password) {
-      if (record) {
-        await base44.asServiceRole.entities.PublicAccessAttempt.delete(record.id);
-      }
+    if (timingSafeEqual(password, settings.access_password)) {
+      await Promise.all(
+        [record, globalRecord]
+          .filter(Boolean)
+          .map(r => base44.asServiceRole.entities.PublicAccessAttempt.delete(r.id))
+      );
       return Response.json({ isPasswordProtected, hasAccess: true, allowPublicBooking });
     }
 
     // Failed attempt: count it within the rolling window and lock when exceeded.
-    const windowStartMs = record?.window_start ? new Date(record.window_start).getTime() : 0;
-    const withinWindow = windowStartMs > 0 && now - windowStartMs < WINDOW_MS;
-    const attempts = withinWindow ? (record.attempts || 0) + 1 : 1;
-    const windowStart = withinWindow ? record.window_start : new Date(now).toISOString();
-    const lockedUntil = attempts >= MAX_ATTEMPTS ? new Date(now + LOCK_MS).toISOString() : null;
+    const state = nextAttemptState(record, now, MAX_ATTEMPTS);
+    const globalState = nextAttemptState(globalRecord, now, MAX_GLOBAL_ATTEMPTS);
 
-    if (record) {
-      await base44.asServiceRole.entities.PublicAccessAttempt.update(record.id, {
-        attempts,
-        window_start: windowStart,
-        locked_until: lockedUntil,
-      });
-    } else {
-      await base44.asServiceRole.entities.PublicAccessAttempt.create({
-        ip,
-        attempts,
-        window_start: windowStart,
-        locked_until: lockedUntil,
-      });
-    }
+    await Promise.all([
+      saveAttempt(base44, record, ip, state),
+      saveAttempt(base44, globalRecord, GLOBAL_KEY, globalState),
+    ]);
+
+    const isLocked = !!state.locked_until || !!globalState.locked_until;
 
     return Response.json({
       isPasswordProtected,
       hasAccess: false,
       allowPublicBooking,
-      locked: !!lockedUntil,
-      remainingAttempts: Math.max(0, MAX_ATTEMPTS - attempts),
-      retryAfterSeconds: lockedUntil ? Math.ceil(LOCK_MS / 1000) : 0,
+      locked: isLocked,
+      remainingAttempts: Math.max(0, MAX_ATTEMPTS - state.attempts),
+      retryAfterSeconds: isLocked ? Math.ceil(LOCK_MS / 1000) : 0,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

@@ -1,6 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { escapeHtml, stripHtml } from "../../shared/escapeHtml.ts";
 
+// Maximum notification emails a non-admin caller may trigger per hour.
+const MAX_EMAILS_PER_HOUR = 30;
+
 async function sendViaResend(to, subject, html, replyTo) {
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   const payload = {
@@ -37,20 +40,37 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const reqBody = await req.json();
 
-    // --- Authorization: any authenticated user (manual UI sends) OR service-role internal call (from onReservationChange) ---
-    let isAuthorized = false;
+    // --- Authorization ---
+    // This endpoint can mail admins, agencies and clients, so it must not be usable
+    // without limits by any authenticated account. Admins are unrestricted, and so is
+    // the internal service-role call from onReservationChange (no user token). Any
+    // other authenticated caller is volume-capped per hour, so a low-privilege account
+    // can no longer generate unlimited notification emails.
+    let user = null;
     try {
-      await base44.auth.me();
-      isAuthorized = true;
+      user = await base44.auth.me();
     } catch {}
 
-    if (!isAuthorized) {
+    if (!user) {
+      let isServiceCall = false;
       try {
-        isAuthorized = await base44.auth.isAuthenticated();
+        isServiceCall = await base44.auth.isAuthenticated();
       } catch {}
-    }
-    if (!isAuthorized) {
-      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+      if (!isServiceCall) {
+        return Response.json({ error: 'Unauthorized' }, { status: 403 });
+      }
+    } else if (user.role !== 'admin') {
+      const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const recentEmails = await base44.asServiceRole.entities.EmailLog.count({
+        requested_by_id: user.id,
+        created_date: { $gte: hourAgo },
+      });
+      if (recentEmails >= MAX_EMAILS_PER_HOUR) {
+        return Response.json(
+          { error: 'Too many notification emails requested. Please try again later.' },
+          { status: 429 }
+        );
+      }
     }
 
     const {
@@ -235,6 +255,7 @@ export default async function(req) {
           error_message: errorMessage,
           client_name: client.name,
           site_name: siteName,
+          requested_by_id: user?.id || undefined,
         }).catch(logErr => console.warn('Failed to save email log:', logErr.message));
       })
     );
