@@ -1,12 +1,29 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { escapeHtml, stripHtml } from "../../shared/escapeHtml.ts";
 
-// This endpoint is intentionally public, so it is throttled per client and globally
-// to stop anonymous callers from flooding the admin inboxes.
+// This endpoint is intentionally public, so it only accepts calls coming from the app's
+// own pages and is throttled per client and globally to stop anonymous callers from
+// flooding the admin inboxes.
 const RATE_WINDOW_MS = 60 * 60 * 1000; // counts are kept over one hour
 const MAX_REQUESTS_PER_IP = 5;         // rates requests allowed per client per hour
 const MAX_REQUESTS_GLOBAL = 30;        // rates requests allowed overall per hour
 const RATE_KEY_PREFIX = 'rates:';
+
+// Hosts allowed to trigger a rates request. A script calling the URL directly sends
+// neither Origin nor Referer, so it is refused before any email is sent; a request
+// forged with a fake Origin remains possible, this only stops the casual case.
+const ALLOWED_HOSTS = ['whisper-tanzania.ch', 'base44.app', 'base44.com', 'localhost', '127.0.0.1'];
+
+function isFromAppPage(req) {
+  const origin = req.headers.get('origin') || req.headers.get('referer');
+  if (!origin) return false;
+  try {
+    const host = new URL(origin).hostname;
+    return ALLOWED_HOSTS.some(allowed => host === allowed || host.endsWith(`.${allowed}`));
+  } catch {
+    return false;
+  }
+}
 
 // Only the header set by the platform edge is trusted: x-forwarded-for and x-real-ip
 // are controlled by the caller and could be rotated to bypass the limit.
@@ -64,6 +81,11 @@ async function sendEmail(base44, provider, to, subject, body, replyTo) {
 
 export default async function(req) {
   try {
+    // The caller must be one of the app's own pages.
+    if (!isFromAppPage(req)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const { contactName, contactEmail } = await req.json();
 
     if (!contactName || !contactEmail) {
