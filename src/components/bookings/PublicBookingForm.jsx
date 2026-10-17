@@ -277,9 +277,16 @@ export default function PublicBookingForm({
       const urlParams = new URLSearchParams(window.location.search);
       const isTestMode = urlParams.get('base44_data_env') === 'dev';
       const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
-      const clients = await dbClient.entities.Client.list();
-      const found = clients.find(c => c.contact_email?.toLowerCase() === email.toLowerCase());
-      setExistingClient(found || null);
+      if (!(await dbClient.auth.isAuthenticated())) {
+        setExistingClient(null);
+        return;
+      }
+      const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const { items } = await dbClient.entities.Client.filter(
+        { contact_email: { $regex: `^${escapedEmail}$`, $options: 'i' } },
+        { limit: 1 }
+      );
+      setExistingClient(items[0] || null);
     } catch (e) {
       setExistingClient(null);
     }

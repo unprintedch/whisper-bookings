@@ -77,7 +77,7 @@ export default function HomePage() {
       setAllowPublicBooking(accessResult.allowPublicBooking);
       setAccessToken(accessResult.accessToken || null);
 
-      if (isAuth || accessResult.hasAccess) {
+      if (isAuth || (accessResult.canViewAvailability ?? accessResult.hasAccess)) {
         setHasAccess(true);
         shouldLoadData = true;
       } else {
@@ -105,7 +105,8 @@ export default function HomePage() {
 
     try {
       const result = await verifyPublicAccess({ password: passwordInput });
-      if (result.hasAccess) {
+      setAllowPublicBooking(result.allowPublicBooking === true);
+      if (result.canViewAvailability ?? result.hasAccess) {
         setAccessToken(result.accessToken || null);
         setHasAccess(true);
         loadData();
@@ -208,9 +209,8 @@ export default function HomePage() {
       // the password gate of this page alone cannot protect the write.
       await createPublicBooking({
         accessToken,
-        clientId: formData.existingClientId || undefined,
-        // The contact details always travel with the request: the backend only reuses an
-        // existing client file when they match the one on record.
+        clientId: isAuthenticated ? formData.existingClientId || undefined : undefined,
+        // Visitors always submit a new client; only authenticated users may reuse a file.
         client: {
           name: formData.contact_name,
           contact_email: formData.contact_email,
@@ -575,7 +575,7 @@ export default function HomePage() {
             sites={sites}
             bedConfigurations={bedConfigurations}
             reservations={reservations}
-            agencies={agencies}
+            agencies={isAuthenticated ? agencies : []}
             onSubmit={handleBookingSubmit}
             initialRanges={publicMultiRanges} />
 
@@ -602,7 +602,7 @@ export default function HomePage() {
         rooms={rooms}
         sites={sites}
         allBedConfigs={bedConfigurations}
-        agencies={agencies}
+        agencies={isAuthenticated ? agencies : []}
         onSuccess={({ clientName, count }) => {
           setSelectedSlots([]);
           setPublicMultiRanges([]);

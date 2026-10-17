@@ -22,30 +22,24 @@ function toCount(value) {
   return Number.isFinite(count) && count > 0 ? Math.min(Math.floor(count), 99) : 0;
 }
 
-// An identifier typed by the public form may be malformed: treat any lookup failure as
-// "not found" so a bad value is ignored instead of breaking the request.
-async function findById(entity, id) {
-  try {
-    return (await entity.filter({ id }))[0] || null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
     const { accessToken, clientId, client, reservations } = body || {};
 
-    // --- Access check ---
-    let isAppUser = false;
+    // Authentication is not ownership: retain the verified user for all later checks.
+    let appUser = null;
     if (req.headers.get('authorization')) {
       try {
-        isAppUser = !!(await base44.auth.me());
+        appUser = await base44.auth.me();
       } catch {
-        isAppUser = false;
+        appUser = null;
       }
+    }
+    const isAppUser = !!appUser;
+    if (isAppUser && !['admin', 'user'].includes(appUser.role)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     if (!isAppUser) {
@@ -54,7 +48,12 @@ export default async function(req) {
 
       // Public booking switched off in the settings page: the switch must stop the write
       // here as well, not only hide the form.
-      if (!settings.allow_public_booking) {
+      if (settings.allow_public_booking !== true) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      // Neither a shared password nor knowledge of a contact email proves ownership.
+      // Visitors may create a new request, never select an existing client file.
+      if (clientId !== undefined && clientId !== null && clientId !== '') {
         return Response.json({ error: 'Forbidden' }, { status: 403 });
       }
 
