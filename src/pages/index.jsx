@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { base44 } from "@/api/base44Client";
 import { sendRatesRequest } from "@/functions/sendRatesRequest";
+import { PUBLIC_FORM_TOKEN } from "@/lib/publicFormToken";
 import { verifyPublicAccess } from "@/functions/verifyPublicAccess";
 import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
@@ -176,7 +177,11 @@ export default function HomePage() {
     e.preventDefault();
     setRatesSending(true);
     try {
-      await sendRatesRequest({ contactName: ratesName, contactEmail: ratesEmail });
+      await sendRatesRequest({
+        contactName: ratesName,
+        contactEmail: ratesEmail,
+        formToken: PUBLIC_FORM_TOKEN,
+      });
       setRatesSent(true);
     } catch (err) {
       console.error('Rate request error:', err);
