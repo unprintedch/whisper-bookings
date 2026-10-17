@@ -161,7 +161,9 @@ export default async function(req) {
 
     return Response.json({ success: true });
   } catch (error) {
+    // Log the details server-side only: this endpoint is public and its response
+    // must never carry internal error text back to an anonymous caller.
     console.error('sendRatesRequest error:', error);
-    return Response.json({ success: true, warning: error.message });
+    return Response.json({ success: true });
   }
 }

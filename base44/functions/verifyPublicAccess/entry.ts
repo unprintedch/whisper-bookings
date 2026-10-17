@@ -133,6 +133,9 @@ export default async function(req) {
       retryAfterSeconds: state.locked_until ? Math.ceil(LOCK_MS / 1000) : 0,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Log the details server-side only: this endpoint is public and its response
+    // must never carry internal error text back to an anonymous caller.
+    console.error('verifyPublicAccess error:', error);
+    return Response.json({ error: 'Unable to verify access' }, { status: 500 });
   }
 }
