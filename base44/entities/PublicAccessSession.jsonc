@@ -1,0 +1,41 @@
+{
+  "name": "PublicAccessSession",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Jeton de session remis par verifyPublicAccess apr\u00e8s saisie correcte du mot de passe public"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date d'expiration du jeton"
+    }
+  },
+  "required": [
+    "token",
+    "expires_at"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

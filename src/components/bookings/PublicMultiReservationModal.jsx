@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
+import { createPublicBooking } from "@/functions/createPublicBooking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ export default function PublicMultiReservationModal({
   sites = [],
   allBedConfigs = [],
   agencies = [],
+  accessToken = null,
   onSuccess,
 }) {
   // Client identity
@@ -146,37 +148,34 @@ export default function PublicMultiReservationModal({
 
     setIsSubmitting(true);
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isTestMode = urlParams.get('base44_data_env') === 'dev';
-      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
-
-      const newClient = await dbClient.entities.Client.create({
-        name: clientName,
-        agency_id: agencyId || undefined,
-        agency_contact_id: agencyContactId !== '' ? agencyContactId : undefined,
-        contact_name: contactName || undefined,
-        contact_email: contactEmail || undefined,
-        contact_phone: contactPhone || undefined,
+      // The booking is created by the backend, which re-checks the public access itself:
+      // the password gate of the page alone cannot protect the write.
+      await createPublicBooking({
+        accessToken,
+        client: {
+          name: clientName,
+          agency_id: agencyId || undefined,
+          agency_contact_id: agencyContactId !== '' ? agencyContactId : undefined,
+          contact_name: contactName || undefined,
+          contact_email: contactEmail || undefined,
+          contact_phone: contactPhone || undefined,
+        },
+        reservations: mergedRanges.map((range) => {
+          const checkinStr = typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd');
+          const details = perRoomDetails[`${range.roomId}_${checkinStr}`] || {};
+          return {
+            room_id: range.roomId,
+            date_checkin: checkinStr,
+            date_checkout: typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd'),
+            bed_configuration: details.bed_configuration || '',
+            adults_count: parseInt(details.adults_count, 10) || 0,
+            children_count: parseInt(details.children_count, 10) || 0,
+            infants_count: parseInt(details.infants_count, 10) || 0,
+            group_pax: groupPax ? parseInt(groupPax, 10) : undefined,
+            comment: comment || '',
+          };
+        }),
       });
-
-      for (const range of mergedRanges) {
-        const checkinStr = typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd');
-        const key = `${range.roomId}_${checkinStr}`;
-        const details = perRoomDetails[key] || {};
-        await dbClient.entities.Reservation.create({
-          client_id: newClient.id,
-          room_id: range.roomId,
-          date_checkin: checkinStr,
-          date_checkout: typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd'),
-          bed_configuration: details.bed_configuration || '',
-          adults_count: parseInt(details.adults_count, 10) || 0,
-          children_count: parseInt(details.children_count, 10) || 0,
-          infants_count: parseInt(details.infants_count, 10) || 0,
-          group_pax: groupPax ? parseInt(groupPax, 10) : undefined,
-          comment: comment || '',
-          status: 'REQUEST',
-        });
-      }
 
       onSuccess({ clientName, count: mergedRanges.length });
       onClose();

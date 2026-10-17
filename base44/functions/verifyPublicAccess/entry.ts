@@ -1,8 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 
-// Verifies public page access without ever exposing access_password to the client.
-// Returns only non-sensitive booleans: isPasswordProtected, hasAccess, allowPublicBooking.
-// Failed password attempts are rate-limited per client to prevent brute-forcing.
+// Verifies public page access without ever exposing the password to the client: only a
+// salted hash is stored, and the comparison happens here.
+// Returns isPasswordProtected, hasAccess, allowPublicBooking and, on success, the session
+// token the public booking endpoint requires. Failed password attempts are rate-limited
+// per client to prevent brute-forcing.
 
 const MAX_ATTEMPTS = 5;
 const MAX_GLOBAL_ATTEMPTS = 50;   // failed attempts overall before responses are slowed down
@@ -28,6 +30,58 @@ function timingSafeEqual(a, b) {
     diff |= (aBytes[i] || 0) ^ (bBytes[i] || 0);
   }
   return diff === 0;
+}
+
+// The password is never stored in clear: only a salted SHA-256 hash is kept, so neither a
+// database leak nor a log record hands out the shared password. The same algorithm runs
+// in the admin page (src/lib/passwordHash.js) — change both together.
+const SESSION_MS = 12 * 60 * 60 * 1000; // how long a public access token stays valid
+
+function randomHex(byteCount) {
+  const bytes = crypto.getRandomValues(new Uint8Array(byteCount));
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPassword(password, salt) {
+  const data = new TextEncoder().encode(`${salt}:${password}`);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Compares the submitted password to the stored hash. A record saved before hashing
+// existed still holds a clear-text password: it is hashed and erased on first use.
+async function passwordMatches(base44, settings, password) {
+  let hash = settings.access_password_hash;
+  let salt = settings.access_password_salt;
+
+  if (!hash && settings.access_password) {
+    salt = randomHex(16);
+    hash = await hashPassword(settings.access_password, salt);
+    await base44.asServiceRole.entities.PublicAccessSettings.update(settings.id, {
+      access_password_hash: hash,
+      access_password_salt: salt,
+      access_password: '',
+    });
+  }
+
+  if (!hash || !salt) return false;
+  return timingSafeEqual(await hashPassword(password, salt), hash);
+}
+
+// Hands the visitor a token that proves the password was entered. The public booking
+// endpoint requires it, so the page's password gate is enforced by the backend too.
+async function createSession(base44) {
+  const token = randomHex(32);
+  const now = Date.now();
+  await base44.asServiceRole.entities.PublicAccessSession.create({
+    token,
+    expires_at: new Date(now + SESSION_MS).toISOString(),
+  });
+  // Drop the tokens that have expired so the table does not grow forever.
+  await base44.asServiceRole.entities.PublicAccessSession.deleteMany({
+    expires_at: { $lt: new Date(now).toISOString() },
+  });
+  return token;
 }
 
 // Next counter state for one rate-limit key, within the rolling window.
@@ -67,7 +121,7 @@ export default async function(req) {
 
     // No password configured: nothing to verify or brute-force.
     if (!isPasswordProtected) {
-      return Response.json({ isPasswordProtected, hasAccess: true, allowPublicBooking });
+      return Response.json({ isPasswordProtected, hasAccess: true, allowPublicBooking, accessToken: null });
     }
 
     const ip = getClientIp(req);
@@ -99,14 +153,15 @@ export default async function(req) {
       return Response.json({ isPasswordProtected, hasAccess: false, allowPublicBooking });
     }
 
-    // Correct password: clear any recorded failures.
-    if (timingSafeEqual(password, settings.access_password)) {
+    // Correct password: clear any recorded failures and open a session.
+    if (await passwordMatches(base44, settings, password)) {
       await Promise.all(
         [record, globalRecord]
           .filter(Boolean)
           .map(r => base44.asServiceRole.entities.PublicAccessAttempt.delete(r.id))
       );
-      return Response.json({ isPasswordProtected, hasAccess: true, allowPublicBooking });
+      const accessToken = await createSession(base44);
+      return Response.json({ isPasswordProtected, hasAccess: true, allowPublicBooking, accessToken });
     }
 
     // Failed attempt: count it within the rolling window and lock when exceeded.

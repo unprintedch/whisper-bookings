@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { base44 } from "@/api/base44Client";
+import { generateSalt, hashPassword } from "@/lib/passwordHash";
 import { Shield, Check } from "lucide-react";
 
 export default function PublicAccessSettingsPage() {
@@ -13,6 +14,9 @@ export default function PublicAccessSettingsPage() {
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
   const [allowPublicBooking, setAllowPublicBooking] = useState(false);
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [hasExistingPassword, setHasExistingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +34,10 @@ export default function PublicAccessSettingsPage() {
         setSettings(existingSettings);
         setIsPasswordProtected(existingSettings.is_password_protected || false);
         setAllowPublicBooking(existingSettings.allow_public_booking || false);
-        setPassword(existingSettings.access_password || '');
+        // The stored password is only ever a hash: it is never read back into the form.
+        setHasExistingPassword(!!(existingSettings.access_password_hash || existingSettings.access_password));
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -41,12 +48,31 @@ export default function PublicAccessSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     setSaveSuccess(false);
+    setPasswordError('');
+
     try {
       const data = {
         is_password_protected: isPasswordProtected,
-        access_password: password,
         allow_public_booking: allowPublicBooking
       };
+
+      // The password is hashed here, so the clear value is never stored. An empty field
+      // keeps the password already in place.
+      if (password) {
+        if (password !== confirmPassword) {
+          setPasswordError('The two passwords do not match.');
+          setIsSaving(false);
+          return;
+        }
+        const salt = generateSalt();
+        data.access_password_hash = await hashPassword(password, salt);
+        data.access_password_salt = salt;
+        data.access_password = '';
+      } else if (isPasswordProtected && !hasExistingPassword) {
+        setPasswordError('Enter a password to protect the public page.');
+        setIsSaving(false);
+        return;
+      }
 
       if (settings) {
         await base44.entities.PublicAccessSettings.update(settings.id, data);
@@ -54,6 +80,8 @@ export default function PublicAccessSettingsPage() {
         await base44.entities.PublicAccessSettings.create(data);
       }
 
+      setPassword('');
+      setConfirmPassword('');
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       await loadSettings();
@@ -111,18 +139,38 @@ export default function PublicAccessSettingsPage() {
           </div>
 
           {isPasswordProtected && (
-            <div className="space-y-2 pt-4 border-t">
-              <Label htmlFor="access-password">Access Password</Label>
-              <Input
-                id="access-password"
-                type="text"
-                placeholder="Enter password for public access"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="max-w-md"
-              />
+            <div className="space-y-4 pt-4 border-t">
+              <div className="space-y-2">
+                <Label htmlFor="access-password">
+                  {hasExistingPassword ? 'Change Access Password' : 'Access Password'}
+                </Label>
+                <Input
+                  id="access-password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder={hasExistingPassword ? 'Leave empty to keep the current password' : 'Enter password for public access'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="max-w-md"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="access-password-confirm">Confirm Password</Label>
+                <Input
+                  id="access-password-confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="Repeat the new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="max-w-md"
+                />
+              </div>
+              {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
               <p className="text-xs text-slate-500">
-                This password will be required for non-authenticated users to access the public availability page
+                {hasExistingPassword
+                  ? 'A password is already set. It is stored as a hash and is never displayed.'
+                  : 'This password will be required for non-authenticated users to access the public availability page'}
               </p>
             </div>
           )}
@@ -155,7 +203,7 @@ export default function PublicAccessSettingsPage() {
           <div className="flex justify-end pt-4">
             <Button
               onClick={handleSave}
-              disabled={isSaving || (isPasswordProtected && !password)}
+              disabled={isSaving || (isPasswordProtected && !hasExistingPassword && !password)}
               className="bg-yellow-700 hover:bg-yellow-800"
             >
               {isSaving ? 'Saving...' : 'Save Settings'}

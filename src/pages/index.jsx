@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { base44 } from "@/api/base44Client";
 import { sendRatesRequest } from "@/functions/sendRatesRequest";
+import { createPublicBooking } from "@/functions/createPublicBooking";
 import { PUBLIC_FORM_TOKEN } from "@/lib/publicFormToken";
 import { verifyPublicAccess } from "@/functions/verifyPublicAccess";
 import { createPageUrl } from "@/utils";
@@ -38,6 +39,7 @@ export default function HomePage() {
 
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
   const [allowPublicBooking, setAllowPublicBooking] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -73,6 +75,7 @@ export default function HomePage() {
       const accessResult = await verifyPublicAccess({});
       setIsPasswordProtected(accessResult.isPasswordProtected);
       setAllowPublicBooking(accessResult.allowPublicBooking);
+      setAccessToken(accessResult.accessToken || null);
 
       if (isAuth || accessResult.hasAccess) {
         setHasAccess(true);
@@ -103,6 +106,7 @@ export default function HomePage() {
     try {
       const result = await verifyPublicAccess({ password: passwordInput });
       if (result.hasAccess) {
+        setAccessToken(result.accessToken || null);
         setHasAccess(true);
         loadData();
       } else if (result.locked) {
@@ -196,28 +200,22 @@ export default function HomePage() {
 
   const handleBookingSubmit = async (formData) => {
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isTestMode = urlParams.get('base44_data_env') === 'dev';
-      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
-
-      let clientId = formData.existingClientId;
-      if (!clientId) {
-        const newClient = await dbClient.entities.Client.create({
-          name: formData.contact_name,
-          contact_email: formData.contact_email,
-          contact_phone: formData.contact_phone,
-          agency_id: formData.agency_id || undefined
-        });
-        clientId = newClient.id;
-      }
-
       const rangesToBook = publicMultiRanges.length > 0 ?
       publicMultiRanges :
       [{ roomId: formData.room_id, checkin: formData.date_checkin, checkout: formData.date_checkout }];
 
-      for (const range of rangesToBook) {
-        await dbClient.entities.Reservation.create({
-          client_id: clientId,
+      // The booking is created by the backend, which re-checks the public access itself:
+      // the password gate of this page alone cannot protect the write.
+      await createPublicBooking({
+        accessToken,
+        clientId: formData.existingClientId || undefined,
+        client: formData.existingClientId ? undefined : {
+          name: formData.contact_name,
+          contact_email: formData.contact_email,
+          contact_phone: formData.contact_phone,
+          agency_id: formData.agency_id || undefined
+        },
+        reservations: rangesToBook.map((range) => ({
           room_id: range.roomId,
           date_checkin: typeof range.checkin === 'string' ? range.checkin : format(range.checkin, 'yyyy-MM-dd'),
           date_checkout: typeof range.checkout === 'string' ? range.checkout : format(range.checkout, 'yyyy-MM-dd'),
@@ -226,10 +224,9 @@ export default function HomePage() {
           children_count: formData.children_count,
           infants_count: formData.infants_count,
           group_pax: formData.group_pax || undefined,
-          comment: formData.comment || '',
-          status: 'REQUEST'
-        });
-      }
+          comment: formData.comment || ''
+        }))
+      });
 
       setSelectedSlots([]);
       setPublicMultiRanges([]);
@@ -595,6 +592,7 @@ export default function HomePage() {
         isOpen={showMultiModal}
         onClose={() => {setShowMultiModal(false);setPublicMultiRanges([]);}}
         mergedRanges={publicMultiRanges}
+        accessToken={accessToken}
         rooms={rooms}
         sites={sites}
         allBedConfigs={bedConfigurations}
