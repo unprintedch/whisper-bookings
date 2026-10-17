@@ -1,6 +1,36 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { escapeHtml, stripHtml } from "../../shared/escapeHtml.ts";
 
+// This endpoint is intentionally public, so it is throttled per client and globally
+// to stop anonymous callers from flooding the admin inboxes.
+const RATE_WINDOW_MS = 60 * 60 * 1000; // counts are kept over one hour
+const MAX_REQUESTS_PER_IP = 5;         // rates requests allowed per client per hour
+const MAX_REQUESTS_GLOBAL = 30;        // rates requests allowed overall per hour
+const RATE_KEY_PREFIX = 'rates:';
+
+// Only the header set by the platform edge is trusted: x-forwarded-for and x-real-ip
+// are controlled by the caller and could be rotated to bypass the limit.
+function getClientIp(req) {
+  return req.headers.get('cf-connecting-ip') || null;
+}
+
+// Increments the hourly counter for one key; returns false when the limit is reached.
+async function countRequest(base44, key, max, now) {
+  const records = await base44.asServiceRole.entities.PublicAccessAttempt.filter({ ip: key });
+  const record = records[0] || null;
+  const windowStartMs = record?.window_start ? new Date(record.window_start).getTime() : 0;
+  const withinWindow = windowStartMs > 0 && now - windowStartMs < RATE_WINDOW_MS;
+  const attempts = withinWindow ? (record?.attempts || 0) + 1 : 1;
+  if (attempts > max) return false;
+  const window_start = withinWindow ? record.window_start : new Date(now).toISOString();
+  if (record) {
+    await base44.asServiceRole.entities.PublicAccessAttempt.update(record.id, { attempts, window_start });
+  } else {
+    await base44.asServiceRole.entities.PublicAccessAttempt.create({ ip: key, attempts, window_start });
+  }
+  return true;
+}
+
 async function sendViaResend(to, subject, html, replyTo) {
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   const payload = {
@@ -47,6 +77,17 @@ export default async function(req) {
     }
 
     const base44 = createClientFromRequest(req);
+
+    // Throttle before doing any work. The per-client counter is checked first so a
+    // blocked caller cannot consume the shared quota.
+    const now = Date.now();
+    const ip = getClientIp(req);
+    if (ip && !(await countRequest(base44, `${RATE_KEY_PREFIX}${ip}`, MAX_REQUESTS_PER_IP, now))) {
+      return Response.json({ error: 'Too many rate requests. Please try again later.' }, { status: 429 });
+    }
+    if (!(await countRequest(base44, `${RATE_KEY_PREFIX}global`, MAX_REQUESTS_GLOBAL, now))) {
+      return Response.json({ error: 'Too many rate requests. Please try again later.' }, { status: 429 });
+    }
 
     let settings = {};
     try {

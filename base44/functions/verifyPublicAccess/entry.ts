@@ -2,19 +2,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 
 // Verifies public page access without ever exposing access_password to the client.
 // Returns only non-sensitive booleans: isPasswordProtected, hasAccess, allowPublicBooking.
-// Failed password attempts are rate-limited per IP to prevent brute-forcing.
+// Failed password attempts are rate-limited per client to prevent brute-forcing.
 
 const MAX_ATTEMPTS = 5;
-const MAX_GLOBAL_ATTEMPTS = 50;   // cap independent of the client IP, defeats IP spoofing
+const MAX_GLOBAL_ATTEMPTS = 50;   // failed attempts overall before responses are slowed down
+const GLOBAL_DELAY_MS = 2000;     // slowdown applied above that threshold (never a lock)
 const GLOBAL_KEY = '__global__';
 const WINDOW_MS = 15 * 60 * 1000; // failed attempts are counted within 15 minutes
 const LOCK_MS = 15 * 60 * 1000;   // lockout duration once the limit is reached
 
-// Only headers set by the platform edge are trusted to identify a client.
-// x-forwarded-for is controlled by the caller: trusting it lets an attacker send a
-// different first entry on every request and get a fresh attempt counter each time.
+// Only the header set by the platform edge is trusted to identify a client.
+// x-forwarded-for and x-real-ip are controlled by the caller: trusting them lets an
+// attacker send a different value on every request and get a fresh attempt counter.
 function getClientIp(req) {
-  return req.headers.get('cf-connecting-ip') || req.headers.get('x-real-ip') || null;
+  return req.headers.get('cf-connecting-ip') || null;
 }
 
 // Constant-time comparison so the password cannot be recovered from response timing.
@@ -72,15 +73,16 @@ export default async function(req) {
     const ip = getClientIp(req);
     const now = Date.now();
 
-    // Both the per-client counter and a global counter are checked, so spoofing or
-    // omitting the IP header no longer grants an unlimited number of attempts.
+    // Only the per-client counter can lock an attempt. A global lock would let an
+    // anonymous visitor take the public booking page down for every legitimate guest,
+    // so the global counter is only ever used to slow responses down.
     const keys = [GLOBAL_KEY, ...(ip ? [ip] : [])];
     const records = await base44.asServiceRole.entities.PublicAccessAttempt.filter({ ip: { $in: keys } });
     const record = ip ? records.find(r => r.ip === ip) || null : null;
     const globalRecord = records.find(r => r.ip === GLOBAL_KEY) || null;
 
-    // Temporarily locked out after too many failed attempts?
-    const lockUntil = Math.max(lockedUntilMs(record), lockedUntilMs(globalRecord));
+    // Temporarily locked out after too many failed attempts from this client?
+    const lockUntil = lockedUntilMs(record);
     if (lockUntil > now) {
       const retryAfterSeconds = Math.ceil((lockUntil - now) / 1000);
       return Response.json({
@@ -116,15 +118,19 @@ export default async function(req) {
       saveAttempt(base44, globalRecord, GLOBAL_KEY, globalState),
     ]);
 
-    const isLocked = !!state.locked_until || !!globalState.locked_until;
+    // Past the global threshold, slow anonymous attempts down instead of blocking
+    // everyone: automated guessing becomes expensive, legitimate guests are unaffected.
+    if (globalState.attempts >= MAX_GLOBAL_ATTEMPTS) {
+      await new Promise(resolve => setTimeout(resolve, GLOBAL_DELAY_MS));
+    }
 
     return Response.json({
       isPasswordProtected,
       hasAccess: false,
       allowPublicBooking,
-      locked: isLocked,
+      locked: !!state.locked_until,
       remainingAttempts: Math.max(0, MAX_ATTEMPTS - state.attempts),
-      retryAfterSeconds: isLocked ? Math.ceil(LOCK_MS / 1000) : 0,
+      retryAfterSeconds: state.locked_until ? Math.ceil(LOCK_MS / 1000) : 0,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
