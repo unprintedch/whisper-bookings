@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { sendBookingNotifications } from "../../shared/bookingNotifications.ts";
 
 // This function is called only by the "Reservation Email Notifications" workflow
 // on Reservation create/update. It sends admin notification emails automatically.
@@ -50,8 +51,10 @@ export default async function(req) {
       return Response.json({ skipped: true, reason: 'Reservation not recently modified' });
     }
 
-    // Invoke the centralized sendBookingNotification function (service-role call is authenticated)
-    const result = await base44.asServiceRole.functions.invoke('sendBookingNotification', {
+    // Build and send the notifications in-process through the shared module: the
+    // workflow already runs server-side, so no public HTTP entry point is involved.
+    const result = await sendBookingNotifications(base44, {
+      dataClient: base44.asServiceRole,
       bookingId: event.entity_id,
       bookingType,
     });
