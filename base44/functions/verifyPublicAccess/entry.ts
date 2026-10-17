@@ -32,9 +32,12 @@ function timingSafeEqual(a, b) {
   return diff === 0;
 }
 
-// The password is never stored in clear: only a salted SHA-256 hash is kept, so neither a
-// database leak nor a log record hands out the shared password. The same algorithm runs
+// The password is never stored in clear: only a slow, salted derivation of it is kept, so
+// neither a database leak nor a log record hands out the shared password. A plain hash is
+// not enough for that: PBKDF2 with 100 000 iterations is used, and the same algorithm runs
 // in the admin page (src/lib/passwordHash.js) — change both together.
+const PBKDF2_ITERATIONS = 100000;
+const PBKDF2_PREFIX = 'pbkdf2';
 const SESSION_MS = 12 * 60 * 60 * 1000; // how long a public access token stays valid
 
 function randomHex(byteCount) {
@@ -42,30 +45,77 @@ function randomHex(byteCount) {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+function toHex(buffer) {
+  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function pbkdf2Hex(password, salt, iterations) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: encoder.encode(salt), iterations, hash: 'SHA-256' },
+    key,
+    256,
+  );
+  return toHex(bits);
+}
+
+// Stored form: "pbkdf2$<iterations>$<hash>".
 async function hashPassword(password, salt) {
-  const data = new TextEncoder().encode(`${salt}:${password}`);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${PBKDF2_PREFIX}$${PBKDF2_ITERATIONS}$${await pbkdf2Hex(password, salt, PBKDF2_ITERATIONS)}`;
+}
+
+// A hash written before the slow derivation existed is a bare SHA-256 digest: it is still
+// accepted so nobody is locked out, and replaced on the next correct password.
+function parseStoredHash(stored) {
+  const parts = String(stored || '').split('$');
+  if (parts.length === 3 && parts[0] === PBKDF2_PREFIX) {
+    const iterations = parseInt(parts[1], 10);
+    if (Number.isFinite(iterations) && iterations > 0) {
+      return { iterations, hash: parts[2] };
+    }
+  }
+  return { iterations: 0, hash: String(stored || '') };
+}
+
+async function legacySha256Hex(password, salt) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${password}`));
+  return toHex(digest);
 }
 
 // Compares the submitted password to the stored hash. A record saved before hashing
 // existed still holds a clear-text password: it is hashed and erased on first use.
 async function passwordMatches(base44, settings, password) {
-  let hash = settings.access_password_hash;
+  let stored = settings.access_password_hash;
   let salt = settings.access_password_salt;
 
-  if (!hash && settings.access_password) {
+  if (!stored && settings.access_password) {
     salt = randomHex(16);
-    hash = await hashPassword(settings.access_password, salt);
+    stored = await hashPassword(settings.access_password, salt);
     await base44.asServiceRole.entities.PublicAccessSettings.update(settings.id, {
-      access_password_hash: hash,
+      access_password_hash: stored,
       access_password_salt: salt,
       access_password: '',
     });
   }
 
-  if (!hash || !salt) return false;
-  return timingSafeEqual(await hashPassword(password, salt), hash);
+  if (!stored || !salt) return false;
+
+  const parsed = parseStoredHash(stored);
+  const candidate = parsed.iterations
+    ? await pbkdf2Hex(password, salt, parsed.iterations)
+    : await legacySha256Hex(password, salt);
+  if (!timingSafeEqual(candidate, parsed.hash)) return false;
+
+  if (!parsed.iterations) {
+    // Old digest: upgrade it now that the password is known, without asking the user to
+    // enter anything again.
+    await base44.asServiceRole.entities.PublicAccessSettings.update(settings.id, {
+      access_password_hash: await hashPassword(password, salt),
+    });
+  }
+
+  return true;
 }
 
 // Hands the visitor a token that proves the password was entered. The public booking

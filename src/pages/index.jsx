@@ -209,7 +209,9 @@ export default function HomePage() {
       await createPublicBooking({
         accessToken,
         clientId: formData.existingClientId || undefined,
-        client: formData.existingClientId ? undefined : {
+        // The contact details always travel with the request: the backend only reuses an
+        // existing client file when they match the one on record.
+        client: {
           name: formData.contact_name,
           contact_email: formData.contact_email,
           contact_phone: formData.contact_phone,
@@ -383,7 +385,11 @@ export default function HomePage() {
             }
           </div>
           <p className="text-xl text-slate-600">Online availability for Whisper Tarangire and Whisper Serengeti.</p>
-          <p className="text-base text-slate-500 mt-2">You are welcome to submit a single request for consecutive or non-consecutive nights, whether for one camp or for both. Our reservations team will respond within 24 hours to confirm availability and will provide a proforma invoice by email.</p>
+          {allowPublicBooking ?
+          <p className="text-base text-slate-500 mt-2">You are welcome to submit a single request for consecutive or non-consecutive nights, whether for one camp or for both. Our reservations team will respond within 24 hours to confirm availability and will provide a proforma invoice by email.</p> :
+
+          <p className="text-base text-slate-500 mt-2">Online booking requests are currently closed. Please contact our reservations team directly for availability.</p>
+          }
         </div>
 
         <Card className="max-w-7xl mx-auto border border-slate-200 bg-white/90 backdrop-blur-sm">
@@ -515,7 +521,7 @@ export default function HomePage() {
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
               highlightDate={currentDate}
               isLoading={isLoading}
-              onSlotToggle={hasAccess ? handleSlotToggle : null}
+              onSlotToggle={hasAccess && allowPublicBooking ? handleSlotToggle : null}
               selectedSlots={selectedSlots}
               onBookingEdit={null}
               onRoomEdit={null}

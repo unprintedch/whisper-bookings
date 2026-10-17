@@ -4,11 +4,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 // page only lives in the browser, so it cannot protect a write that anyone could perform
 // directly: this endpoint checks the access itself before creating anything. A visitor
 // must present the session token issued by verifyPublicAccess after entering the
-// password; staff members are recognised by their signed-in user token.
+// password; staff members are recognised by their signed-in user token. The public
+// channel can also be closed from the settings page, which is honoured here too.
 
 const MAX_RESERVATIONS = 20;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const CLIENT_FIELDS = ['agency_id', 'agency_contact_id', 'contact_name', 'contact_email', 'contact_phone'];
+const CLIENT_FIELDS = ['contact_name', 'contact_email', 'contact_phone'];
 
 function cleanText(value, maxLength) {
   if (typeof value !== 'string') return undefined;
@@ -19,6 +20,16 @@ function cleanText(value, maxLength) {
 function toCount(value) {
   const count = Number(value);
   return Number.isFinite(count) && count > 0 ? Math.min(Math.floor(count), 99) : 0;
+}
+
+// An identifier typed by the public form may be malformed: treat any lookup failure as
+// "not found" so a bad value is ignored instead of breaking the request.
+async function findById(entity, id) {
+  try {
+    return (await entity.filter({ id }))[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 export default async function(req) {
@@ -40,6 +51,12 @@ export default async function(req) {
     if (!isAppUser) {
       const settingsList = await base44.asServiceRole.entities.PublicAccessSettings.list();
       const settings = settingsList[0] || {};
+
+      // Public booking switched off in the settings page: the switch must stop the write
+      // here as well, not only hide the form.
+      if (!settings.allow_public_booking) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
       if (settings.is_password_protected) {
         const token = cleanText(accessToken, 128);
@@ -82,7 +99,22 @@ export default async function(req) {
     }
 
     // --- Client ---
-    let targetClientId = cleanText(clientId, 64);
+    // Identifiers sent by the public form are never trusted as-is: the file of an existing
+    // client is only reused by a caller who proves it is theirs (the contact email on the
+    // request matches the one on record), and an agency is only attached when it exists.
+    const contactEmail = cleanText(client?.contact_email, 200) || '';
+    const requestedClientId = cleanText(clientId, 64);
+    let targetClientId = null;
+
+    if (requestedClientId) {
+      const found = await findById(base44.asServiceRole.entities.Client, requestedClientId);
+      const ownsFile = !!found && !!contactEmail &&
+        (found.contact_email || '').trim().toLowerCase() === contactEmail.toLowerCase();
+      if (found && (isAppUser || ownsFile)) {
+        targetClientId = found.id;
+      }
+    }
+
     if (!targetClientId) {
       const name = cleanText(client?.name, 200);
       if (!name) {
@@ -93,6 +125,19 @@ export default async function(req) {
         const value = cleanText(client?.[field], 200);
         if (value) clientData[field] = value;
       }
+
+      const agencyId = cleanText(client?.agency_id, 64);
+      if (agencyId) {
+        const agency = await findById(base44.asServiceRole.entities.Agency, agencyId);
+        if (agency && agency.is_active !== false) {
+          clientData.agency_id = agency.id;
+          const contactIndex = Number(client?.agency_contact_id);
+          if (Number.isInteger(contactIndex) && contactIndex >= 0 && contactIndex < (agency.contacts || []).length) {
+            clientData.agency_contact_id = String(contactIndex);
+          }
+        }
+      }
+
       const createdClient = await base44.asServiceRole.entities.Client.create(clientData);
       targetClientId = createdClient.id;
     }
