@@ -6,9 +6,30 @@
       "type": "string",
       "description": "ID du client"
     },
+    "agency_id": {
+      "type": "string",
+      "description": "P\u00e9rim\u00e8tre d'agence calcul\u00e9 c\u00f4t\u00e9 serveur \u00e0 partir du client",
+      "rls": {
+        "write": {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "full_access"
+              }
+            }
+          ]
+        }
+      }
+    },
     "room_id": {
       "type": "string",
-      "description": "ID de la chambre"
+      "description": "ID de la tente"
     },
     "bed_configuration": {
       "type": "string",
@@ -82,7 +103,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -96,8 +118,30 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
     },
@@ -110,7 +154,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -124,7 +169,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
