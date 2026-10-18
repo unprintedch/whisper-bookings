@@ -1,12 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { hardenPublicPassword, publicPasswordMatches } from '../../shared/publicPassword.ts';
+import { publicSettings, issuePublicSession } from '../../shared/publicAccess.ts';
 
 // Verifies public page access without ever exposing the password to the client: only a
 // slow, salted derivation is stored, and the comparison happens here. Records saved with
 // an older scheme are hardened on the way in (see shared/publicPassword.ts), so a fast
-// verifier never stays in storage. Returns isPasswordProtected, hasAccess, allowPublicBooking
-// and, on success, the session token the public booking endpoint requires. Failed password
-// attempts are rate-limited per client to prevent brute-forcing.
+// verifier never stays in storage. Returns isPasswordProtected, allowPublicBooking and,
+// on success, the session token the public booking endpoint requires. Failed attempts are
+// rate-limited per client; a correct answer never wipes the counters, so guessing cannot
+// be used to clear them.
 
 const MAX_ATTEMPTS = 5;
 const MAX_GLOBAL_ATTEMPTS = 50;   // failed attempts overall before responses are slowed down
@@ -14,34 +16,12 @@ const GLOBAL_DELAY_MS = 2000;     // slowdown applied above that threshold (neve
 const GLOBAL_KEY = '__global__';
 const WINDOW_MS = 15 * 60 * 1000; // failed attempts are counted within 15 minutes
 const LOCK_MS = 15 * 60 * 1000;   // lockout duration once the limit is reached
-const SESSION_MS = 12 * 60 * 60 * 1000; // how long a public access token stays valid
 
 // Only the header set by the platform edge is trusted to identify a client.
 // x-forwarded-for and x-real-ip are controlled by the caller: trusting them lets an
 // attacker send a different value on every request and get a fresh attempt counter.
 function getClientIp(req) {
   return req.headers.get('cf-connecting-ip') || null;
-}
-
-function randomHex(byteCount) {
-  const bytes = crypto.getRandomValues(new Uint8Array(byteCount));
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Hands the visitor a token that proves the password was entered. The public booking
-// endpoint requires it, so the page's password gate is enforced by the backend too.
-async function createSession(base44) {
-  const token = randomHex(32);
-  const now = Date.now();
-  await base44.asServiceRole.entities.PublicAccessSession.create({
-    token,
-    expires_at: new Date(now + SESSION_MS).toISOString(),
-  });
-  // Drop the tokens that have expired so the table does not grow forever.
-  await base44.asServiceRole.entities.PublicAccessSession.deleteMany({
-    expires_at: { $lt: new Date(now).toISOString() },
-  });
-  return token;
 }
 
 // Next counter state for one rate-limit key, within the rolling window.
@@ -73,9 +53,8 @@ export default async function(req) {
     const body = await req.json().catch(() => ({}));
     const { password } = body || {};
 
-    const settingsList = await base44.asServiceRole.entities.PublicAccessSettings.list();
     // Any legacy record is upgraded here, before the submitted password is looked at.
-    const settings = await hardenPublicPassword(base44, settingsList[0] || {});
+    const settings = await hardenPublicPassword(base44, await publicSettings(base44));
 
     const isPasswordProtected = !!settings.is_password_protected;
     const allowPublicBooking = !!settings.allow_public_booking;
@@ -92,7 +71,7 @@ export default async function(req) {
     // anonymous visitor take the public booking page down for every legitimate guest,
     // so the global counter is only ever used to slow responses down.
     const keys = [GLOBAL_KEY, ...(ip ? [ip] : [])];
-    const records = await base44.asServiceRole.entities.PublicAccessAttempt.filter({ ip: { $in: keys } });
+    const { items: records } = await base44.asServiceRole.entities.PublicAccessAttempt.filter({ ip: { $in: keys } }, { limit: 10 });
     const record = ip ? records.find(r => r.ip === ip) || null : null;
     const globalRecord = records.find(r => r.ip === GLOBAL_KEY) || null;
 
@@ -115,14 +94,10 @@ export default async function(req) {
       return Response.json({ isPasswordProtected, hasAccess: false, canViewAvailability: false, allowPublicBooking });
     }
 
-    // Correct password: clear any recorded failures and open a session.
+    // Correct password: open a session. The failure counters are deliberately kept, so a
+    // repeated guess cannot clear the lockout state.
     if (await publicPasswordMatches(base44, settings, password)) {
-      await Promise.all(
-        [record, globalRecord]
-          .filter(Boolean)
-          .map(r => base44.asServiceRole.entities.PublicAccessAttempt.delete(r.id))
-      );
-      const accessToken = await createSession(base44);
+      const accessToken = await issuePublicSession(base44, settings);
       return Response.json({ isPasswordProtected, hasAccess: true, canViewAvailability: true, allowPublicBooking, accessToken });
     }
 
