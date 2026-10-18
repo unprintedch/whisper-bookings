@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { LogIn, ChevronLeft, ChevronRight, CalendarCheck, Calendar as CalendarIcon, Mail } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,6 +16,8 @@ import { createBookingRequests } from "@/functions/createBookingRequests";
 import { verifyPublicAccess } from "@/functions/verifyPublicAccess";
 import { createPageUrl } from "@/utils";
 import { anonymousBookingProof } from "@/lib/bookingChallenge";
+import usePublicAvailability from "@/components/public/usePublicAvailability";
+import PublicAvailabilityNotice from "@/components/public/PublicAvailabilityNotice";
 import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
 import PublicBookingForm from "../components/bookings/PublicBookingForm";
@@ -25,18 +26,12 @@ import PublicMultiReservationModal from "../components/bookings/PublicMultiReser
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [rooms, setRooms] = useState([]);
-  const [sites, setSites] = useState([]);
-  const [bedConfigurations, setBedConfigurations] = useState([]);
-  const [reservations, setReservations] = useState([]);
 
-  const [clients, setClients] = useState([]);
-  const [agencies, setAgencies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedSiteName, setSelectedSiteName] = useState('all');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [filters, setFilters] = useState({ bedConfigId: 'all' });
+  const [filters] = useState({ bedConfigId: 'all' });
 
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
@@ -57,8 +52,11 @@ export default function HomePage() {
   const [ratesName, setRatesName] = useState('');
   const [ratesSending, setRatesSending] = useState(false);
   const [ratesSent, setRatesSent] = useState(false);
-  const [confirmTitle, setConfirmTitle] = useState('Request received');
-  const [confirmMessage, setConfirmMessage] = useState('We will get back to you shortly.');
+  const {
+    rooms, visibleRooms, sites, bedConfigurations, reservations, agencies,
+    confirmTitle, confirmMessage, isLoading: availabilityLoading, error: availabilityError,
+    hasNextPage, isFetchingNextPage, loadMore, reload: loadData,
+  } = usePublicAvailability({ hasAccess, accessToken, isAuthenticated, currentDate, selectedSiteName, bedConfigId: filters.bedConfigId });
 
 
   useEffect(() => {
@@ -70,24 +68,13 @@ export default function HomePage() {
       const isAuth = await base44.auth.isAuthenticated();
       setIsAuthenticated(isAuth);
 
-      let shouldLoadData = false;
-
-      // Use backend function to check access — never exposes access_password to the client
-      const accessResult = await verifyPublicAccess({});
-      setIsPasswordProtected(accessResult.isPasswordProtected);
-      setAllowPublicBooking(accessResult.allowPublicBooking);
+      const { data: accessResult } = await verifyPublicAccess({});
+      setIsPasswordProtected(accessResult.isPasswordProtected === true);
+      setAllowPublicBooking(accessResult.allowPublicBooking === true);
       setAccessToken(accessResult.accessToken || null);
-
-      if (isAuth || (accessResult.canViewAvailability ?? accessResult.hasAccess)) {
-        setHasAccess(true);
-        shouldLoadData = true;
-      } else {
-        setIsLoading(false);
-      }
-
-      if (shouldLoadData) {
-        loadData();
-      }
+      setHasAccess(isAuth || (accessResult.canViewAvailability ?? accessResult.hasAccess) === true);
+      setAccessError(false);
+      setIsLoading(false);
     } catch (error) {
       // Fail closed: if access cannot be verified, deny it. The gate must never
       // be opened by client-side state or by an error.
@@ -105,12 +92,11 @@ export default function HomePage() {
     setPasswordError('');
 
     try {
-      const result = await verifyPublicAccess({ password: passwordInput });
+      const { data: result } = await verifyPublicAccess({ password: passwordInput });
       setAllowPublicBooking(result.allowPublicBooking === true);
       if (result.canViewAvailability ?? result.hasAccess) {
         setAccessToken(result.accessToken || null);
         setHasAccess(true);
-        loadData();
       } else if (result.locked) {
         const mins = Math.max(1, Math.ceil((result.retryAfterSeconds || 0) / 60));
         setPasswordError(`Too many attempts. Please try again in ${mins} minute${mins > 1 ? 's' : ''}.`);
@@ -123,38 +109,7 @@ export default function HomePage() {
     }
   };
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isTestMode = urlParams.get('base44_data_env') === 'dev';
-      const dbClient = isTestMode ? base44.asDataEnv('dev') : base44;
 
-      const [roomsData, sitesData, bedConfigsData, reservationsData, clientsData, agenciesData, notifSettingsList] = await Promise.all([
-      dbClient.entities.Room.list('-name'),
-      dbClient.entities.Site.list(),
-      dbClient.entities.BedConfiguration.list('sort_order'),
-      dbClient.entities.Reservation.list('-created_date'),
-      dbClient.entities.Client.list(),
-      dbClient.entities.Agency.list(),
-      dbClient.entities.NotificationSettings.list()]
-      );
-      setRooms(roomsData);
-      setSites(sitesData);
-      setBedConfigurations(bedConfigsData);
-      setReservations(reservationsData);
-      setClients(clientsData);
-      setAgencies(agenciesData);
-      if (notifSettingsList && notifSettingsList.length > 0) {
-        const ns = notifSettingsList[0];
-        if (ns.booking_request_confirm_title) setConfirmTitle(ns.booking_request_confirm_title);
-        if (ns.booking_request_confirm_message) setConfirmMessage(ns.booking_request_confirm_message);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-    setIsLoading(false);
-  };
 
 
 
@@ -256,7 +211,7 @@ export default function HomePage() {
 
 
 
-  if (isLoading) {
+  if (isLoading || availabilityLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center">
         <div className="text-center">
@@ -490,39 +445,11 @@ export default function HomePage() {
               </div>
             </div>
 
-            <GanttChart
-              rooms={(() => {
-                let filteredRooms = rooms.filter((room) => room.is_active);
-
-                if (selectedSiteName !== 'all') {
-                  const matchingSiteIds = sites.
-                  filter((s) => s.name === selectedSiteName).
-                  map((s) => s.id);
-
-                  if (matchingSiteIds.length > 0) {
-                    filteredRooms = filteredRooms.filter((room) =>
-                    matchingSiteIds.includes(room.site_id)
-                    );
-                  }
-                }
-
-                if (filters.bedConfigId !== 'all') {
-                  filteredRooms = filteredRooms.filter((room) =>
-                  room.bed_configuration_ids?.includes(filters.bedConfigId)
-                  );
-                }
-
-                return filteredRooms.sort((a, b) => {
-                  const siteA = sites.find((s) => s.id === a.site_id)?.name || '';
-                  const siteB = sites.find((s) => s.id === b.site_id)?.name || '';
-                  if (siteA !== siteB) {
-                    return siteA.localeCompare(siteB);
-                  }
-                  return a.number.localeCompare(b.number, undefined, { numeric: true });
-                });
-              })()}
-              reservations={reservations.filter((r) => r.status !== 'OPTION' && r.status !== 'REQUEST')}
-              clients={clients}
+            <PublicAvailabilityNotice error={availabilityError} empty={!visibleRooms.length} />
+            {!availabilityError && visibleRooms.length > 0 && <GanttChart
+              rooms={visibleRooms}
+              reservations={reservations}
+              clients={[]}
               groups={[]}
               sites={sites}
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
@@ -532,7 +459,12 @@ export default function HomePage() {
               selectedSlots={selectedSlots}
               onBookingEdit={null}
               onRoomEdit={null}
-              isPublicView={true} />
+              isPublicView={true} />}
+            {hasNextPage && !availabilityError && (
+              <Button variant="outline" className="mt-4" onClick={() => loadMore()} disabled={isFetchingNextPage}>
+                {isFetchingNextPage ? 'Loading tents...' : 'Load more tents'}
+              </Button>
+            )}
 
           </CardContent>
         </Card>
