@@ -4,6 +4,11 @@
 
 export const MAX_RESERVATIONS = 20;
 export const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+export function validBookingDate(value) {
+  if (typeof value !== 'string' || !DATE_PATTERN.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 export const CLIENT_FIELDS = ['contact_name', 'contact_email', 'contact_phone'];
 export const STATUSES = ['REQUEST', 'OPTION', 'RESERVE', 'CONFIRME', 'PAYE', 'ANNULE'];
 
@@ -27,9 +32,9 @@ export function buildReservationRows(reservations, { allowStatus = false } = {})
   const rows = [];
   for (const item of reservations) {
     const roomId = cleanText(item?.room_id, 64);
-    const checkin = cleanText(item?.date_checkin, 10);
-    const checkout = cleanText(item?.date_checkout, 10);
-    if (!roomId || !DATE_PATTERN.test(checkin || '') || !DATE_PATTERN.test(checkout || '') || checkin >= checkout) {
+    const checkin = item?.date_checkin;
+    const checkout = item?.date_checkout;
+    if (!roomId || !validBookingDate(checkin) || !validBookingDate(checkout) || checkin >= checkout) {
       return { error: 'Invalid reservation details', status: 400 };
     }
     const status = allowStatus && STATUSES.includes(item?.status) ? item.status : 'REQUEST';

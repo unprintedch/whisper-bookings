@@ -5,7 +5,7 @@ export async function signedInUser(base44, req) {
 
 export async function publicSettings(base44) {
   const { items } = await base44.asServiceRole.entities.PublicAccessSettings.filter({}, { sort: '-updated_date', limit: 1 });
-  return items[0] || {};
+  return items[0] || { is_password_protected: true, allow_public_booking: false };
 }
 
 export async function digest(value) {

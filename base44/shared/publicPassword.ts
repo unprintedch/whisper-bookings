@@ -68,7 +68,9 @@ export async function publicPasswordMatches(base44, settings, password) {
   }
   if (!equal(await derive(input, salt), match[2])) return false;
   if (match[1] === 'pbkdf2-legacy') {
-    await base44.asServiceRole.entities.PublicAccessSettings.update(settings.id, await passwordFields(password));
+    const changes = await passwordFields(password);
+    await base44.asServiceRole.entities.PublicAccessSettings.update(settings.id, changes);
+    Object.assign(settings, changes);
   }
   return true;
 }
