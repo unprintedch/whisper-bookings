@@ -60,6 +60,20 @@
               }
             },
             {
+              "user_condition": {
+                "data.custom_role": "full_access"
+              }
+            }
+          ]
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
               "data.agency_id": "{{user.data.agency_id}}"
             }
           ]
