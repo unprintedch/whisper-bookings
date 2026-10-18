@@ -19,7 +19,7 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
 
     if (await signedInUser(base44, req)) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+      return Response.json({ error: 'Signed-in users book from the app.' }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -30,7 +30,7 @@ export default async function(req) {
     // Public booking switched off in the settings page: the switch must stop the write
     // here as well, not only hide the form.
     if (settings.allow_public_booking !== true) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+      return Response.json({ error: 'Public booking is disabled.' }, { status: 403 });
     }
 
     // Neither a shared password nor knowledge of a contact email proves ownership:
@@ -42,7 +42,7 @@ export default async function(req) {
     // Password protection is optional. When it is on, availability was unlocked with a
     // session and the same session must accompany the write.
     if (settings.is_password_protected && !(await validPublicSession(base44, settings, accessToken))) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+      return Response.json({ error: 'Public access expired. Please refresh the page.' }, { status: 403 });
     }
 
     // Anti-robot gate: single use, short lived, so a captured proof cannot be replayed.
