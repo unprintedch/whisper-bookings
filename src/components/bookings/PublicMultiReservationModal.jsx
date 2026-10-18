@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChevronDown, ChevronUp, User } from "lucide-react";
+import { anonymousBookingProof } from "@/lib/bookingChallenge";
 
 export default function PublicMultiReservationModal({
   isOpen,
@@ -153,8 +154,12 @@ export default function PublicMultiReservationModal({
       // The booking is created by the backend, which re-checks the public access itself:
       // the password gate of the page alone cannot protect the write.
       const submitBooking = isAuthenticated ? createBookingRequests : createPublicBooking;
+      // A visitor's request carries the anti-robot proof solved just before sending;
+      // signed-in users are already identified by their account.
+      const proof = await anonymousBookingProof(isAuthenticated);
       await submitBooking({
         accessToken,
+        ...proof,
         client: {
           name: clientName,
           agency_id: isAuthenticated ? agencyId || undefined : undefined,

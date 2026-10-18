@@ -1,0 +1,52 @@
+{
+  "name": "PublicChallenge",
+  "type": "object",
+  "properties": {
+    "token_hash": {
+      "type": "string",
+      "description": "Empreinte SHA-256 du jeton de d\u00e9fi anti-robots, jamais le jeton utilisable",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "difficulty": {
+      "type": "number",
+      "description": "Nombre de z\u00e9ros hexad\u00e9cimaux exig\u00e9s en t\u00eate de la preuve"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fin de validit\u00e9 du d\u00e9fi"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date \u00e0 laquelle la preuve a \u00e9t\u00e9 accept\u00e9e, ce qui interdit de la rejouer"
+    }
+  },
+  "required": [
+    "token_hash",
+    "difficulty",
+    "expires_at"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

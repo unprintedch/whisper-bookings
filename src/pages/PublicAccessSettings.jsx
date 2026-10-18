@@ -28,12 +28,12 @@ export default function PublicAccessSettingsPage() {
   const loadSettings = async () => {
     setIsLoading(true);
     try {
-      const { items } = await base44.entities.PublicAccessSettings.filter({}, { sort: '-updated_date', limit: 1 });
-      if (items.length > 0) {
-        const existingSettings = items[0];
+      const settingsList = await base44.entities.PublicAccessSettings.list();
+      if (settingsList.length > 0) {
+        const existingSettings = settingsList[0];
         setSettings(existingSettings);
-        setIsPasswordProtected(existingSettings.is_password_protected === true);
-        setAllowPublicBooking(existingSettings.is_password_protected === true && existingSettings.allow_public_booking === true);
+        setIsPasswordProtected(existingSettings.is_password_protected || false);
+        setAllowPublicBooking(existingSettings.allow_public_booking || false);
         // The stored password is only ever a hash: it is never read back into the form.
         setHasExistingPassword(!!(existingSettings.access_password_hash || existingSettings.access_password));
         setPassword('');
@@ -53,7 +53,7 @@ export default function PublicAccessSettingsPage() {
     try {
       const data = {
         is_password_protected: isPasswordProtected,
-        allow_public_booking: isPasswordProtected && allowPublicBooking
+        allow_public_booking: allowPublicBooking
       };
 
       // The password is hashed here, so the clear value is never stored. An empty field
@@ -134,10 +134,7 @@ export default function PublicAccessSettingsPage() {
             <Switch
               id="password-protection"
               checked={isPasswordProtected}
-              onCheckedChange={(enabled) => {
-                setIsPasswordProtected(enabled);
-                if (!enabled) setAllowPublicBooking(false);
-              }}
+              onCheckedChange={setIsPasswordProtected}
             />
           </div>
 
@@ -184,13 +181,12 @@ export default function PublicAccessSettingsPage() {
                 Allow public booking requests
               </Label>
               <p className="text-sm text-slate-500">
-                Password protection is required. Visitors must verify the password before submitting a booking request.
+                When enabled, visitors can submit booking requests via the public page
               </p>
             </div>
             <Switch
               id="allow-public-booking"
-              checked={isPasswordProtected && allowPublicBooking}
-              disabled={!isPasswordProtected}
+              checked={allowPublicBooking}
               onCheckedChange={setAllowPublicBooking}
             />
           </div>

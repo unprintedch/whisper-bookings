@@ -16,6 +16,7 @@ import { createPublicBooking } from "@/functions/createPublicBooking";
 import { createBookingRequests } from "@/functions/createBookingRequests";
 import { verifyPublicAccess } from "@/functions/verifyPublicAccess";
 import { createPageUrl } from "@/utils";
+import { anonymousBookingProof } from "@/lib/bookingChallenge";
 import { startOfDay, addDays, format } from "date-fns";
 import GanttChart from "../components/dashboard/GanttChart";
 import PublicBookingForm from "../components/bookings/PublicBookingForm";
@@ -209,8 +210,12 @@ export default function HomePage() {
       // Visitors go through the public endpoint, signed-in users through the app endpoint:
       // the two have different permissions and neither can borrow the other's.
       const submitBooking = isAuthenticated ? createBookingRequests : createPublicBooking;
+      // A visitor's request carries the anti-robot proof solved just before sending;
+      // signed-in users are already identified by their account.
+      const proof = await anonymousBookingProof(isAuthenticated);
       await submitBooking({
         accessToken,
+        ...proof,
         clientId: isAuthenticated ? formData.existingClientId || undefined : undefined,
         // Visitors always submit a new client; only authenticated users may reuse a file.
         client: {

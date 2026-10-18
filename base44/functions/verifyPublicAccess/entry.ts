@@ -57,10 +57,10 @@ export default async function(req) {
     const settings = await hardenPublicPassword(base44, await publicSettings(base44));
 
     const isPasswordProtected = settings.is_password_protected === true;
-    const allowPublicBooking = isPasswordProtected && settings.allow_public_booking === true;
+    const allowPublicBooking = settings.allow_public_booking === true;
 
-    // Without password protection, availability may be viewed but booking is disabled.
-    // No booking session is issued on this branch.
+    // No password configured: the page is open to everyone. The booking form stays
+    // protected by its anti-robot challenge, not by a login.
     if (!isPasswordProtected) {
       return Response.json({ isPasswordProtected, hasAccess: true, canViewAvailability: true, allowPublicBooking, accessToken: null });
     }

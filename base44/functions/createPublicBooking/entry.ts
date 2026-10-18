@@ -1,11 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { signedInUser, publicSettings, validPublicSession, consumePublicQuota, clientIp } from '../../shared/publicAccess.ts';
+import { consumeChallenge } from '../../shared/publicChallenge.ts';
 import { buildReservationRows, buildNewClient } from '../../shared/bookingWrites.ts';
 
-// Public requests require password protection AND a server-verified session issued
-// after the password was checked by verifyPublicAccess. Disabling password protection
-// disables this write endpoint, even if allow_public_booking is still true in storage.
-// Signed-in staff and agency users use createBookingRequests instead.
+// Files a booking request coming from the public page, with no account: the page is open
+// on purpose, so the write is protected by an anti-robot challenge instead of a login.
+// Every submission must carry a proof issued by getPublicBookingChallenge and solved in
+// the visitor's browser. When the page is password protected, the session issued after the
+// password was checked is required too. Signed-in users write through createBookingRequests.
 
 // Anonymous booking requests allowed per client and overall, within one hour.
 const RATE_WINDOW_MS = 60 * 60 * 1000;
@@ -21,13 +23,13 @@ export default async function(req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { accessToken, clientId, client, reservations } = body || {};
+    const { accessToken, challengeToken, nonce, clientId, client, reservations } = body || {};
 
     const settings = await publicSettings(base44);
 
-    // Fail closed for both switches. An unprotected availability page is read-only;
-    // it must never enable service-role booking writes.
-    if (settings.allow_public_booking !== true || settings.is_password_protected !== true) {
+    // Public booking switched off in the settings page: the switch must stop the write
+    // here as well, not only hide the form.
+    if (settings.allow_public_booking !== true) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -37,13 +39,18 @@ export default async function(req) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Mandatory on every submission, not conditional on an optional browser gate.
-    // Missing, forged, expired and password-revoked sessions are rejected before writes.
-    if (!(await validPublicSession(base44, settings, accessToken))) {
+    // Password protection is optional. When it is on, availability was unlocked with a
+    // session and the same session must accompany the write.
+    if (settings.is_password_protected && !(await validPublicSession(base44, settings, accessToken))) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // These quotas limit verified visitors; they are not a substitute for authorization.
+    // Anti-robot gate: single use, short lived, so a captured proof cannot be replayed.
+    if (!(await consumeChallenge(base44, challengeToken, nonce))) {
+      return Response.json({ error: 'Verification failed. Please try again.' }, { status: 403 });
+    }
+
+    // Beyond the challenge, anonymous writes stay capped per visitor and overall.
     const ip = clientIp(req);
     if (ip && !(await consumePublicQuota(base44, `booking:${ip}`, MAX_REQUESTS_PER_IP, RATE_WINDOW_MS))) {
       return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
