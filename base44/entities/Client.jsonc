@@ -12,7 +12,24 @@
     },
     "agency_id": {
       "type": "string",
-      "description": "ID de l'agence"
+      "description": "ID de l'agence",
+      "rls": {
+        "write": {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            },
+            {
+              "user_condition": {
+                "data.custom_role": "full_access",
+                "role": "user"
+              }
+            }
+          ]
+        }
+      }
     },
     "agency_contact_id": {
       "type": "string",
@@ -53,30 +70,10 @@
           }
         },
         {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "user"
-              }
-            },
-            {
-              "user_condition": {
-                "data.custom_role": "full_access"
-              }
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "user"
-              }
-            },
-            {
-              "data.agency_id": "{{user.data.agency_id}}"
-            }
-          ]
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
         }
       ]
     },
@@ -88,26 +85,29 @@
           }
         },
         {
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
+        },
+        {
           "$and": [
             {
               "user_condition": {
-                "role": "user"
+                "role": "user",
+                "data.custom_role": "agency"
               }
             },
             {
-              "$or": [
-                {
-                  "user_condition": {
-                    "data.custom_role": "full_access"
-                  }
-                },
-                {
-                  "created_by_id": "{{user.id}}"
-                },
-                {
-                  "data.agency_id": "{{user.data.agency_id}}"
-                }
-              ]
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
             }
           ]
         }
@@ -121,23 +121,10 @@
           }
         },
         {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "user"
-              }
-            },
-            {
-              "$or": [
-                {
-                  "created_by_id": "{{user.id}}"
-                },
-                {
-                  "data.agency_id": "{{user.data.agency_id}}"
-                }
-              ]
-            }
-          ]
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
         }
       ]
     },
