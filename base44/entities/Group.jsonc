@@ -8,7 +8,27 @@
     },
     "agency_id": {
       "type": "string",
-      "description": "ID de l'agence"
+      "description": "ID de l'agence",
+      "rls": {
+        "write": {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "full_access"
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
+        }
+      }
     },
     "contact_name": {
       "type": "string",
@@ -49,6 +69,27 @@
             "role": "user",
             "data.custom_role": "full_access"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
     },
@@ -100,6 +141,27 @@
             "role": "user",
             "data.custom_role": "full_access"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
     },
