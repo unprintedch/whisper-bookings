@@ -46,7 +46,21 @@
     "action"
   ],
   "rls": {
-    "create": null,
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
+        }
+      ]
+    },
     "read": {
       "user_condition": {
         "role": "admin"
