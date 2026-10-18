@@ -56,10 +56,11 @@ export default async function(req) {
     // Any legacy record is upgraded here, before the submitted password is looked at.
     const settings = await hardenPublicPassword(base44, await publicSettings(base44));
 
-    const isPasswordProtected = !!settings.is_password_protected;
-    const allowPublicBooking = !!settings.allow_public_booking;
+    const isPasswordProtected = settings.is_password_protected === true;
+    const allowPublicBooking = isPasswordProtected && settings.allow_public_booking === true;
 
-    // No password configured: nothing to verify or brute-force.
+    // Without password protection, availability may be viewed but booking is disabled.
+    // No booking session is issued on this branch.
     if (!isPasswordProtected) {
       return Response.json({ isPasswordProtected, hasAccess: true, canViewAvailability: true, allowPublicBooking, accessToken: null });
     }

@@ -2,11 +2,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { signedInUser, publicSettings, validPublicSession, consumePublicQuota, clientIp } from '../../shared/publicAccess.ts';
 import { buildReservationRows, buildNewClient } from '../../shared/bookingWrites.ts';
 
-// Files a booking request coming from the public page. The password gate of that page
-// only lives in the browser, so it cannot protect a write anyone could perform directly:
-// this endpoint checks the access itself. A visitor must present the session token issued
-// by verifyPublicAccess; signed-in users write through createBookingRequests instead, so
-// this channel stays strictly anonymous and cannot be used to reach app data.
+// Public requests require password protection AND a server-verified session issued
+// after the password was checked by verifyPublicAccess. Disabling password protection
+// disables this write endpoint, even if allow_public_booking is still true in storage.
+// Signed-in staff and agency users use createBookingRequests instead.
 
 // Anonymous booking requests allowed per client and overall, within one hour.
 const RATE_WINDOW_MS = 60 * 60 * 1000;
@@ -26,9 +25,9 @@ export default async function(req) {
 
     const settings = await publicSettings(base44);
 
-    // Public booking switched off in the settings page: the switch must stop the write
-    // here as well, not only hide the form.
-    if (settings.allow_public_booking !== true) {
+    // Fail closed for both switches. An unprotected availability page is read-only;
+    // it must never enable service-role booking writes.
+    if (settings.allow_public_booking !== true || settings.is_password_protected !== true) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -38,12 +37,13 @@ export default async function(req) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    if (settings.is_password_protected && !(await validPublicSession(base44, settings, accessToken))) {
+    // Mandatory on every submission, not conditional on an optional browser gate.
+    // Missing, forged, expired and password-revoked sessions are rejected before writes.
+    if (!(await validPublicSession(base44, settings, accessToken))) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Anonymous writes are capped per client and overall, so a script cannot flood the
-    // reservations list even when the page is open without a password.
+    // These quotas limit verified visitors; they are not a substitute for authorization.
     const ip = clientIp(req);
     if (ip && !(await consumePublicQuota(base44, `booking:${ip}`, MAX_REQUESTS_PER_IP, RATE_WINDOW_MS))) {
       return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
