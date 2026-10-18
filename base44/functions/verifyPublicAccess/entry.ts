@@ -1,10 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { hardenPublicPassword, publicPasswordMatches } from '../../shared/publicPassword.ts';
 
 // Verifies public page access without ever exposing the password to the client: only a
-// salted hash is stored, and the comparison happens here.
-// Returns isPasswordProtected, hasAccess, allowPublicBooking and, on success, the session
-// token the public booking endpoint requires. Failed password attempts are rate-limited
-// per client to prevent brute-forcing.
+// slow, salted derivation is stored, and the comparison happens here. Records saved with
+// an older scheme are hardened on the way in (see shared/publicPassword.ts), so a fast
+// verifier never stays in storage. Returns isPasswordProtected, hasAccess, allowPublicBooking
+// and, on success, the session token the public booking endpoint requires. Failed password
+// attempts are rate-limited per client to prevent brute-forcing.
 
 const MAX_ATTEMPTS = 5;
 const MAX_GLOBAL_ATTEMPTS = 50;   // failed attempts overall before responses are slowed down
@@ -12,6 +14,7 @@ const GLOBAL_DELAY_MS = 2000;     // slowdown applied above that threshold (neve
 const GLOBAL_KEY = '__global__';
 const WINDOW_MS = 15 * 60 * 1000; // failed attempts are counted within 15 minutes
 const LOCK_MS = 15 * 60 * 1000;   // lockout duration once the limit is reached
+const SESSION_MS = 12 * 60 * 60 * 1000; // how long a public access token stays valid
 
 // Only the header set by the platform edge is trusted to identify a client.
 // x-forwarded-for and x-real-ip are controlled by the caller: trusting them lets an
@@ -20,102 +23,9 @@ function getClientIp(req) {
   return req.headers.get('cf-connecting-ip') || null;
 }
 
-// Constant-time comparison so the password cannot be recovered from response timing.
-function timingSafeEqual(a, b) {
-  const aBytes = new TextEncoder().encode(String(a));
-  const bBytes = new TextEncoder().encode(String(b));
-  let diff = aBytes.length ^ bBytes.length;
-  const len = Math.max(aBytes.length, bBytes.length);
-  for (let i = 0; i < len; i++) {
-    diff |= (aBytes[i] || 0) ^ (bBytes[i] || 0);
-  }
-  return diff === 0;
-}
-
-// The password is never stored in clear: only a slow, salted derivation of it is kept, so
-// neither a database leak nor a log record hands out the shared password. A plain hash is
-// not enough for that: PBKDF2 with 100 000 iterations is used, and the same algorithm runs
-// in the admin page (src/lib/passwordHash.js) — change both together.
-const PBKDF2_ITERATIONS = 100000;
-const PBKDF2_PREFIX = 'pbkdf2';
-const SESSION_MS = 12 * 60 * 60 * 1000; // how long a public access token stays valid
-
 function randomHex(byteCount) {
   const bytes = crypto.getRandomValues(new Uint8Array(byteCount));
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function toHex(buffer) {
-  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function pbkdf2Hex(password, salt, iterations) {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt: encoder.encode(salt), iterations, hash: 'SHA-256' },
-    key,
-    256,
-  );
-  return toHex(bits);
-}
-
-// Stored form: "pbkdf2$<iterations>$<hash>".
-async function hashPassword(password, salt) {
-  return `${PBKDF2_PREFIX}$${PBKDF2_ITERATIONS}$${await pbkdf2Hex(password, salt, PBKDF2_ITERATIONS)}`;
-}
-
-// A hash written before the slow derivation existed is a bare SHA-256 digest: it is still
-// accepted so nobody is locked out, and replaced on the next correct password.
-function parseStoredHash(stored) {
-  const parts = String(stored || '').split('$');
-  if (parts.length === 3 && parts[0] === PBKDF2_PREFIX) {
-    const iterations = parseInt(parts[1], 10);
-    if (Number.isFinite(iterations) && iterations > 0) {
-      return { iterations, hash: parts[2] };
-    }
-  }
-  return { iterations: 0, hash: String(stored || '') };
-}
-
-async function legacySha256Hex(password, salt) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${password}`));
-  return toHex(digest);
-}
-
-// Compares the submitted password to the stored hash. A record saved before hashing
-// existed still holds a clear-text password: it is hashed and erased on first use.
-async function passwordMatches(base44, settings, password) {
-  let stored = settings.access_password_hash;
-  let salt = settings.access_password_salt;
-
-  if (!stored && settings.access_password) {
-    salt = randomHex(16);
-    stored = await hashPassword(settings.access_password, salt);
-    await base44.asServiceRole.entities.PublicAccessSettings.update(settings.id, {
-      access_password_hash: stored,
-      access_password_salt: salt,
-      access_password: '',
-    });
-  }
-
-  if (!stored || !salt) return false;
-
-  const parsed = parseStoredHash(stored);
-  const candidate = parsed.iterations
-    ? await pbkdf2Hex(password, salt, parsed.iterations)
-    : await legacySha256Hex(password, salt);
-  if (!timingSafeEqual(candidate, parsed.hash)) return false;
-
-  if (!parsed.iterations) {
-    // Old digest: upgrade it now that the password is known, without asking the user to
-    // enter anything again.
-    await base44.asServiceRole.entities.PublicAccessSettings.update(settings.id, {
-      access_password_hash: await hashPassword(password, salt),
-    });
-  }
-
-  return true;
 }
 
 // Hands the visitor a token that proves the password was entered. The public booking
@@ -164,14 +74,15 @@ export default async function(req) {
     const { password } = body || {};
 
     const settingsList = await base44.asServiceRole.entities.PublicAccessSettings.list();
-    const settings = settingsList[0] || {};
+    // Any legacy record is upgraded here, before the submitted password is looked at.
+    const settings = await hardenPublicPassword(base44, settingsList[0] || {});
 
     const isPasswordProtected = !!settings.is_password_protected;
     const allowPublicBooking = !!settings.allow_public_booking;
 
     // No password configured: nothing to verify or brute-force.
     if (!isPasswordProtected) {
-      return Response.json({ isPasswordProtected, hasAccess: true, allowPublicBooking, accessToken: null });
+      return Response.json({ isPasswordProtected, hasAccess: true, canViewAvailability: true, allowPublicBooking, accessToken: null });
     }
 
     const ip = getClientIp(req);
@@ -192,6 +103,7 @@ export default async function(req) {
       return Response.json({
         isPasswordProtected,
         hasAccess: false,
+        canViewAvailability: false,
         allowPublicBooking,
         locked: true,
         retryAfterSeconds,
@@ -200,18 +112,18 @@ export default async function(req) {
 
     // A probe without a password (initial page load) never counts as an attempt.
     if (!password) {
-      return Response.json({ isPasswordProtected, hasAccess: false, allowPublicBooking });
+      return Response.json({ isPasswordProtected, hasAccess: false, canViewAvailability: false, allowPublicBooking });
     }
 
     // Correct password: clear any recorded failures and open a session.
-    if (await passwordMatches(base44, settings, password)) {
+    if (await publicPasswordMatches(base44, settings, password)) {
       await Promise.all(
         [record, globalRecord]
           .filter(Boolean)
           .map(r => base44.asServiceRole.entities.PublicAccessAttempt.delete(r.id))
       );
       const accessToken = await createSession(base44);
-      return Response.json({ isPasswordProtected, hasAccess: true, allowPublicBooking, accessToken });
+      return Response.json({ isPasswordProtected, hasAccess: true, canViewAvailability: true, allowPublicBooking, accessToken });
     }
 
     // Failed attempt: count it within the rolling window and lock when exceeded.
@@ -232,6 +144,7 @@ export default async function(req) {
     return Response.json({
       isPasswordProtected,
       hasAccess: false,
+      canViewAvailability: false,
       allowPublicBooking,
       locked: !!state.locked_until,
       remainingAttempts: Math.max(0, MAX_ATTEMPTS - state.attempts),

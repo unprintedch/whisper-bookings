@@ -98,23 +98,28 @@ export default async function(req) {
     }
 
     // --- Client ---
-    // Identifiers sent by the public form are never trusted as-is: the file of an existing
-    // client is only reused by a caller who proves it is theirs (the contact email on the
-    // request matches the one on record), and an agency is only attached when it exists.
-    const contactEmail = cleanText(client?.contact_email, 200) || '';
-    const requestedClientId = cleanText(clientId, 64);
-    let targetClientId = null;
+    // An existing file is never selected by an identifier the caller supplies. It is read
+    // with the signed-in caller's own permissions, and reused only when that caller really
+    // owns it (administrator, full-access staff, creator, or same agency).
+    let targetClientId = cleanText(clientId, 64);
 
-    if (requestedClientId) {
-      const found = await findById(base44.asServiceRole.entities.Client, requestedClientId);
-      const ownsFile = !!found && !!contactEmail &&
-        (found.contact_email || '').trim().toLowerCase() === contactEmail.toLowerCase();
-      if (found && (isAppUser || ownsFile)) {
-        targetClientId = found.id;
+    if (targetClientId) {
+      let existingClient;
+      try {
+        existingClient = await base44.entities.Client.get(targetClientId);
+      } catch {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
       }
-    }
-
-    if (!targetClientId) {
+      const mayUseClient = isAppUser && existingClient && (
+        appUser.role === 'admin' || appUser.custom_role === 'full_access' ||
+        existingClient.created_by_id === appUser.id ||
+        (appUser.agency_id && existingClient.agency_id === appUser.agency_id)
+      );
+      if (!mayUseClient) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      targetClientId = existingClient.id;
+    } else {
       const name = cleanText(client?.name, 200);
       if (!name) {
         return Response.json({ error: 'Client name is required' }, { status: 400 });
@@ -125,26 +130,49 @@ export default async function(req) {
         if (value) clientData[field] = value;
       }
 
+      // An agency chosen by a visitor is ignored outright. Staff may attach an agency,
+      // but an agency user only the one they belong to.
       const agencyId = cleanText(client?.agency_id, 64);
-      if (agencyId) {
-        const agency = await findById(base44.asServiceRole.entities.Agency, agencyId);
-        if (agency && agency.is_active !== false) {
-          clientData.agency_id = agency.id;
-          const contactIndex = Number(client?.agency_contact_id);
-          if (Number.isInteger(contactIndex) && contactIndex >= 0 && contactIndex < (agency.contacts || []).length) {
-            clientData.agency_contact_id = String(contactIndex);
+      if (isAppUser && agencyId) {
+        const mayUseAgency = appUser.role === 'admin' || appUser.custom_role === 'full_access' ||
+          (!!appUser.agency_id && appUser.agency_id === agencyId);
+        if (!mayUseAgency) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        let agency;
+        try {
+          agency = await base44.asServiceRole.entities.Agency.get(agencyId);
+        } catch {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        if (!agency || agency.is_active === false) {
+          return Response.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        clientData.agency_id = agency.id;
+        const contact = client?.agency_contact_id;
+        if (contact !== undefined && contact !== null && contact !== '') {
+          const contactIndex = Number(contact);
+          if (!Number.isInteger(contactIndex) || contactIndex < 0 || contactIndex >= (agency.contacts || []).length) {
+            return Response.json({ error: 'Invalid agency contact' }, { status: 400 });
           }
+          clientData.agency_contact_id = String(contactIndex);
         }
       }
 
-      const createdClient = await base44.asServiceRole.entities.Client.create(clientData);
+      // The write runs with the caller's own permissions, so the row-level rules stay in
+      // force; only the anonymous public submission, already gated above, is elevated.
+      const createdClient = isAppUser
+        ? await base44.entities.Client.create(clientData)
+        : await base44.asServiceRole.entities.Client.create(clientData);
       targetClientId = createdClient.id;
     }
 
-    // Writes run with the service role: the caller has been identified above (staff token
-    // or visitor session token), and the public form must create records regardless of the
-    // row-level rules that apply to anonymous callers.
-    await base44.asServiceRole.entities.Reservation.bulkCreate(
+    // Same rule for the reservations: a signed-in caller writes under their own rules, and
+    // the service role is used only for the public submission identified above.
+    const reservationEntity = isAppUser
+      ? base44.entities.Reservation
+      : base44.asServiceRole.entities.Reservation;
+    await reservationEntity.bulkCreate(
       rows.map((row) => ({ ...row, client_id: targetClientId }))
     );
 

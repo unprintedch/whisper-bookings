@@ -9,15 +9,15 @@
     },
     "access_password_hash": {
       "type": "string",
-      "description": "Empreinte SHA-256 sal\u00e9e du mot de passe public : le mot de passe n'est jamais stock\u00e9 en clair"
+      "description": "D\u00e9rivation PBKDF2 sal\u00e9e du mot de passe public : le mot de passe n'est jamais stock\u00e9 en clair"
     },
     "access_password_salt": {
       "type": "string",
-      "description": "Sel al\u00e9atoire utilis\u00e9 pour calculer l'empreinte du mot de passe"
+      "description": "Sel al\u00e9atoire utilis\u00e9 pour calculer la d\u00e9rivation du mot de passe"
     },
     "access_password": {
       "type": "string",
-      "description": "Ancien champ en clair, conserv\u00e9 pour la migration uniquement : il est effac\u00e9 d\u00e8s qu'une empreinte existe"
+      "description": "Ancien champ en clair, conserv\u00e9 pour la migration uniquement : il est effac\u00e9 d\u00e8s qu'une d\u00e9rivation existe"
     },
     "allow_public_booking": {
       "type": "boolean",
