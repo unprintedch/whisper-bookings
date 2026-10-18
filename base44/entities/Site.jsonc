@@ -25,7 +25,7 @@
     "slug"
   ],
   "rls": {
-    "create": {
+    "read": {
       "$or": [
         {
           "user_condition": {
@@ -39,7 +39,21 @@
         }
       ]
     },
-    "read": null,
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
+        }
+      ]
+    },
     "update": {
       "$or": [
         {
@@ -49,7 +63,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -63,7 +78,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
