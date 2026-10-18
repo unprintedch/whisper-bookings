@@ -8,7 +8,7 @@
     },
     "agency_id": {
       "type": "string",
-      "description": "P\u00e9rim\u00e8tre d'agence calcul\u00e9 c\u00f4t\u00e9 serveur \u00e0 partir du client",
+      "description": "P\u00e9rim\u00e8tre d'agence, calcul\u00e9 c\u00f4t\u00e9 serveur \u00e0 partir du client ; jamais fourni par l'appelant",
       "rls": {
         "write": {
           "$or": [
@@ -22,6 +22,9 @@
                 "role": "user",
                 "data.custom_role": "full_access"
               }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
             }
           ]
         }
@@ -106,6 +109,27 @@
             "role": "user",
             "data.custom_role": "full_access"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
     },
@@ -157,6 +181,27 @@
             "role": "user",
             "data.custom_role": "full_access"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
     },
@@ -172,6 +217,27 @@
             "role": "user",
             "data.custom_role": "full_access"
           }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
     }
