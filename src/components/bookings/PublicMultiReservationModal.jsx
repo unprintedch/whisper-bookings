@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { createPublicBooking } from "@/functions/createPublicBooking";
+import { createBookingRequests } from "@/functions/createBookingRequests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ export default function PublicMultiReservationModal({
   allBedConfigs = [],
   agencies = [],
   accessToken = null,
+  isAuthenticated = false,
   onSuccess,
 }) {
   // Client identity
@@ -150,11 +152,12 @@ export default function PublicMultiReservationModal({
     try {
       // The booking is created by the backend, which re-checks the public access itself:
       // the password gate of the page alone cannot protect the write.
-      await createPublicBooking({
+      const submitBooking = isAuthenticated ? createBookingRequests : createPublicBooking;
+      await submitBooking({
         accessToken,
         client: {
           name: clientName,
-          agency_id: agencyId || undefined,
+          agency_id: isAuthenticated ? agencyId || undefined : undefined,
           agency_contact_id: agencyContactId !== '' ? agencyContactId : undefined,
           contact_name: contactName || undefined,
           contact_email: contactEmail || undefined,

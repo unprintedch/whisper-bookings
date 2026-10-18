@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { base44 } from "@/api/base44Client";
 import { sendBookingNotification } from "@/functions/sendBookingNotification";
+import { createBookingRequests } from "@/functions/createBookingRequests";
 
 import GanttChart from "../components/dashboard/GanttChart";
 import AvailableRooms from "../components/dashboard/AvailableRooms";
@@ -177,13 +178,16 @@ export default function Dashboard({
   const handleCreateBooking = async (bookingDataWithNotifications) => {
     const { notifications, ...bookingData } = bookingDataWithNotifications;
     try {
-      const newBooking = await base44.entities.Reservation.create(bookingData);
+      // Bookings are created through the backend so the agency scope of the record is
+      // derived from the client file, never sent by the browser.
+      const result = await createBookingRequests({ clientId: bookingData.client_id, reservations: [bookingData] });
+      const newId = result?.data?.ids?.[0];
       // Optimistic update: add the new reservation directly to state
-      setReservations(prev => [...prev, { ...bookingData, id: newBooking.id, created_date: new Date().toISOString() }]);
+      setReservations(prev => [...prev, { ...bookingData, id: newId, created_date: new Date().toISOString() }]);
       setShowBookingForm(false);
       setSelectedRoomForBooking(null);
       setSelectedDateForBooking(null);
-      await sendNotificationEmails(newBooking.id, 'new', notifications);
+      await sendNotificationEmails(newId, 'new', notifications);
     } catch (error) {
       console.error('Error creating booking:', error);
     }

@@ -23,6 +23,8 @@ export async function issuePublicSession(base44, settings) {
     token_hash: await digest(token), settings_fingerprint: await settingsFingerprint(settings),
     expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
   });
+  // Drop the tokens that have expired so the table does not grow forever.
+  await base44.asServiceRole.entities.PublicAccessSession.deleteMany({ expires_at: { $lt: new Date().toISOString() } });
   return token;
 }
 

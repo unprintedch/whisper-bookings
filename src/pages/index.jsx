@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { base44 } from "@/api/base44Client";
 import { sendRatesRequest } from "@/functions/sendRatesRequest";
 import { createPublicBooking } from "@/functions/createPublicBooking";
+import { createBookingRequests } from "@/functions/createBookingRequests";
 import { PUBLIC_FORM_TOKEN } from "@/lib/publicFormToken";
 import { verifyPublicAccess } from "@/functions/verifyPublicAccess";
 import { createPageUrl } from "@/utils";
@@ -207,7 +208,10 @@ export default function HomePage() {
 
       // The booking is created by the backend, which re-checks the public access itself:
       // the password gate of this page alone cannot protect the write.
-      await createPublicBooking({
+      // Visitors go through the public endpoint, signed-in users through the app endpoint:
+      // the two have different permissions and neither can borrow the other's.
+      const submitBooking = isAuthenticated ? createBookingRequests : createPublicBooking;
+      await submitBooking({
         accessToken,
         clientId: isAuthenticated ? formData.existingClientId || undefined : undefined,
         // Visitors always submit a new client; only authenticated users may reuse a file.
@@ -215,7 +219,7 @@ export default function HomePage() {
           name: formData.contact_name,
           contact_email: formData.contact_email,
           contact_phone: formData.contact_phone,
-          agency_id: formData.agency_id || undefined
+          agency_id: isAuthenticated ? formData.agency_id || undefined : undefined
         },
         reservations: rangesToBook.map((range) => ({
           room_id: range.roomId,
@@ -599,6 +603,7 @@ export default function HomePage() {
         onClose={() => {setShowMultiModal(false);setPublicMultiRanges([]);}}
         mergedRanges={publicMultiRanges}
         accessToken={accessToken}
+        isAuthenticated={isAuthenticated}
         rooms={rooms}
         sites={sites}
         allBedConfigs={bedConfigurations}

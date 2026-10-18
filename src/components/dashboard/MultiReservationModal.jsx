@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { base44 } from "@/api/base44Client";
+import { createBookingRequests } from "@/functions/createBookingRequests";
 import { Client } from "@/entities/all";
 import ClientForm from "@/components/clients/ClientForm";
 import { validateNoOverlaps, validateRangeWithinWindow } from "./multiSelectLogic";
@@ -282,7 +283,8 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
      });
 
     try {
-      await base44.entities.Reservation.bulkCreate(reservationsToCreate);
+      // The agency scope of each record is derived server-side from the client file.
+      await createBookingRequests({ clientId: finalClientId, reservations: reservationsToCreate });
       setIsSubmitting(false);
       onSuccess();
       onClose();

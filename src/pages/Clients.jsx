@@ -8,6 +8,7 @@ import { enUS } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import ClientForm from "../components/clients/ClientForm";
+import { createBookingRequests } from "@/functions/createBookingRequests";
 import BookingForm from "../components/bookings/BookingForm";
 import ReservationsTable from "../components/clients/ReservationsTable";
 import { Button } from "@/components/ui/button";
@@ -377,7 +378,9 @@ export default function ClientsPage() {
       if (clientForNewBooking && !reservationData.client_id) {
         reservationData.client_id = clientForNewBooking.id;
       }
-      await Reservation.create(reservationData);
+      // Bookings are created through the backend so the agency scope of the record is
+      // derived from the client file, never sent by the browser.
+      await createBookingRequests({ clientId: reservationData.client_id, reservations: [reservationData] });
       setShowBookingForm(false);
       setEditingReservation(null);
       setClientForNewBooking(null); // Clear the clientForNewBooking state after saving
