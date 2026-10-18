@@ -45,7 +45,10 @@
           }
         },
         {
-          "data.agency_id": "{{user.data.agency_id}}"
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
         }
       ]
     },
@@ -57,10 +60,31 @@
           }
         },
         {
-          "created_by_id": "{{user.id}}"
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
         },
         {
-          "data.agency_id": "{{user.data.agency_id}}"
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "data.agency_id": {
+                "$nin": [
+                  null,
+                  ""
+                ]
+              }
+            },
+            {
+              "data.agency_id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
     },
@@ -72,10 +96,10 @@
           }
         },
         {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "data.agency_id": "{{user.data.agency_id}}"
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
         }
       ]
     },
