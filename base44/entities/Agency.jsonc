@@ -21,7 +21,24 @@
     },
     "notes": {
       "type": "string",
-      "description": "Notes sur l'agence"
+      "description": "Notes sur l'agence",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "full_access"
+              }
+            }
+          ]
+        }
+      }
     },
     "is_active": {
       "type": "boolean",
@@ -40,7 +57,7 @@
     },
     "contacts": {
       "type": "array",
-      "description": "Liste des contacts sp\u00e9cifiques de l'agence",
+      "description": "Contacts sp\u00e9cifiques",
       "items": {
         "type": "object",
         "properties": {
@@ -68,11 +85,6 @@
     "name"
   ],
   "rls": {
-    "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
     "read": {
       "$or": [
         {
@@ -81,9 +93,30 @@
           }
         },
         {
-          "created_by_id": "{{user.id}}"
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "agency"
+              }
+            },
+            {
+              "id": "{{user.data.agency_id}}"
+            }
+          ]
         }
       ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "update": {
       "user_condition": {
