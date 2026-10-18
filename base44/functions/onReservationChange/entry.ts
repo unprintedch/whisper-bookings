@@ -8,6 +8,9 @@ import { sendBookingNotifications } from "../../shared/bookingNotifications.ts";
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    if (!/^Bearer\s+\S+$/i.test(req.headers.get('authorization') || '')) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     let user = null;
     try {
@@ -62,6 +65,6 @@ export default async function(req) {
     return Response.json({ success: true, result });
   } catch (error) {
     console.error('onReservationChange error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Unable to process notification' }, { status: 500 });
   }
 }

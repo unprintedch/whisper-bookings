@@ -77,6 +77,6 @@ export default async function(req) {
     return Response.json(result);
   } catch (error) {
     console.error('sendBookingNotification error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: 'Unable to send notification' }, { status: 500 });
   }
 }

@@ -2,18 +2,24 @@
   "name": "PublicAccessSession",
   "type": "object",
   "properties": {
-    "token": {
+    "token_hash": {
       "type": "string",
-      "description": "Jeton de session remis par verifyPublicAccess apr\u00e8s saisie correcte du mot de passe public"
+      "description": "Empreinte SHA-256 du jeton al\u00e9atoire, jamais le jeton utilisable",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "settings_fingerprint": {
+      "type": "string",
+      "description": "Lie la session au mot de passe et \u00e0 la protection actuels"
     },
     "expires_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Date d'expiration du jeton"
+      "description": "Expiration de la session publique"
     }
   },
   "required": [
-    "token",
+    "token_hash",
+    "settings_fingerprint",
     "expires_at"
   ],
   "rls": {
