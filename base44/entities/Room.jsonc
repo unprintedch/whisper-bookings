@@ -8,11 +8,11 @@
     },
     "number": {
       "type": "string",
-      "description": "Num\u00e9ro de la chambre"
+      "description": "Num\u00e9ro de la tente"
     },
     "name": {
       "type": "string",
-      "description": "Nom de la chambre"
+      "description": "Nom de la tente"
     },
     "capacity_max": {
       "type": "number",
@@ -34,11 +34,28 @@
       "items": {
         "type": "string"
       },
-      "description": "Liste des IDs des configurations de lit disponibles"
+      "description": "Configurations de lit disponibles"
     },
     "notes": {
       "type": "string",
-      "description": "Notes internes"
+      "description": "Notes internes",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "user",
+                "data.custom_role": "full_access"
+              }
+            }
+          ]
+        }
+      }
     },
     "photo_url": {
       "type": "string",
@@ -47,7 +64,7 @@
     "is_active": {
       "type": "boolean",
       "default": true,
-      "description": "Chambre active"
+      "description": "Tente active"
     }
   },
   "required": [
@@ -58,7 +75,7 @@
     "type_label"
   ],
   "rls": {
-    "create": {
+    "read": {
       "$or": [
         {
           "user_condition": {
@@ -72,7 +89,21 @@
         }
       ]
     },
-    "read": null,
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
+        }
+      ]
+    },
     "update": {
       "$or": [
         {
@@ -82,7 +113,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -96,7 +128,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
