@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
-import { signedInUser, publicSettings, validPublicSession } from '../../shared/publicAccess.ts';
+import { signedInUser, publicSettings, validPublicSession, consumePublicQuota, clientIp } from '../../shared/publicAccess.ts';
 import { buildReservationRows, buildNewClient } from '../../shared/bookingWrites.ts';
 
 // Files a booking request coming from the public page. The password gate of that page
@@ -7,6 +7,11 @@ import { buildReservationRows, buildNewClient } from '../../shared/bookingWrites
 // this endpoint checks the access itself. A visitor must present the session token issued
 // by verifyPublicAccess; signed-in users write through createBookingRequests instead, so
 // this channel stays strictly anonymous and cannot be used to reach app data.
+
+// Anonymous booking requests allowed per client and overall, within one hour.
+const RATE_WINDOW_MS = 60 * 60 * 1000;
+const MAX_REQUESTS_PER_IP = 10;
+const MAX_REQUESTS_GLOBAL = 60;
 
 export default async function(req) {
   try {
@@ -35,6 +40,16 @@ export default async function(req) {
 
     if (settings.is_password_protected && !(await validPublicSession(base44, settings, accessToken))) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Anonymous writes are capped per client and overall, so a script cannot flood the
+    // reservations list even when the page is open without a password.
+    const ip = clientIp(req);
+    if (ip && !(await consumePublicQuota(base44, `booking:${ip}`, MAX_REQUESTS_PER_IP, RATE_WINDOW_MS))) {
+      return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+    if (!(await consumePublicQuota(base44, 'booking:global', MAX_REQUESTS_GLOBAL, RATE_WINDOW_MS))) {
+      return Response.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 
     const built = buildReservationRows(reservations);

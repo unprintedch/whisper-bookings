@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { escapeHtml, stripHtml } from "../../shared/escapeHtml.ts";
-import { consumePublicQuota } from "../../shared/publicAccess.ts";
+import { consumePublicQuota, clientIp } from "../../shared/publicAccess.ts";
 
 // This endpoint is intentionally public, so it only accepts calls coming from the app's
 // own pages carrying the shared form token, and is throttled per client and globally to
@@ -27,25 +27,9 @@ function isFromAppPage(req) {
   }
 }
 
-// The public page sends this token with every rates request, so knowing the function URL
-// is not enough to trigger an email. The token is readable in the page's own code: it
-// filters out direct automated calls, while the volume cap below remains the guard that
-// limits a flood. Keep in sync with src/lib/publicFormToken.js.
-const FORM_TOKEN = 'wbr_9f4c2a7e13b8d605';
-
-// Constant-time comparison so the answer does not reveal how much of the token matched.
-function tokenMatches(value) {
-  if (typeof value !== 'string' || value.length !== FORM_TOKEN.length) return false;
-  let diff = 0;
-  for (let i = 0; i < FORM_TOKEN.length; i++) diff |= value.charCodeAt(i) ^ FORM_TOKEN.charCodeAt(i);
-  return diff === 0;
-}
-
-// Only the header set by the platform edge is trusted: x-forwarded-for and x-real-ip
-// are controlled by the caller and could be rotated to bypass the limit.
-function getClientIp(req) {
-  return req.headers.get('cf-connecting-ip') || null;
-}
+// No shared secret is checked here: any value embedded in the page's own JavaScript is
+// readable by anyone, so it filters nothing out. The origin check above turns away direct
+// automated calls, and the hourly volume caps below are the guard that limits a flood.
 
 async function sendViaResend(to, subject, html, replyTo) {
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -85,12 +69,7 @@ export default async function(req) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { contactName, contactEmail, formToken } = await req.json();
-
-    // The caller must prove it is the app's own page, not just a copy of its address.
-    if (!tokenMatches(formToken)) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const { contactName, contactEmail } = await req.json();
 
     if (!contactName || !contactEmail) {
       return Response.json({ error: 'Missing contactName or contactEmail' }, { status: 400 });
@@ -106,7 +85,7 @@ export default async function(req) {
 
     // Throttle before doing any work. The per-client counter is checked first so a
     // blocked caller cannot consume the shared quota.
-    const ip = getClientIp(req);
+    const ip = clientIp(req);
     if (ip && !(await consumePublicQuota(base44, `${RATE_KEY_PREFIX}${ip}`, MAX_REQUESTS_PER_IP, RATE_WINDOW_MS))) {
       return Response.json({ error: 'Too many rate requests. Please try again later.' }, { status: 429 });
     }

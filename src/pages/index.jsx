@@ -14,7 +14,6 @@ import { base44 } from "@/api/base44Client";
 import { sendRatesRequest } from "@/functions/sendRatesRequest";
 import { createPublicBooking } from "@/functions/createPublicBooking";
 import { createBookingRequests } from "@/functions/createBookingRequests";
-import { PUBLIC_FORM_TOKEN } from "@/lib/publicFormToken";
 import { verifyPublicAccess } from "@/functions/verifyPublicAccess";
 import { createPageUrl } from "@/utils";
 import { startOfDay, addDays, format } from "date-fns";
@@ -186,7 +185,6 @@ export default function HomePage() {
       await sendRatesRequest({
         contactName: ratesName,
         contactEmail: ratesEmail,
-        formToken: PUBLIC_FORM_TOKEN,
       });
       setRatesSent(true);
     } catch (err) {

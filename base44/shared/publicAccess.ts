@@ -3,6 +3,12 @@ export async function signedInUser(base44, req) {
   try { return await base44.auth.me(); } catch { return null; }
 }
 
+// Only the header set by the platform edge identifies a client: x-forwarded-for and
+// x-real-ip are controlled by the caller and can be rotated to get a fresh quota.
+export function clientIp(req) {
+  return req.headers.get('cf-connecting-ip') || null;
+}
+
 export async function publicSettings(base44) {
   const { items } = await base44.asServiceRole.entities.PublicAccessSettings.filter({}, { sort: '-updated_date', limit: 1 });
   return items[0] || { is_password_protected: true, allow_public_booking: false };
