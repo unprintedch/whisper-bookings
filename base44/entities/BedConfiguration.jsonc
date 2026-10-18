@@ -4,7 +4,7 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Description de la configuration (ex: 1 lit double, 2 lits simples)"
+      "description": "Description de la configuration"
     },
     "max_occupancy": {
       "type": "number",
@@ -20,7 +20,7 @@
     "max_occupancy"
   ],
   "rls": {
-    "create": {
+    "read": {
       "$or": [
         {
           "user_condition": {
@@ -34,7 +34,21 @@
         }
       ]
     },
-    "read": null,
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user",
+            "data.custom_role": "full_access"
+          }
+        }
+      ]
+    },
     "update": {
       "$or": [
         {
@@ -44,7 +58,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -58,7 +73,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
