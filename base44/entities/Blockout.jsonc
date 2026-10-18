@@ -4,7 +4,7 @@
   "properties": {
     "room_id": {
       "type": "string",
-      "description": "ID de la chambre"
+      "description": "ID de la tente"
     },
     "date_start": {
       "type": "string",
@@ -41,7 +41,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -55,7 +56,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -69,7 +71,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
@@ -83,7 +86,8 @@
         },
         {
           "user_condition": {
-            "role": "user"
+            "role": "user",
+            "data.custom_role": "full_access"
           }
         }
       ]
