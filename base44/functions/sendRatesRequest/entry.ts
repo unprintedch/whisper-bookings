@@ -80,19 +80,20 @@ export default async function(req) {
 
     const base44 = createClientFromRequest(req);
 
-    // Anti-robot gate: single use, short lived, so a captured proof cannot be replayed.
-    if (!(await consumeChallenge(base44, challengeToken, nonce))) {
-      return Response.json({ error: 'Verification failed. Please try again.' }, { status: 403 });
-    }
-
     // Throttle before doing any work. The per-client counter is checked first so a
-    // blocked caller cannot consume the shared quota.
+    // blocked caller cannot consume the shared quota. This runs before the proof is
+    // consumed: a caller over its quota must not burn a solved proof for nothing.
     const ip = clientIp(req);
     if (ip && !(await consumePublicQuota(base44, `${RATE_KEY_PREFIX}${ip}`, MAX_REQUESTS_PER_IP, RATE_WINDOW_MS))) {
       return Response.json({ error: 'Too many rate requests. Please try again later.' }, { status: 429 });
     }
     if (!(await consumePublicQuota(base44, `${RATE_KEY_PREFIX}global`, MAX_REQUESTS_GLOBAL, RATE_WINDOW_MS))) {
       return Response.json({ error: 'Too many rate requests. Please try again later.' }, { status: 429 });
+    }
+
+    // Anti-robot gate: single use, short lived, so a captured proof cannot be replayed.
+    if (!(await consumeChallenge(base44, challengeToken, nonce))) {
+      return Response.json({ error: 'Verification failed. Please try again.' }, { status: 403 });
     }
 
     let settings = {};
@@ -168,8 +169,9 @@ export default async function(req) {
     return Response.json({ success: true });
   } catch (error) {
     // Log the details server-side only: this endpoint is public and its response
-    // must never carry internal error text back to an anonymous caller.
+    // must never carry internal error text back to an anonymous caller. The failure
+    // is reported as a failure though, so the visitor is not told it was sent.
     console.error('sendRatesRequest error:', error);
-    return Response.json({ success: true });
+    return Response.json({ error: 'Unable to send your request. Please try again.' }, { status: 500 });
   }
 }
