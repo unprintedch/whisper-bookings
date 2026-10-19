@@ -58,6 +58,13 @@ export default function HomePage() {
     hasNextPage, isFetchingNextPage, loadMore, reload: loadData,
   } = usePublicAvailability({ hasAccess, accessToken, isAuthenticated, currentDate, selectedSiteName, bedConfigId: filters.bedConfigId });
 
+  // Changing the week or the date starts a new availability lookup. Only the very first
+  // one may take over the whole screen: after that the page keeps its frame and the
+  // calendar area shows its own loading state, so navigation stays fluid.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  useEffect(() => {
+    if (hasAccess && !availabilityLoading) setHasLoadedOnce(true);
+  }, [hasAccess, availabilityLoading]);
 
   useEffect(() => {
     checkAuth();
@@ -214,7 +221,7 @@ export default function HomePage() {
 
 
 
-  if (isLoading || availabilityLoading) {
+  if (isLoading || (availabilityLoading && !hasLoadedOnce)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 flex items-center justify-center">
         <div className="text-center">
@@ -448,8 +455,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            <PublicAvailabilityNotice error={availabilityError} empty={!visibleRooms.length} />
-            {!availabilityError && visibleRooms.length > 0 && <GanttChart
+            <PublicAvailabilityNotice error={availabilityError} empty={!availabilityLoading && !visibleRooms.length} />
+            {!availabilityError && (availabilityLoading || visibleRooms.length > 0) && <GanttChart
               rooms={visibleRooms}
               reservations={reservations}
               clients={[]}
@@ -457,7 +464,7 @@ export default function HomePage() {
               sites={sites}
               dateColumns={Array.from({ length: 30 }, (_, i) => startOfDay(addDays(currentDate, i)))}
               highlightDate={currentDate}
-              isLoading={isLoading}
+              isLoading={availabilityLoading}
               onSlotToggle={hasAccess && allowPublicBooking ? handleSlotToggle : null}
               selectedSlots={selectedSlots}
               onBookingEdit={null}
