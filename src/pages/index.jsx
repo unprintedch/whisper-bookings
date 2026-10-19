@@ -138,9 +138,12 @@ export default function HomePage() {
     e.preventDefault();
     setRatesSending(true);
     try {
+      // This endpoint has no signed-in path, so the proof is always required.
+      const proof = await anonymousBookingProof(false);
       await sendRatesRequest({
         contactName: ratesName,
         contactEmail: ratesEmail,
+        ...proof,
       });
       setRatesSent(true);
     } catch (err) {

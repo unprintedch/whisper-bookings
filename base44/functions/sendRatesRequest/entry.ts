@@ -1,9 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { escapeHtml, stripHtml } from "../../shared/escapeHtml.ts";
 import { consumePublicQuota, clientIp } from "../../shared/publicAccess.ts";
+import { consumeChallenge } from "../../shared/publicChallenge.ts";
 
-// This endpoint is intentionally public, so it only accepts calls coming from the app's
-// own pages carrying the shared form token, and is throttled per client and globally to
+// This endpoint is intentionally public, so it requires a solved anti-robot challenge
+// (single use, see publicChallenge.ts) and is throttled per client and globally to
 // stop anonymous callers from flooding the admin inboxes. The counters are fixed windows
 // that count every request: a blocked caller cannot reset its own quota.
 const RATE_WINDOW_MS = 60 * 60 * 1000; // counts are kept over one hour
@@ -26,10 +27,6 @@ function isFromAppPage(req) {
     return false;
   }
 }
-
-// No shared secret is checked here: any value embedded in the page's own JavaScript is
-// readable by anyone, so it filters nothing out. The origin check above turns away direct
-// automated calls, and the hourly volume caps below are the guard that limits a flood.
 
 async function sendViaResend(to, subject, html, replyTo) {
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -69,7 +66,7 @@ export default async function(req) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { contactName, contactEmail } = await req.json();
+    const { contactName, contactEmail, challengeToken, nonce } = await req.json();
 
     if (!contactName || !contactEmail) {
       return Response.json({ error: 'Missing contactName or contactEmail' }, { status: 400 });
@@ -82,6 +79,11 @@ export default async function(req) {
     }
 
     const base44 = createClientFromRequest(req);
+
+    // Anti-robot gate: single use, short lived, so a captured proof cannot be replayed.
+    if (!(await consumeChallenge(base44, challengeToken, nonce))) {
+      return Response.json({ error: 'Verification failed. Please try again.' }, { status: 403 });
+    }
 
     // Throttle before doing any work. The per-client counter is checked first so a
     // blocked caller cannot consume the shared quota.
