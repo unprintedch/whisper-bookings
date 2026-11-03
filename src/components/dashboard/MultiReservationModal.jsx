@@ -10,6 +10,7 @@ import { base44 } from "@/api/base44Client";
 import { createBookingRequests } from "@/functions/createBookingRequests";
 import { Client } from "@/entities/all";
 import ClientForm from "@/components/clients/ClientForm";
+import AgencySelectFields from "@/components/agencies/AgencySelectFields";
 import { validateNoOverlaps, validateRangeWithinWindow } from "./multiSelectLogic";
 
 export default function MultiReservationModal({ isOpen, onClose, mergedRanges, rooms, clients, sites, allBedConfigs, agencies = [], onSuccess }) {
@@ -47,16 +48,23 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
     setLocalClients(clients);
   }, [clients]);
 
+  // Agencies created from this screen, merged with the ones loaded by the page
+  const [createdAgencies, setCreatedAgencies] = useState([]);
+  const agencyOptions = useMemo(
+    () => [...agencies, ...createdAgencies.filter(c => !agencies.some(a => a.id === c.id))],
+    [agencies, createdAgencies]
+  );
+
   const selectedClient = localClients.find(c => c.id === clientId);
-  const agencyForSelectedClient = selectedClient?.agency_id ? agencies.find(a => a.id === selectedClient.agency_id) : null;
+  const agencyForSelectedClient = selectedClient?.agency_id ? agencyOptions.find(a => a.id === selectedClient.agency_id) : null;
 
   // For new client agency display
-  const newClientAgency = newClientData.agency_id ? agencies.find(a => a.id === newClientData.agency_id) : null;
+  const newClientAgency = newClientData.agency_id ? agencyOptions.find(a => a.id === newClientData.agency_id) : null;
 
   const generateNextClientNumber = (agencyId) => {
     let agencyCode = 'XXX';
     if (agencyId) {
-      const agency = agencies.find(a => a.id === agencyId);
+      const agency = agencyOptions.find(a => a.id === agencyId);
       if (agency?.code) agencyCode = agency.code;
     }
     let maxNum = 0;
@@ -402,7 +410,7 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select agency" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="null-string">No Agency</SelectItem>
-                      {agencies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                      {agencyOptions.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -463,7 +471,8 @@ export default function MultiReservationModal({ isOpen, onClose, mergedRanges, r
                 ) : isAgencyEditOpen ? (
                   <AgencyEditForm
                     client={selectedClient}
-                    agencies={agencies}
+                    agencies={agencyOptions}
+                    onAgencyCreated={(agency) => setCreatedAgencies(prev => [...prev, agency])}
                     onSave={handleSaveAgencyInModal}
                     onCancel={() => setIsAgencyEditOpen(false)}
                   />
@@ -761,38 +770,26 @@ function ClientContactForm({ client, onSave, onCancel }) {
 }
 
 // Inline agency edit form
-function AgencyEditForm({ client, agencies, onSave, onCancel }) {
-  const [agencyId, setAgencyId] = useState(client?.agency_id || null);
-  const [agencyContactId, setAgencyContactId] = useState(client?.agency_contact_id || null);
-  const selectedAgency = agencies.find(a => a.id === agencyId);
+function AgencyEditForm({ client, agencies, onSave, onCancel, onAgencyCreated }) {
+  const [selection, setSelection] = useState({
+    agency_id: client?.agency_id || null,
+    agency_contact_id: client?.agency_contact_id || null,
+  });
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Agency</Label>
-        <Select value={agencyId || ""} onValueChange={v => { setAgencyId(v === "null-string" ? null : v); setAgencyContactId(null); }}>
-          <SelectTrigger><SelectValue placeholder="Select agency" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="null-string">No Agency</SelectItem>
-            {agencies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      {selectedAgency && (
-        <div className="space-y-2">
-          <Label>Agency Contact</Label>
-          <Select value={agencyContactId || ""} onValueChange={v => setAgencyContactId(v === "null-string" ? null : v)}>
-            <SelectTrigger><SelectValue placeholder="General Contact" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="null-string">General Contact ({selectedAgency.email || 'N/A'})</SelectItem>
-              {selectedAgency.contacts?.map((c, i) => <SelectItem key={i} value={String(i)}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      {/* The "Agency" heading above this block already labels the first field */}
+      <AgencySelectFields
+        agencyId={selection.agency_id}
+        agencyContactId={selection.agency_contact_id}
+        agencies={agencies}
+        showAgencyLabel={false}
+        onChange={setSelection}
+        onAgencyCreated={onAgencyCreated}
+      />
       <div className="flex justify-end gap-2 pt-4 border-t">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={() => onSave({ ...client, agency_id: agencyId, agency_contact_id: agencyContactId })}>Save Changes</Button>
+        <Button onClick={() => onSave({ ...client, ...selection })}>Save Changes</Button>
       </div>
     </div>
   );
