@@ -45,15 +45,16 @@ export default function UsersPage() {
       setCurrentUser(currentUserData);
 
       try {
-        const [usersData, agenciesData] = await Promise.all([
-          User.list('-created_date'),
-          Agency.list()
-        ]);
-        setUsers(usersData);
-        setAgencies(agenciesData);
+        setUsers(await User.list('-created_date'));
       } catch (dataError) {
         console.error('Error loading users:', dataError);
         setLoadError('Unable to load the user list. Please try again.');
+      }
+
+      try {
+        setAgencies(await Agency.list());
+      } catch (agencyError) {
+        console.error('Error loading agencies:', agencyError);
       }
     } catch (error) {
       console.error('Error loading current user:', error);
