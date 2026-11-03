@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Users as UsersIcon, Shield, Mail, Building2, Search, Edit, Save, X, CheckCircle } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import useAdminUserList from "@/components/users/useAdminUserList";
 import {
   Table,
   TableBody,
@@ -19,7 +20,6 @@ import {
 
 export default function UsersPage() {
   const { user: sessionUser } = useAuth();
-  const [users, setUsers] = useState([]);
   const [agencies, setAgencies] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +27,12 @@ export default function UsersPage() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [editData, setEditData] = useState({});
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [loadError, setLoadError] = useState('');
+  const { users, displayedCount, error: usersError, isPending: usersPending, refetch: refreshUsers, fetchNextPage, hasNextPage, isFetchingNextPage } = useAdminUserList(searchTerm, currentUser?.role === 'admin');
+  const loadError = usersError
+    ? ([401, 403].includes(usersError.status || usersError.response?.status)
+      ? 'Administrator access could not be verified. Please sign in again.'
+      : 'Unable to load the user list. Please try again.')
+    : '';
 
   useEffect(() => {
     loadData();
@@ -35,7 +40,6 @@ export default function UsersPage() {
 
   const loadData = async () => {
     setIsLoading(true);
-    setLoadError('');
     try {
       // The signed-in user is resolved on its own: a failure while loading the lists
       // must never be mistaken for a permission problem and hide the page from an admin.
@@ -43,13 +47,6 @@ export default function UsersPage() {
       // auth endpoint cannot wrongly deny an administrator.
       const currentUserData = sessionUser || await User.me();
       setCurrentUser(currentUserData);
-
-      try {
-        setUsers(await User.list('-created_date'));
-      } catch (dataError) {
-        console.error('Error loading users:', dataError);
-        setLoadError('Unable to load the user list. Please try again.');
-      }
 
       try {
         setAgencies(await Agency.list());
@@ -80,7 +77,7 @@ export default function UsersPage() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       setEditingUserId(null);
-      await loadData();
+      await refreshUsers();
     } catch (error) {
       console.error('Error updating user:', error);
       alert('Failed to update user. Please try again.');
@@ -96,11 +93,6 @@ export default function UsersPage() {
     const agency = agencies.find(a => a.id === agencyId);
     return agency ? agency.name : 'N/A';
   };
-
-  const filteredUsers = users.filter(user =>
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   if (isLoading) {
     return (
@@ -136,7 +128,7 @@ export default function UsersPage() {
             <h1 className="text-3xl font-bold text-slate-800">User Management</h1>
           </div>
           <Badge variant="secondary" className="text-lg px-4 py-2">
-            {users.length} users
+            {displayedCount}{hasNextPage ? '+' : ''} users
           </Badge>
         </div>
 
@@ -153,7 +145,7 @@ export default function UsersPage() {
           <Alert className="bg-amber-50 border-amber-200">
             <AlertDescription className="text-amber-900 flex items-center justify-between gap-4">
               <span>{loadError}</span>
-              <Button size="sm" variant="outline" onClick={loadData}>Retry</Button>
+              <Button size="sm" variant="outline" onClick={() => refreshUsers()}>Retry</Button>
             </AlertDescription>
           </Alert>
         )}
@@ -187,14 +179,14 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length === 0 ? (
+                {usersPending || users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-slate-500">
-                      No users found
+                    <TableCell colSpan={7} className="text-center py-8 text-slate-500" aria-live="polite">
+                      {usersPending ? 'Loading users...' : loadError ? 'User list unavailable' : 'No users found'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">
                         {user.full_name || 'Unnamed User'}
@@ -304,6 +296,13 @@ export default function UsersPage() {
                 )}
               </TableBody>
             </Table>
+            {hasNextPage && (
+              <div className="flex justify-center border-t p-4">
+                <Button variant="outline" disabled={isFetchingNextPage} onClick={() => fetchNextPage()}>
+                  {isFetchingNextPage ? 'Loading users...' : 'Load more'}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
