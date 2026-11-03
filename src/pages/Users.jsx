@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Users as UsersIcon, Shield, Mail, Building2, Search, Edit, Save, X, CheckCircle } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 import {
   Table,
   TableBody,
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/table";
 
 export default function UsersPage() {
+  const { user: sessionUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [agencies, setAgencies] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -25,6 +27,7 @@ export default function UsersPage() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [editData, setEditData] = useState({});
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     loadData();
@@ -32,17 +35,29 @@ export default function UsersPage() {
 
   const loadData = async () => {
     setIsLoading(true);
+    setLoadError('');
     try {
-      const [currentUserData, usersData, agenciesData] = await Promise.all([
-        User.me(),
-        User.list('-created_date'),
-        Agency.list()
-      ]);
+      // The signed-in user is resolved on its own: a failure while loading the lists
+      // must never be mistaken for a permission problem and hide the page from an admin.
+      // Prefer the session already validated by the app, so a second call to the
+      // auth endpoint cannot wrongly deny an administrator.
+      const currentUserData = sessionUser || await User.me();
       setCurrentUser(currentUserData);
-      setUsers(usersData);
-      setAgencies(agenciesData);
+
+      try {
+        const [usersData, agenciesData] = await Promise.all([
+          User.list('-created_date'),
+          Agency.list()
+        ]);
+        setUsers(usersData);
+        setAgencies(agenciesData);
+      } catch (dataError) {
+        console.error('Error loading users:', dataError);
+        setLoadError('Unable to load the user list. Please try again.');
+      }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading current user:', error);
+      setCurrentUser(null);
     }
     setIsLoading(false);
   };
@@ -126,6 +141,15 @@ export default function UsersPage() {
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
               User updated successfully!
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {loadError && (
+          <Alert className="bg-amber-50 border-amber-200">
+            <AlertDescription className="text-amber-900 flex items-center justify-between gap-4">
+              <span>{loadError}</span>
+              <Button size="sm" variant="outline" onClick={loadData}>Retry</Button>
             </AlertDescription>
           </Alert>
         )}

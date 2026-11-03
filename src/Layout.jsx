@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { 
   Calendar as CalendarIcon,
   Building2, 
@@ -120,6 +121,7 @@ const adminNavItems = [
 export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user: sessionUser } = useAuth();
   
   // Add user state
   const [currentUser, setCurrentUser] = useState(null);
@@ -149,7 +151,9 @@ export default function Layout({ children }) {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const user = await base44.auth.me();
+        // The session user is already validated by the app: reuse it so a failing
+        // call cannot hide the admin menu or bounce the user away from the page.
+        const user = sessionUser || await base44.auth.me();
         setCurrentUser(user);
       } catch (error) {
         console.error('Error loading user:', error);
