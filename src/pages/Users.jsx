@@ -66,14 +66,17 @@ export default function UsersPage() {
   const handleEdit = (user) => {
     setEditingUserId(user.id);
     setEditData({
-      custom_role: user.custom_role || 'full_access',
+      // Never default to a role: opening Edit and saving must not grant Full Access by surprise.
+      custom_role: user.custom_role || '',
       agency_id: user.agency_id || ''
     });
   };
 
   const handleSave = async (userId) => {
     try {
-      await User.update(userId, editData);
+      const payload = { agency_id: editData.agency_id || '' };
+      if (editData.custom_role) payload.custom_role = editData.custom_role;
+      await User.update(userId, payload);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       setEditingUserId(null);
@@ -214,7 +217,7 @@ export default function UsersPage() {
                             onValueChange={(value) => setEditData(prev => ({ ...prev, custom_role: value }))}
                           >
                             <SelectTrigger className="w-36">
-                              <SelectValue />
+                              <SelectValue placeholder="Select role" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="full_access">Full Access</SelectItem>
@@ -223,7 +226,11 @@ export default function UsersPage() {
                           </Select>
                         ) : (
                           <Badge variant="outline">
-                            {user.custom_role === 'agency' ? 'Agency' : 'Full Access'}
+                            {user.custom_role === 'agency'
+                              ? 'Agency'
+                              : user.custom_role === 'full_access'
+                              ? 'Full Access'
+                              : 'Not set'}
                           </Badge>
                         )}
                       </TableCell>
