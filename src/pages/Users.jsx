@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Users as UsersIcon, Shield, Mail, Building2, Search, Edit, Save, X, CheckCircle } from "lucide-react";
+import { Users as UsersIcon, Shield, Mail, Building2, Search, Edit, Save, X, CheckCircle, UserPlus } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import useAdminUserList from "@/components/users/useAdminUserList";
+import InviteUserDialog from "@/components/users/InviteUserDialog";
+import RemoveUserButton from "@/components/users/RemoveUserButton";
 import {
   Table,
   TableBody,
@@ -26,7 +28,8 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUserId, setEditingUserId] = useState(null);
   const [editData, setEditData] = useState({});
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const { users, displayedCount, error: usersError, isPending: usersPending, refetch: refreshUsers, fetchNextPage, hasNextPage, isFetchingNextPage } = useAdminUserList(searchTerm, currentUser?.role === 'admin');
   const loadError = usersError
     ? ([401, 403].includes(usersError.status || usersError.response?.status)
@@ -74,8 +77,7 @@ export default function UsersPage() {
       const payload = { agency_id: editData.agency_id || '' };
       if (editData.custom_role) payload.custom_role = editData.custom_role;
       await User.update(userId, payload);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setFeedback('User updated successfully.');
       setEditingUserId(null);
       await refreshUsers();
     } catch (error) {
@@ -127,16 +129,22 @@ export default function UsersPage() {
             <UsersIcon className="w-8 h-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-slate-800">User Management</h1>
           </div>
-          <Badge variant="secondary" className="text-lg px-4 py-2">
-            {displayedCount}{hasNextPage ? '+' : ''} users
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              {displayedCount}{hasNextPage ? '+' : ''} users
+            </Badge>
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsInviteOpen(true)}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Invite user
+            </Button>
+          </div>
         </div>
 
-        {saveSuccess && (
+        {feedback && (
           <Alert className="bg-green-50 border-green-200">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              User updated successfully!
+              {feedback}
             </AlertDescription>
           </Alert>
         )}
@@ -281,14 +289,25 @@ export default function UsersPage() {
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(user)}
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(user)}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                            {user.id !== currentUser?.id && (
+                              <RemoveUserButton
+                                user={user}
+                                onRemoved={(email) => {
+                                  setFeedback(`Removed ${email}.`);
+                                  refreshUsers();
+                                }}
+                              />
+                            )}
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -330,10 +349,19 @@ export default function UsersPage() {
         <Alert className="bg-amber-50 border-amber-200">
           <Shield className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800">
-            <strong>Note:</strong> To invite new users, use Dashboard → Users → Invite User. 
-            After they join, you can assign them a role and agency here.
+            <strong>Note:</strong> Inviting a user creates their account and sends them an email invitation.
+            After they join, you can assign them an agency and custom role here.
           </AlertDescription>
         </Alert>
+
+        <InviteUserDialog
+          open={isInviteOpen}
+          onOpenChange={setIsInviteOpen}
+          onInvited={(email) => {
+            setFeedback(`Invitation sent to ${email}.`);
+            refreshUsers();
+          }}
+        />
       </div>
     </div>
   );
