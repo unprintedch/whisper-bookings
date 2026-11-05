@@ -64,7 +64,10 @@ export default function UsersPage() {
     setIsLoading(false);
   };
 
+  const canManageUsers = currentUser?.role === 'admin';
+
   const handleEdit = (user) => {
+    if (!canManageUsers) return;
     setEditingUserId(user.id);
     setEditData({
       // Never default to a role: opening Edit and saving must not grant Full Access by surprise.
@@ -75,6 +78,7 @@ export default function UsersPage() {
   };
 
   const handleSave = async (user) => {
+    if (!canManageUsers) return;
     try {
       if (editData.role && editData.role !== user.role) {
         const response = await updateBookingUser({ user_id: user.id, role: editData.role });
@@ -139,10 +143,12 @@ export default function UsersPage() {
             <Badge variant="secondary" className="text-lg px-4 py-2">
               {displayedCount}{hasNextPage ? '+' : ''} users
             </Badge>
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsInviteOpen(true)}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Invite user
-            </Button>
+            {canManageUsers && (
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsInviteOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite user
+              </Button>
+            )}
           </div>
         </div>
 
@@ -212,7 +218,7 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {editingUserId === user.id && user.id !== currentUser?.id ? (
+                        {canManageUsers && editingUserId === user.id && user.id !== currentUser?.id ? (
                           <Select
                             value={editData.role}
                             onValueChange={(value) => setEditData(prev => ({ ...prev, role: value }))}
@@ -315,11 +321,12 @@ export default function UsersPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleEdit(user)}
+                              disabled={!canManageUsers}
                             >
                               <Edit className="w-4 h-4 mr-1" />
                               Edit
                             </Button>
-                            {user.id !== currentUser?.id && (
+                            {canManageUsers && user.id !== currentUser?.id && (
                               <RemoveUserButton
                                 user={user}
                                 onRemoved={(email) => {
