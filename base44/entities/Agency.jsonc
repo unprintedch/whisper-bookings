@@ -94,39 +94,52 @@
         },
         {
           "user_condition": {
-            "role": "user",
-            "data.custom_role": "full_access"
+            "role": "user"
           }
-        },
-        {
-          "$and": [
-            {
-              "user_condition": {
-                "role": "user",
-                "data.custom_role": "agency"
-              }
-            },
-            {
-              "id": "{{user.data.agency_id}}"
-            }
-          ]
         }
       ]
     },
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
     },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
     }
   }
 }
