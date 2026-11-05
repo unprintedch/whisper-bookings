@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/AuthContext";
 import useAdminUserList from "@/components/users/useAdminUserList";
 import InviteUserDialog from "@/components/users/InviteUserDialog";
 import RemoveUserButton from "@/components/users/RemoveUserButton";
+import { updateBookingUser } from "@/functions/updateBookingUser";
 import {
   Table,
   TableBody,
@@ -67,22 +68,27 @@ export default function UsersPage() {
     setEditingUserId(user.id);
     setEditData({
       // Never default to a role: opening Edit and saving must not grant Full Access by surprise.
+      role: user.role || 'user',
       custom_role: user.custom_role || '',
       agency_id: user.agency_id || ''
     });
   };
 
-  const handleSave = async (userId) => {
+  const handleSave = async (user) => {
     try {
+      if (editData.role && editData.role !== user.role) {
+        const response = await updateBookingUser({ user_id: user.id, role: editData.role });
+        if (response.data?.error) throw new Error(response.data.error);
+      }
       const payload = { agency_id: editData.agency_id || '' };
       if (editData.custom_role) payload.custom_role = editData.custom_role;
-      await User.update(userId, payload);
+      await User.update(user.id, payload);
       setFeedback('User updated successfully.');
       setEditingUserId(null);
       await refreshUsers();
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Failed to update user. Please try again.');
+      alert(error.response?.data?.error || 'Failed to update user. Please try again.');
     }
   };
 
@@ -206,9 +212,24 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role}
-                        </Badge>
+                        {editingUserId === user.id && user.id !== currentUser?.id ? (
+                          <Select
+                            value={editData.role}
+                            onValueChange={(value) => setEditData(prev => ({ ...prev, role: value }))}
+                          >
+                            <SelectTrigger className="w-28">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                            {user.role}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         {editingUserId === user.id ? (
@@ -281,7 +302,7 @@ export default function UsersPage() {
                             </Button>
                             <Button
                               size="sm"
-                              onClick={() => handleSave(user.id)}
+                              onClick={() => handleSave(user)}
                               className="bg-blue-600 hover:bg-blue-700"
                             >
                               <Save className="w-4 h-4 mr-1" />
@@ -350,7 +371,7 @@ export default function UsersPage() {
           <Shield className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800">
             <strong>Note:</strong> Inviting a user creates their account and sends them an email invitation.
-            After they join, you can assign them an agency and custom role here.
+            Base role, custom role and agency are managed here. You cannot change your own base role.
           </AlertDescription>
         </Alert>
 
