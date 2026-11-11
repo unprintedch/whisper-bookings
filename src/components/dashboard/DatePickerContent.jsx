@@ -134,6 +134,7 @@ export default function DatePickerContent({ value, onSelectDate }) {
         selected={value}
         onSelect={(date) => date && onSelectDate(date)}
         className="p-0 mt-2"
+        classNames={{ caption: "hidden" }}
       />
 
       <Button
