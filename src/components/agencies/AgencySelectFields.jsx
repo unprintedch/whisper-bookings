@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import AgencyCombobox from "@/components/agencies/AgencyCombobox";
 
 /**
  * Agency + agency contact selection, with an inline shortcut to create a new agency.
@@ -62,23 +63,14 @@ export default function AgencySelectFields({
       <div className="space-y-2">
         {showAgencyLabel && <Label>Agency</Label>}
         <div className="flex items-center gap-2">
-          <Select
-            value={agencyId || ""}
-            onValueChange={(v) => onChange({
-              agency_id: v === "null-string" ? null : v,
+          <AgencyCombobox
+            agencies={agencies}
+            value={agencyId}
+            onSelect={(id) => onChange({
+              agency_id: id,
               agency_contact_id: null,
             })}
-          >
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Select agency" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="null-string">No Agency</SelectItem>
-              {agencies.map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
           {!isCreating && (
             <Button
               type="button"
