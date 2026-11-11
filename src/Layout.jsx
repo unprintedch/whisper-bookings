@@ -30,8 +30,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Calendar } from "@/components/ui/calendar"; // Calendar component for date picker
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import DatePickerContent from "@/components/dashboard/DatePickerContent";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge"; // Added for agency user badge
 
@@ -389,16 +389,11 @@ export default function Layout({ children }) {
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-40 justify-start text-left font-normal h-9">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(currentDate, 'dd MMM')}
+                      {format(currentDate, 'dd MMM yyyy')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={currentDate}
-                      onSelect={handleDateSelect}
-                      initialFocus
-                    />
+                    <DatePickerContent value={currentDate} onSelectDate={handleDateSelect} />
                   </PopoverContent>
                 </Popover>
                 
