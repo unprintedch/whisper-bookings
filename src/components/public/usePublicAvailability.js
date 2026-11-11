@@ -21,7 +21,7 @@ export default function usePublicAvailability({ hasAccess, accessToken, isAuthen
   const agencyQuery = useQuery({
     queryKey: ['publicBookingAgencies', isAuthenticated],
     enabled: hasAccess && isAuthenticated,
-    queryFn: () => base44.entities.Agency.filter({}, { sort: 'name', limit: 50, fields: ['name', 'email', 'phone', 'contacts'] }),
+    queryFn: () => base44.entities.Agency.filter({}, { sort: 'name', limit: 500, fields: ['name', 'email', 'phone', 'contacts'] }),
   });
   const first = query.data?.pages[0];
   const visibleRooms = useMemo(() => {
